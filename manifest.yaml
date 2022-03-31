@@ -1,0 +1,37 @@
+---
+default_target: "groups-all"
+
+params:
+  project: "vcorelib"
+  python_version: "$PYTHON_VERSION"
+  entry: "vcorelib"
+
+includes:
+  - "config/includes/python.yaml"
+  - "config/includes/license.yaml"
+
+configs:
+  - "local/configs"
+
+variables:
+  - "local/variables"
+
+templates:
+  - "local/templates"
+
+compiles:
+  - name: "local"
+
+renders:
+  - name: "README.md"
+    output_dir: "."
+    dependencies:
+      - "compiles-local"
+      - "renders-python_readme_header.md"
+
+groups:
+  - name: all
+    dependencies:
+      - groups-python-no-cli
+      - groups-license
+      - "renders-README.md"

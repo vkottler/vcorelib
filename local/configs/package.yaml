@@ -1,0 +1,7 @@
+---
+name: "vcorelib"
+version: "{{major}}.{{minor}}.{{patch}}"
+description: "A collection of core Python utilities."
+requirements: []
+dev_requirements:
+  - vmklib
