@@ -1,17 +1,20 @@
 """
-vcorelib - Math utilities.
+Math utilities involving units of time and other conversions.
 """
 
 # built-in
 from io import StringIO
-from math import floor
-from typing import Tuple
+from math import floor as _floor
+from typing import Tuple as _Tuple
 
 # internal
-from vcorelib.math import KIBI_UNITS, SI_UNITS, UnitSystem, unit_traverse
+from vcorelib.math import KIBI_UNITS as _KIBI_UNITS
+from vcorelib.math import SI_UNITS as _SI_UNITS
+from vcorelib.math import UnitSystem as _UnitSystem
+from vcorelib.math import unit_traverse as _unit_traverse
 
 
-def seconds_str(seconds: int) -> Tuple[str, int]:
+def seconds_str(seconds: int) -> _Tuple[str, int]:
     """
     Attempt to characterize a large amount of seconds into a string describing
     hours and minutes, returning the string (may be empty) and the seconds
@@ -38,7 +41,7 @@ def nano_str(
     nanos: int,
     is_time: bool = False,
     max_prefix: int = 3,
-    unit: UnitSystem = SI_UNITS,
+    unit: _UnitSystem = _SI_UNITS,
     prefix_space: bool = False,
     iteration: int = 0,
 ) -> str:
@@ -47,7 +50,7 @@ def nano_str(
     as possible.
     """
 
-    decimal, fractional, prefix = unit_traverse(
+    decimal, fractional, prefix = _unit_traverse(
         nanos, unit, max_prefix, iteration
     )
 
@@ -60,7 +63,7 @@ def nano_str(
 
         # Normalize the fractional component if necessary.
         if unit.divisor != 1000 and fractional != 0:
-            fractional = floor(float(fractional / unit.divisor) * 1000.0)
+            fractional = _floor(float(fractional / unit.divisor) * 1000.0)
 
         stream.write(str(decimal))
         if fractional:
@@ -73,4 +76,4 @@ def nano_str(
 
 def byte_count_str(byte_count: int) -> str:
     """Get a string representing a number of bytes."""
-    return nano_str(byte_count, False, 99, KIBI_UNITS, True) + "B"
+    return nano_str(byte_count, False, 99, _KIBI_UNITS, True) + "B"

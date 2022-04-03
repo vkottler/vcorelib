@@ -1,18 +1,18 @@
 """
-vcorelib - Math utilities.
+Math utilities.
 """
 
 # built-in
-from typing import NamedTuple, Sequence, Tuple
+import typing
 
 
-class UnitSystem(NamedTuple):
+class UnitSystem(typing.NamedTuple):
     """
     A pairing of prefixes defining a unit, and the amount that indicates the
     multiplicative step-size between them.
     """
 
-    prefixes: Sequence[str]
+    prefixes: typing.Sequence[str]
     divisor: int
 
 
@@ -27,7 +27,7 @@ def unit_traverse(
     unit: UnitSystem = SI_UNITS,
     max_prefix: int = 3,
     iteration: int = 0,
-) -> Tuple[int, int, str]:
+) -> typing.Tuple[int, int, str]:
     """
     Given an initial value, traverse a unit system to get the largest
     representative unit prefix. Also return a fractional component, in units

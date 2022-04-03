@@ -1,20 +1,20 @@
 """
-vcorelib - Dictionary manipulation utilities.
+Dictionary manipulation utilities.
 """
 
 # built-in
 from logging import Logger, getLogger
-from typing import List
+from typing import List as _List
 
-LOG = getLogger(__name__)
+_LOG = getLogger(__name__)
 
 
 def merge(
     dict_a: dict,
     dict_b: dict,
-    path: List[str] = None,
+    path: _List[str] = None,
     expect_overwrite: bool = False,
-    logger: Logger = LOG,
+    logger: Logger = _LOG,
 ) -> dict:
     """
     Combine two dictionaries recursively, prefers dict_a in a conflict. For
@@ -66,9 +66,9 @@ def merge(
 
 
 def merge_dicts(
-    dicts: List[dict],
+    dicts: _List[dict],
     expect_overwrite: bool = False,
-    logger: Logger = LOG,
+    logger: Logger = _LOG,
 ) -> dict:
     """
     Merge a list of dictionary data into a single set (mutates the first

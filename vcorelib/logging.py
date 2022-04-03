@@ -1,12 +1,13 @@
 """
-vcorelib - Utilities for logging information.
+Utilities for logging information.
 """
 
 # built-in
 from contextlib import contextmanager
-import logging
-from time import perf_counter_ns
-from typing import Iterator
+from logging import INFO as _INFO
+from logging import Logger
+from time import perf_counter_ns as _perf_counter_ns
+from typing import Iterator as _Iterator
 
 # internal
 from vcorelib.math.time import nano_str
@@ -14,19 +15,19 @@ from vcorelib.math.time import nano_str
 
 @contextmanager
 def log_time(
-    log: logging.Logger,
+    log: Logger,
     message: str,
     *args,
-    level: int = logging.INFO,
+    level: int = _INFO,
     **kwargs,
-) -> Iterator[None]:
+) -> _Iterator[None]:
     """
     A simple context manager for conveniently logging time taken for a task.
     """
 
-    start = perf_counter_ns()
+    start = _perf_counter_ns()
     yield
-    time_ns = perf_counter_ns() - start
+    time_ns = _perf_counter_ns() - start
 
     # Log the duration spent yielded.
     log.log(

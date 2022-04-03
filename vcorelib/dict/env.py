@@ -1,11 +1,11 @@
 """
-vcorelib - Utilities for working with environment-variable data contained
-           inside various data structures.
+Utilities for working with environment-variable data contained inside various
+data structures.
 """
 
 # built-in
-import os
-from typing import List
+from os import environ as _environ
+from typing import List as _List
 
 
 def str_resolve_env_var(data: str) -> str:
@@ -17,8 +17,8 @@ def str_resolve_env_var(data: str) -> str:
     temp = data.strip()
     if temp.startswith("$"):
         key = temp[1:]
-        if key in os.environ and os.environ[key]:
-            data = os.environ[key]
+        if key in _environ and _environ[key]:
+            data = _environ[key]
 
     return data
 
@@ -52,7 +52,7 @@ def dict_resolve_env_vars(
     in-place.
     """
 
-    keys_to_remove: List[str] = []
+    keys_to_remove: _List[str] = []
     to_update: dict = {}
     for key, value in data.items():
 
