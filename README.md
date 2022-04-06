@@ -2,7 +2,7 @@
     =====================================
     generator=datazen
     version=1.14.0
-    hash=3138f95b570f5db446fab8dd851157ea
+    hash=f03c4824f58667098458edcc355996a3
     =====================================
 -->
 
@@ -13,3 +13,10 @@
 [![codecov](https://codecov.io/gh/vkottler/vcorelib/branch/master/graphs/badge.svg?branch=master)](https://codecov.io/github/vkottler/vcorelib)
 
 *A collection of core Python utilities.*
+
+# Dependency Graph
+
+Generated using [pydeps](https://github.com/thebjorn/pydeps) (via
+`mk python-deps`).
+
+![vcorelib's Dependency Graph](im/pydeps.svg)
