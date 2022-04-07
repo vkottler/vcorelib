@@ -1,8 +1,8 @@
 <!--
     =====================================
     generator=datazen
-    version=1.14.0
-    hash=f03c4824f58667098458edcc355996a3
+    version=2.1.0
+    hash=e4e09c30d4442f19a90348ee14e53b7b
     =====================================
 -->
 
@@ -14,8 +14,10 @@
 
 *A collection of core Python utilities.*
 
-# Dependency Graph
+# Internal Dependency Graph
 
+A coarse view of the internal structure and scale of
+`vcorelib`'s source.
 Generated using [pydeps](https://github.com/thebjorn/pydeps) (via
 `mk python-deps`).
 
