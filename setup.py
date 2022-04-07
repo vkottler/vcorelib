@@ -1,7 +1,7 @@
 # =====================================
 # generator=datazen
 # version=2.1.0
-# hash=1d4b1b8b95f6a72ff93ce27d3fbd8bdb
+# hash=52298bd2a455180ae74f08cf9a931c90
 # =====================================
 
 """
@@ -10,7 +10,7 @@ vcorelib - Package definition for distribution.
 
 # third-party
 try:
-    from vmklib.setup import setup
+    from setuptools_wrapper.setup import setup
 except (ImportError, ModuleNotFoundError):
     from vcorelib_bootstrap.setup import setup  # type: ignore
 
