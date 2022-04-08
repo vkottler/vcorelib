@@ -4,9 +4,23 @@ Dictionary manipulation utilities.
 
 # built-in
 from logging import Logger, getLogger
+from typing import Any as _Any
 from typing import List as _List
 
 _LOG = getLogger(__name__)
+
+
+def consume(data: dict, key: _Any, default: _Any = None) -> _Any:
+    """
+    Attempt to obtain dictionary data via key, removing the data if it was
+    present.
+    """
+    result = data.get(key, default)
+    try:
+        del result[key]
+    except KeyError:
+        pass
+    return result
 
 
 def merge(
