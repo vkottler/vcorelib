@@ -2,6 +2,12 @@
 name: "vcorelib"
 version: "{{major}}.{{minor}}.{{patch}}"
 description: "A collection of core Python utilities."
-requirements: []
+requirements:
+  - ruamel.yaml
+  - tomli
+  - tomli-w
 dev_requirements:
   - setuptools-wrapper
+init_local: |
+
+  DEFAULT_INDENT = 2
