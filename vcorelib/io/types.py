@@ -7,21 +7,20 @@ from enum import Enum
 from io import StringIO
 from logging import Logger
 from pathlib import Path
-from typing import (
-    Callable,
-    FrozenSet,
-    Iterator,
-    NamedTuple,
-    Optional,
-    TextIO,
-    Tuple,
-    Union,
-)
+from typing import Callable as _Callable
+from typing import FrozenSet as _FrozenSet
+from typing import Iterator as _Iterator
+from typing import NamedTuple
+from typing import Optional as _Optional
+from typing import TextIO
+from typing import Tuple as _Tuple
+from typing import Union as _Union
 
 # third-party
 from ruamel.yaml import YAML
 
 # internal
+from vcorelib.paths import Pathlike as _Pathlike
 from vcorelib.paths import get_file_ext
 
 DEFAULT_ARCHIVE_EXT = "tar.gz"
@@ -31,22 +30,22 @@ DEFAULT_DATA_EXT = "json"
 class FileExtension(Enum):
     """A mapping of expected encoding type to file extensions."""
 
-    UNKNOWN: FrozenSet[str] = frozenset()
-    JSON: FrozenSet[str] = frozenset([DEFAULT_DATA_EXT])
-    YAML: FrozenSet[str] = frozenset(["yaml", "yml", "eyaml"])
-    INI: FrozenSet[str] = frozenset(["ini", "cfg"])
-    ZIP: FrozenSet[str] = frozenset(["zip"])
-    TAR: FrozenSet[str] = frozenset(
+    UNKNOWN: _FrozenSet[str] = frozenset()
+    JSON: _FrozenSet[str] = frozenset([DEFAULT_DATA_EXT])
+    YAML: _FrozenSet[str] = frozenset(["yaml", "yml", "eyaml"])
+    INI: _FrozenSet[str] = frozenset(["ini", "cfg"])
+    ZIP: _FrozenSet[str] = frozenset(["zip"])
+    TAR: _FrozenSet[str] = frozenset(
         ["tar", DEFAULT_ARCHIVE_EXT, "tar.bz2", "tar.lzma", "tar.xz"]
     )
-    TOML: FrozenSet[str] = frozenset(["toml"])
+    TOML: _FrozenSet[str] = frozenset(["toml"])
 
     def is_archive(self) -> bool:
         """Determine if this extension is a kind of archive file."""
         return self in {FileExtension.ZIP, FileExtension.TAR}
 
     @staticmethod
-    def has_archive(path: Path) -> Optional[Path]:
+    def has_archive(path: Path) -> _Optional[Path]:
         """Determine if a path has an associated archive file."""
 
         for ext in [FileExtension.ZIP, FileExtension.TAR]:
@@ -66,7 +65,7 @@ class FileExtension(Enum):
         }
 
     @staticmethod
-    def from_ext(ext_str: str) -> Optional["FileExtension"]:
+    def from_ext(ext_str: str) -> _Optional["FileExtension"]:
         """Given a file extension, determine what kind of file it is."""
 
         result = FileExtension.UNKNOWN
@@ -78,14 +77,14 @@ class FileExtension(Enum):
 
     @staticmethod
     def from_path(
-        path: Union[Path, str], maxsplit: int = 1
-    ) -> Optional["FileExtension"]:
+        path: _Pathlike, maxsplit: int = 1
+    ) -> _Optional["FileExtension"]:
         """Get a known file extension for a path, if it exists."""
         return FileExtension.from_ext(get_file_ext(path, maxsplit=maxsplit))
 
     def candidates(
         self, path: Path, exists_only: bool = False
-    ) -> Iterator[Path]:
+    ) -> _Iterator[Path]:
         """
         For a given path, iterate over candidate paths that have the suffixes
         for this kind of file extension.
@@ -98,7 +97,7 @@ class FileExtension(Enum):
     @staticmethod
     def archive_candidates(
         path: Path, exists_only: bool = False
-    ) -> Iterator[Path]:
+    ) -> _Iterator[Path]:
         """
         Iterate over all file extensions that could point to an archive file.
         """
@@ -110,7 +109,7 @@ class FileExtension(Enum):
     @staticmethod
     def data_candidates(
         path: Path, exists_only: bool = False
-    ) -> Iterator[Path]:
+    ) -> _Iterator[Path]:
         """
         Iterate over all file extensions that could point to a data file.
         """
@@ -135,15 +134,15 @@ class LoadResult(NamedTuple):
         assert isinstance(other, (LoadResult, tuple))
         return self.data == other[0] and self.success == other[1]
 
-    def require_success(self, path: Union[Path, str]) -> None:
+    def require_success(self, path: _Union[Path, str]) -> None:
         """Raise a canonical exception if this result is a failure."""
         assert self.success, f"Couldn't load '{path}'!"
 
 
-EncodeResult = Tuple[bool, int]
-DataStream = Union[TextIO, StringIO]
-DataDecoder = Callable[[DataStream, Logger], LoadResult]
-DataEncoder = Callable[[dict, DataStream, Logger], int]
+EncodeResult = _Tuple[bool, int]
+DataStream = _Union[TextIO, StringIO]
+DataDecoder = _Callable[[DataStream, Logger], LoadResult]
+DataEncoder = _Callable[[dict, DataStream, Logger], int]
 
 # Only create the interface one so it's not re-created on every read and write
 # attempt.

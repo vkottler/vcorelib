@@ -3,11 +3,18 @@ Math utilities involving units of time and other conversions.
 """
 
 # built-in
+from contextlib import contextmanager
 from io import StringIO
+from logging import INFO as _INFO
+from logging import Logger
 from math import floor as _floor
+from time import perf_counter_ns as _perf_counter_ns
+from typing import Dict as _Dict
+from typing import Iterator as _Iterator
 from typing import Tuple as _Tuple
 
 # internal
+from vcorelib.dict import consume as _consume
 from vcorelib.math import KIBI_UNITS as _KIBI_UNITS
 from vcorelib.math import SI_UNITS as _SI_UNITS
 from vcorelib.math import UnitSystem as _UnitSystem
@@ -77,3 +84,57 @@ def nano_str(
 def byte_count_str(byte_count: int) -> str:
     """Get a string representing a number of bytes."""
     return nano_str(byte_count, False, 99, _KIBI_UNITS, True) + "B"
+
+
+class Timer:
+    """A class for measuring and logging how long events take."""
+
+    def __init__(self) -> None:
+        """Initialize this timer."""
+
+        self.curr: int = 0
+        self.data: _Dict[int, int] = {}
+
+    @contextmanager
+    def measure_ns(self) -> _Iterator[int]:
+        """
+        Compute the time that the caller's context takes, provides an integer
+        token that can be used to query for the result afterwards.
+        """
+
+        curr = self.curr
+        self.curr += 1
+        start = _perf_counter_ns()
+        yield curr
+        self.data[curr] = _perf_counter_ns() - start
+
+    def result(self, token: int) -> int:
+        """Get the timer result."""
+        return _consume(self.data, token, -1)
+
+    @contextmanager
+    def log(
+        self,
+        log: Logger,
+        message: str,
+        *args,
+        level: int = _INFO,
+        **kwargs,
+    ) -> _Iterator[None]:
+        """Log how long the caller's context took to execute."""
+
+        with self.measure_ns() as token:
+            yield
+        result = self.result(token)
+
+        # Log the duration spent yielded.
+        log.log(
+            level,
+            message + " completed in %ss.",
+            *args,
+            nano_str(result, True),
+            **kwargs,
+        )
+
+
+TIMER = Timer()

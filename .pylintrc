@@ -1,2 +1,6 @@
 [DESIGN]
 max-args=6
+
+[SIMILARITIES]
+ignore-imports=yes
+ignore-signatures=yes

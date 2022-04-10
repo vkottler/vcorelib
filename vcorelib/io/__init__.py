@@ -5,8 +5,8 @@ A module exposing data-file encoders and decoders.
 # built-in
 from enum import Enum
 import logging
-from pathlib import Path
-from typing import NamedTuple, Optional
+from typing import NamedTuple
+from typing import Optional as _Optional
 
 # internal
 from vcorelib.io.decode import (
@@ -21,22 +21,20 @@ from vcorelib.io.encode import (
     encode_toml,
     encode_yaml,
 )
-from vcorelib.io.types import (
-    DataDecoder,
-    DataEncoder,
-    DataStream,
-    EncodeResult,
-    FileExtension,
-    LoadResult,
-)
-from vcorelib.paths import get_file_ext
+from vcorelib.io.types import DataDecoder as _DataDecoder
+from vcorelib.io.types import DataEncoder as _DataEncoder
+from vcorelib.io.types import DataStream as _DataStream
+from vcorelib.io.types import EncodeResult as _EncodeResult
+from vcorelib.io.types import FileExtension, LoadResult
+from vcorelib.paths import Pathlike as _Pathlike
+from vcorelib.paths import get_file_ext, normalize
 
 
-class DataHandle(NamedTuple):
+class _DataHandle(NamedTuple):
     """A description of a data type."""
 
-    decoder: DataDecoder
-    encoder: DataEncoder
+    decoder: _DataDecoder
+    encoder: _DataEncoder
 
 
 class DataMapping:
@@ -48,10 +46,10 @@ class DataMapping:
     class DataType(Enum):
         """An aggregation of all known data types."""
 
-        INI = DataHandle(decode_ini, encode_ini)
-        JSON = DataHandle(decode_json, encode_json)
-        YAML = DataHandle(decode_yaml, encode_yaml)
-        TOML = DataHandle(decode_toml, encode_toml)
+        INI = _DataHandle(decode_ini, encode_ini)
+        JSON = _DataHandle(decode_json, encode_json)
+        YAML = _DataHandle(decode_yaml, encode_yaml)
+        TOML = _DataHandle(decode_toml, encode_toml)
 
     mapping = {
         FileExtension.INI: DataType.INI,
@@ -61,7 +59,7 @@ class DataMapping:
     }
 
     @staticmethod
-    def from_ext(ext: FileExtension = None) -> Optional["DataType"]:
+    def from_ext(ext: FileExtension = None) -> _Optional["DataType"]:
         """Map a file extension to a data type."""
 
         if ext is None:
@@ -69,7 +67,7 @@ class DataMapping:
         return DataMapping.mapping.get(ext)
 
     @staticmethod
-    def from_ext_str(ext: str) -> Optional["DataType"]:
+    def from_ext_str(ext: str) -> _Optional["DataType"]:
         """Get a data type from a file-extension string."""
         return DataMapping.from_ext(FileExtension.from_ext(ext))
 
@@ -88,7 +86,7 @@ class DataArbiter:
         self.logger = logger
         self.encoding = encoding
 
-    def decoder(self, ext: str) -> Optional[DataDecoder]:
+    def decoder(self, ext: str) -> _Optional[_DataDecoder]:
         """Look up a decoding routine from a file extension."""
 
         result = None
@@ -102,7 +100,7 @@ class DataArbiter:
     def decode_stream(
         self,
         ext: str,
-        stream: DataStream,
+        stream: _DataStream,
         logger: logging.Logger = None,
         **kwargs,
     ) -> LoadResult:
@@ -119,7 +117,7 @@ class DataArbiter:
 
     def decode(
         self,
-        path: Path,
+        pathlike: _Pathlike,
         logger: logging.Logger = None,
         require_success: bool = False,
         **kwargs,
@@ -130,6 +128,7 @@ class DataArbiter:
         if logger is None:
             logger = self.logger
 
+        path = normalize(pathlike)
         if path.is_file():
             with path.open(encoding=self.encoding) as path_fd:
                 result = self.decode_stream(
@@ -148,11 +147,11 @@ class DataArbiter:
     def encode_stream(
         self,
         ext: str,
-        stream: DataStream,
+        stream: _DataStream,
         data: dict,
         logger: logging.Logger = None,
         **kwargs,
-    ) -> EncodeResult:
+    ) -> _EncodeResult:
         """Serialize data to an output stream."""
 
         if logger is None:
@@ -167,16 +166,21 @@ class DataArbiter:
         return result, time_ns
 
     def encode(
-        self, path: Path, data: dict, logger: logging.Logger = None, **kwargs
-    ) -> EncodeResult:
+        self,
+        pathlike: _Pathlike,
+        data: dict,
+        logger: logging.Logger = None,
+        **kwargs,
+    ) -> _EncodeResult:
         """Encode data to a file on disk."""
 
+        path = normalize(pathlike)
         with path.open("w", encoding=self.encoding) as path_fd:
             return self.encode_stream(
                 get_file_ext(path, maxsplit=1), path_fd, data, logger, **kwargs
             )
 
-    def encoder(self, ext: str) -> Optional[DataEncoder]:
+    def encoder(self, ext: str) -> _Optional[_DataEncoder]:
         """Look up an encoding routine from a file extension."""
 
         result = None

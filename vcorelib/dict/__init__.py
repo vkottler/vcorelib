@@ -17,7 +17,7 @@ def consume(data: dict, key: _Any, default: _Any = None) -> _Any:
     """
     result = data.get(key, default)
     try:
-        del result[key]
+        del data[key]
     except KeyError:
         pass
     return result
