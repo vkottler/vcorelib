@@ -3,21 +3,24 @@ A module for extracting and creating arbitrary archives.
 """
 
 # built-in
-from os import chdir, getcwd
+from os import chdir as _chdir
+from os import getcwd as _getcwd
 from pathlib import Path
 import shutil
 import tarfile
-from time import perf_counter_ns
-from typing import Optional, Tuple
+from typing import Optional as _Optional
+from typing import Tuple as _Tuple
 import zipfile
 
 # internal
-from vcorelib.io.types import DEFAULT_ARCHIVE_EXT, FileExtension
+from vcorelib.io.types import DEFAULT_ARCHIVE_EXT as _DEFAULT_ARCHIVE_EXT
+from vcorelib.io.types import FileExtension
+from vcorelib.math.time import TIMER as _TIMER
 
 
 def extractall(
     src: Path, dst: Path = None, **extract_kwargs
-) -> Tuple[bool, int]:
+) -> _Tuple[bool, int]:
     """
     Attempt to extract an arbitrary archive to a destination. Return whether or
     not this succeeded and how long it took.
@@ -34,31 +37,29 @@ def extractall(
     if dst is None:
         dst = Path()
 
-    start = perf_counter_ns()
+    with _TIMER.measure_ns() as token:
 
-    # Extract the tar archive.
-    if ext is FileExtension.TAR:
-        with tarfile.open(src) as tar:
-            tar.extractall(dst, **extract_kwargs)
-        time_ns = perf_counter_ns() - start
-        success = True
+        # Extract the tar archive.
+        if ext is FileExtension.TAR:
+            with tarfile.open(src) as tar:
+                tar.extractall(dst, **extract_kwargs)
+            success = True
 
-    # Extract the ZIP archive.
-    elif ext is FileExtension.ZIP:
-        with zipfile.ZipFile(src) as zipf:
-            zipf.extractall(dst, **extract_kwargs)
-        time_ns = perf_counter_ns() - start
-        success = True
+        # Extract the ZIP archive.
+        elif ext is FileExtension.ZIP:
+            with zipfile.ZipFile(src) as zipf:
+                zipf.extractall(dst, **extract_kwargs)
+            success = True
 
-    return success, time_ns
+    return success, _TIMER.result(token)
 
 
 def make_archive(
     src_dir: Path,
-    ext_str: str = DEFAULT_ARCHIVE_EXT,
+    ext_str: str = _DEFAULT_ARCHIVE_EXT,
     dst_dir: Path = None,
     **archive_kwargs,
-) -> Tuple[Optional[Path], int]:
+) -> _Tuple[_Optional[Path], int]:
     """
     Create an archive from a source directory, named after that directory,
     and optionally moved to a destination other than the parent directory
@@ -88,20 +89,20 @@ def make_archive(
     if format_str not in [x[0] for x in shutil.get_archive_formats()]:
         return result, time_ns
 
-    curr = getcwd()
+    curr = _getcwd()
     try:
-        chdir(src_dir.parent)
+        _chdir(src_dir.parent)
 
-        start = perf_counter_ns()
-        result = Path(
-            shutil.make_archive(
-                src_dir.name,
-                format_str,
-                base_dir=src_dir.name,
-                **archive_kwargs,
-            )
-        ).resolve()
-        time_ns = perf_counter_ns() - start
+        with _TIMER.measure_ns() as token:
+            result = Path(
+                shutil.make_archive(
+                    src_dir.name,
+                    format_str,
+                    base_dir=src_dir.name,
+                    **archive_kwargs,
+                )
+            ).resolve()
+        time_ns = _TIMER.result(token)
 
         # Move the resulting archive, if requested.
         if dst_dir is not None:
@@ -111,6 +112,6 @@ def make_archive(
             shutil.move(str(result), new_path)
             result = new_path
     finally:
-        chdir(curr)
+        _chdir(curr)
 
     return result, time_ns

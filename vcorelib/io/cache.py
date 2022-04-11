@@ -5,23 +5,23 @@ constraints and assumptions.
 
 # built-in
 from collections import UserDict
-import logging
+from logging import DEBUG as _DEBUG
+from logging import Logger
 from pathlib import Path
 from shutil import rmtree
-from time import perf_counter_ns
-from typing import Dict
+from typing import Dict as _Dict
 
 # third-party
 from vcorelib.dict import merge
-from vcorelib.io import ARBITER, DataArbiter
+from vcorelib.io import ARBITER as _ARBITER
+from vcorelib.io import DataArbiter
 
 # internal
 from vcorelib.io.archive import extractall, make_archive
-from vcorelib.io.types import (
-    DEFAULT_ARCHIVE_EXT,
-    DEFAULT_DATA_EXT,
-    FileExtension,
-)
+from vcorelib.io.types import DEFAULT_ARCHIVE_EXT as _DEFAULT_ARCHIVE_EXT
+from vcorelib.io.types import DEFAULT_DATA_EXT as _DEFAULT_DATA_EXT
+from vcorelib.io.types import FileExtension
+from vcorelib.math.time import TIMER as _TIMER
 from vcorelib.math.time import byte_count_str, nano_str
 from vcorelib.paths import get_file_name
 
@@ -36,9 +36,9 @@ class FlatDirectoryCache(UserDict):
         self,
         root: Path,
         initialdata: dict = None,
-        archive_encoding: str = DEFAULT_ARCHIVE_EXT,
-        data_encoding: str = DEFAULT_DATA_EXT,
-        arbiter: DataArbiter = ARBITER,
+        archive_encoding: str = _DEFAULT_ARCHIVE_EXT,
+        data_encoding: str = _DEFAULT_DATA_EXT,
+        arbiter: DataArbiter = _ARBITER,
         **load_kwargs,
     ) -> None:
         """Initialize this data cache."""
@@ -59,41 +59,41 @@ class FlatDirectoryCache(UserDict):
     def load_directory(
         self,
         path: Path,
-        data: Dict[str, dict],
+        data: _Dict[str, dict],
         **kwargs,
     ) -> int:
         """Load a directory and update data, return time taken to load."""
 
-        start = perf_counter_ns()
-        for child in path.iterdir():
-            # Don't traverse directories.
-            if child.is_file():
-                load = self.arbiter.decode(child, **kwargs)
-                key = get_file_name(child)
-                assert key
-                if load.success:
-                    assert (
-                        key not in data
-                    ), f"Data for '{key}' is already loaded!"
-                    data[key] = load.data
+        with _TIMER.measure_ns() as token:
+            for child in path.iterdir():
+                # Don't traverse directories.
+                if child.is_file():
+                    load = self.arbiter.decode(child, **kwargs)
+                    key = get_file_name(child)
+                    assert key
+                    if load.success:
+                        assert (
+                            key not in data
+                        ), f"Data for '{key}' is already loaded!"
+                        data[key] = load.data
 
         # Return load time.
-        return perf_counter_ns() - start
+        return _TIMER.result(token)
 
     def load(
         self,
         path: Path = None,
-        logger: logging.Logger = None,
-        level: int = logging.DEBUG,
+        logger: Logger = None,
+        level: int = _DEBUG,
         **kwargs,
-    ) -> Dict[str, dict]:
+    ) -> _Dict[str, dict]:
         """Load data from disk."""
 
         if path is None:
             path = self.root
 
         loaded = False
-        result: Dict[str, dict] = {}
+        result: _Dict[str, dict] = {}
         if path.is_dir():
             self.load_time_ns = self.load_directory(path, result, **kwargs)
             loaded = True
@@ -125,20 +125,20 @@ class FlatDirectoryCache(UserDict):
     def save_directory(self, path: Path, **kwargs) -> int:
         """Write data in this cache to a directory."""
 
-        start = perf_counter_ns()
-        path.mkdir(parents=True, exist_ok=True)
-        for key, val in self.data.items():
-            assert self.arbiter.encode(
-                Path(path, f"{key}.{self.data_encoding}"), val, **kwargs
-            )[0], f"Couldn't write key '{key}' to cache ({path})!"
+        with _TIMER.measure_ns() as token:
+            path.mkdir(parents=True, exist_ok=True)
+            for key, val in self.data.items():
+                assert self.arbiter.encode(
+                    Path(path, f"{key}.{self.data_encoding}"), val, **kwargs
+                )[0], f"Couldn't write key '{key}' to cache ({path})!"
 
-        return perf_counter_ns() - start
+        return _TIMER.result(token)
 
     def save(
         self,
         path: Path = None,
-        logger: logging.Logger = None,
-        level: int = logging.DEBUG,
+        logger: Logger = None,
+        level: int = _DEBUG,
         archive: bool = False,
         **kwargs,
     ) -> None:
@@ -174,23 +174,22 @@ class FlatDirectoryCache(UserDict):
     def clean(
         self,
         path: Path = None,
-        logger: logging.Logger = None,
-        level: int = logging.DEBUG,
+        logger: Logger = None,
+        level: int = _DEBUG,
     ) -> None:
         """Remove cached data from disk."""
 
         if path is None:
             path = self.root
 
-        start = perf_counter_ns()
+        with _TIMER.measure_ns() as token:
+            # Remove any archives.
+            for candidate in FileExtension.archive_candidates(path, True):
+                candidate.unlink()
 
-        # Remove any archives.
-        for candidate in FileExtension.archive_candidates(path, True):
-            candidate.unlink()
+            # Remove the data directory.
+            rmtree(path, ignore_errors=True)
 
-        # Remove the data directory.
-        rmtree(path, ignore_errors=True)
-
-        time_ns = perf_counter_ns() - start
+        time_ns = _TIMER.result(token)
         if logger is not None:
             logger.log(level, "Cache cleaned in %ss.", nano_str(time_ns, True))
