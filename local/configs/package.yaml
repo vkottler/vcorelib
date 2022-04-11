@@ -8,6 +8,7 @@ requirements:
   - tomli-w
 dev_requirements:
   - setuptools-wrapper
+  - types-setuptools
 init_local: |
 
   DEFAULT_INDENT = 2

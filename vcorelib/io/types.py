@@ -8,8 +8,8 @@ from io import StringIO
 from logging import Logger
 from pathlib import Path
 from typing import Callable as _Callable
-from typing import FrozenSet as _FrozenSet
 from typing import Iterator as _Iterator
+from typing import List as _List
 from typing import NamedTuple
 from typing import Optional as _Optional
 from typing import TextIO
@@ -30,15 +30,23 @@ DEFAULT_DATA_EXT = "json"
 class FileExtension(Enum):
     """A mapping of expected encoding type to file extensions."""
 
-    UNKNOWN: _FrozenSet[str] = frozenset()
-    JSON: _FrozenSet[str] = frozenset([DEFAULT_DATA_EXT])
-    YAML: _FrozenSet[str] = frozenset(["yaml", "yml", "eyaml"])
-    INI: _FrozenSet[str] = frozenset(["ini", "cfg"])
-    ZIP: _FrozenSet[str] = frozenset(["zip"])
-    TAR: _FrozenSet[str] = frozenset(
-        ["tar", DEFAULT_ARCHIVE_EXT, "tar.bz2", "tar.lzma", "tar.xz"]
-    )
-    TOML: _FrozenSet[str] = frozenset(["toml"])
+    UNKNOWN: _List[str] = ["unknown"]
+    JSON: _List[str] = [DEFAULT_DATA_EXT]
+    YAML: _List[str] = ["yaml", "yml", "eyaml"]
+    INI: _List[str] = ["ini", "cfg"]
+    ZIP: _List[str] = ["zip"]
+    TAR: _List[str] = [
+        DEFAULT_ARCHIVE_EXT,
+        "tar",
+        "tar.bz2",
+        "tar.lzma",
+        "tar.xz",
+    ]
+    TOML: _List[str] = ["toml"]
+
+    def __str__(self) -> str:
+        """Get this extension as a string."""
+        return self.value[0]
 
     def is_archive(self) -> bool:
         """Determine if this extension is a kind of archive file."""
@@ -49,7 +57,7 @@ class FileExtension(Enum):
         """Determine if a path has an associated archive file."""
 
         for ext in [FileExtension.ZIP, FileExtension.TAR]:
-            for ext_str in list(ext.value):
+            for ext_str in ext.value:  # pylint: disable=not-an-iterable
                 check_path = Path(f"{path}.{ext_str}")
                 if check_path.is_file():
                     return check_path
@@ -82,6 +90,10 @@ class FileExtension(Enum):
         """Get a known file extension for a path, if it exists."""
         return FileExtension.from_ext(get_file_ext(path, maxsplit=maxsplit))
 
+    def apply(self, path: Path) -> Path:
+        """Apply this extension's suffix to the given path."""
+        return path.with_suffix("." + str(self))
+
     def candidates(
         self, path: Path, exists_only: bool = False
     ) -> _Iterator[Path]:
@@ -89,7 +101,7 @@ class FileExtension(Enum):
         For a given path, iterate over candidate paths that have the suffixes
         for this kind of file extension.
         """
-        for ext in list(self.value):
+        for ext in self.value:
             path = path.with_suffix(f".{ext}")
             if not exists_only or path.exists():
                 yield path
