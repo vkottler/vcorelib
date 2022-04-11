@@ -1,4 +1,5 @@
 setuptools-wrapper
+types-setuptools
 pylint
 flake8
 pytest
