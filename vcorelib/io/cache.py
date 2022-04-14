@@ -23,7 +23,7 @@ from vcorelib.io.types import DEFAULT_DATA_EXT as _DEFAULT_DATA_EXT
 from vcorelib.io.types import FileExtension
 from vcorelib.math.time import TIMER as _TIMER
 from vcorelib.math.time import byte_count_str, nano_str
-from vcorelib.paths import get_file_name
+from vcorelib.paths import Pathlike as _Pathlike
 
 
 class FlatDirectoryCache(UserDict):
@@ -58,27 +58,17 @@ class FlatDirectoryCache(UserDict):
 
     def load_directory(
         self,
-        path: Path,
+        path: _Pathlike,
         data: _Dict[str, dict],
         **kwargs,
     ) -> int:
         """Load a directory and update data, return time taken to load."""
 
-        with _TIMER.measure_ns() as token:
-            for child in path.iterdir():
-                # Don't traverse directories.
-                if child.is_file():
-                    load = self.arbiter.decode(child, **kwargs)
-                    key = get_file_name(child)
-                    assert key
-                    if load.success:
-                        assert (
-                            key not in data
-                        ), f"Data for '{key}' is already loaded!"
-                        data[key] = load.data
-
-        # Return load time.
-        return _TIMER.result(token)
+        load = self.arbiter.decode_directory(
+            path, require_success=True, **kwargs
+        )
+        data.update(load.data)
+        return load.time_ns
 
     def load(
         self,
@@ -125,14 +115,10 @@ class FlatDirectoryCache(UserDict):
     def save_directory(self, path: Path, **kwargs) -> int:
         """Write data in this cache to a directory."""
 
-        with _TIMER.measure_ns() as token:
-            path.mkdir(parents=True, exist_ok=True)
-            for key, val in self.data.items():
-                assert self.arbiter.encode(
-                    Path(path, f"{key}.{self.data_encoding}"), val, **kwargs
-                )[0], f"Couldn't write key '{key}' to cache ({path})!"
-
-        return _TIMER.result(token)
+        path.mkdir(parents=True, exist_ok=True)
+        return self.arbiter.encode_directory(
+            path, self.data, self.data_encoding, **kwargs
+        )[1]
 
     def save(
         self,
