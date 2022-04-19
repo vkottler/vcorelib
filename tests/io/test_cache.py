@@ -8,11 +8,11 @@ from pathlib import Path
 import shutil
 from tempfile import TemporaryDirectory
 
-# module under test
-from vcorelib.io.cache import FlatDirectoryCache
-
 # internal
 from tests.resources import get_archives_root, resource
+
+# module under test
+from vcorelib.io.cache import FlatDirectoryCache
 
 
 def test_directory_cache_basic():
