@@ -170,7 +170,7 @@ class DataArbiter:
             path_filter if path_filter is not None else lambda _: True,
             path.iterdir(),
         ):
-            load = self.decode(path, logger, require_success, **kwargs)
+            load = self.decode(child, logger, require_success, **kwargs)
             if load.success:
                 result[get_file_name(child)] = load.data
             errors += int(not load.success)
