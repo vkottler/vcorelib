@@ -80,3 +80,17 @@ def test_arbiter_decode_failures():
             if ext is FileExtension.UNKNOWN:
                 with path.open(encoding="utf-8") as path_fd:
                     assert not ARBITER.decode_stream(str(ext), path_fd).success
+
+
+def test_arbiter_decode_directory_recurse():
+    """Ensure we can successfully recurse a directory."""
+
+    assert ARBITER.decode_directory(
+        resource("simple_decode").joinpath("recurse"),
+        require_success=True,
+        recurse=True,
+    ).data == {
+        "a_section_1": {"a": "a", "b": "b", "c": "c"},
+        "b_section_1": {"a": "a", "b": "b", "c": "c"},
+        "c_section_1": {"a": "a", "b": "b", "c": "c"},
+    }

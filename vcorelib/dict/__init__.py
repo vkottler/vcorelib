@@ -28,7 +28,7 @@ def merge(
     dict_b: dict,
     path: _List[str] = None,
     expect_overwrite: bool = False,
-    logger: Logger = _LOG,
+    logger: Logger = None,
 ) -> dict:
     """
     Combine two dictionaries recursively, prefers dict_a in a conflict. For
@@ -38,41 +38,42 @@ def merge(
 
     if path is None:
         path = []
+    if logger is None:
+        logger = _LOG
 
     for key, right_val in dict_b.items():
-        if key in dict_a:
-            # first try to coerce b's type into a's
-            if not isinstance(right_val, type(dict_a[key])):
-                try:
-                    right_val = type(dict_a[key])(right_val)
-                except ValueError:
-                    pass
+        if key not in dict_a:
+            dict_a[key] = right_val
+            continue
 
-            # same leaf value
-            if dict_a[key] == right_val:
+        # first try to coerce b's type into a's
+        if not isinstance(right_val, type(dict_a[key])):
+            try:
+                right_val = type(dict_a[key])(right_val)
+            except ValueError:
                 pass
-            elif isinstance(dict_a[key], dict) and isinstance(right_val, dict):
-                merge(
-                    dict_a[key],
-                    right_val,
-                    path + [str(key)],
-                    expect_overwrite,
-                    logger,
-                )
-            elif isinstance(dict_a[key], list) and isinstance(right_val, list):
-                dict_a[key].extend(right_val)
-            elif not isinstance(right_val, type(dict_a[key])):
-                logger.error(
-                    "Type mismatch at '%s'", ".".join(path + [str(key)])
-                )
-                logger.error("left:  %s (%s)", type(dict_a[key]), dict_a[key])
-                logger.error("right: %s (%s)", type(right_val), right_val)
-            elif not expect_overwrite:
-                logger.error("Conflict at '%s'", ".".join(path + [str(key)]))
-                logger.error("left:  %s", dict_a[key])
-                logger.error("right: %s", right_val)
-            else:
-                dict_a[key] = right_val
+
+        # same leaf value
+        if dict_a[key] == right_val:
+            pass
+        elif isinstance(dict_a[key], dict) and isinstance(right_val, dict):
+            merge(
+                dict_a[key],
+                right_val,
+                path + [str(key)],
+                expect_overwrite,
+                logger,
+            )
+        elif isinstance(dict_a[key], list) and isinstance(right_val, list):
+            dict_a[key].extend(right_val)
+        elif not isinstance(right_val, type(dict_a[key])):
+            logger.error("Type mismatch at '%s'", ".".join(path + [str(key)]))
+            logger.error("left:  %s (%s)", type(dict_a[key]), dict_a[key])
+            logger.error("right: %s (%s)", type(right_val), right_val)
+        elif not expect_overwrite:
+            logger.error("Conflict at '%s'", ".".join(path + [str(key)]))
+            logger.error("left:  %s", dict_a[key])
+            logger.error("right: %s", right_val)
         else:
             dict_a[key] = right_val
 
@@ -82,7 +83,7 @@ def merge(
 def merge_dicts(
     dicts: _List[dict],
     expect_overwrite: bool = False,
-    logger: Logger = _LOG,
+    logger: Logger = None,
 ) -> dict:
     """
     Merge a list of dictionary data into a single set (mutates the first
