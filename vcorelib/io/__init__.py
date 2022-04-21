@@ -11,6 +11,7 @@ from typing import NamedTuple
 from typing import Optional as _Optional
 
 # internal
+from vcorelib.dict import merge
 from vcorelib.io.decode import (
     decode_ini,
     decode_json,
@@ -153,6 +154,7 @@ class DataArbiter:
         logger: logging.Logger = None,
         require_success: bool = False,
         path_filter: _Callable[[Path], bool] = None,
+        recurse: bool = False,
         **kwargs,
     ) -> LoadResult:
         """
@@ -161,7 +163,7 @@ class DataArbiter:
         and the cumulative time that each file-load took.
         """
 
-        result = {}
+        data = {}
         path = normalize(pathlike)
         errors = 0
         load_time = 0
@@ -170,14 +172,38 @@ class DataArbiter:
             path_filter if path_filter is not None else lambda _: True,
             path.iterdir(),
         ):
-            load = self.decode(child, logger, require_success, **kwargs)
-            if load.success:
-                result[get_file_name(child)] = load.data
-            errors += int(not load.success)
-            if load.time_ns:
-                load_time += load.time_ns
+            load = None
+            if child.is_file():
+                load = self.decode(child, logger, require_success, **kwargs)
+            elif recurse and child.is_dir():
+                load = self.decode_directory(
+                    child,
+                    logger,
+                    require_success,
+                    path_filter,
+                    recurse,
+                    **kwargs,
+                )
 
-        return LoadResult(result, errors == 0, load_time)
+            if load is not None:
+                if load.success:
+                    key = get_file_name(child)
+                    if key:
+                        data[key] = load.data
+                    else:
+                        data = merge(
+                            data,
+                            load.data,
+                            expect_overwrite=kwargs.get(
+                                "expect_overwrite", False
+                            ),
+                            logger=logger,
+                        )
+                errors += int(not load.success)
+                if load.time_ns:
+                    load_time += load.time_ns
+
+        return LoadResult(data, errors == 0, load_time)
 
     def encode_stream(
         self,

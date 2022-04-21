@@ -23,7 +23,12 @@ def get_file_name(path: Pathlike, maxsplit: int = -1) -> str:
     From a path to a file, get the name of the file. Use 'maxsplit' to control
     how many suffixes are considered part of the name or the extension.
     """
-    return ".".join(normalize(path).name.split(".", maxsplit=maxsplit)[:-1])
+    split = normalize(path).name.split(".", maxsplit=maxsplit)
+    if len(split) > 1:
+        pieces = split[:-1]
+    else:
+        pieces = [split[0]]
+    return ".".join(pieces)
 
 
 def get_file_ext(path: Pathlike, maxsplit: int = -1) -> str:
