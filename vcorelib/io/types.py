@@ -20,6 +20,7 @@ from typing import Union as _Union
 from ruamel.yaml import YAML
 
 # internal
+from vcorelib.dict import merge
 from vcorelib.paths import Pathlike as _Pathlike
 from vcorelib.paths import get_file_ext
 
@@ -149,6 +150,20 @@ class LoadResult(NamedTuple):
     def require_success(self, path: _Union[Path, str]) -> None:
         """Raise a canonical exception if this result is a failure."""
         assert self.success, f"Couldn't load '{path}'!"
+
+    def merge(self, other: "LoadResult") -> "LoadResult":
+        """Merge two load results."""
+
+        # Add the time fields up if they're both positive.
+        time_ns = self.time_ns
+        if time_ns > 0 and other.time_ns > 0:
+            time_ns += other.time_ns
+
+        return LoadResult(
+            merge(self.data, other.data),
+            self.success and other.success,
+            time_ns,
+        )
 
 
 EncodeResult = _Tuple[bool, int]
