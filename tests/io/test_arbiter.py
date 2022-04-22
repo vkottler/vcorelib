@@ -94,3 +94,17 @@ def test_arbiter_decode_directory_recurse():
         "b_section_1": {"a": "a", "b": "b", "c": "c"},
         "c_section_1": {"a": "a", "b": "b", "c": "c"},
     }
+
+
+def test_arbiter_decode_includes():
+    """Test that we can load data via the 'includes' key."""
+
+    assert ARBITER.decode_directory(
+        resource("simple_decode").joinpath("includes"),
+        require_success=True,
+        includes_key="includes",
+    ).data == {
+        "a_section_1": {"a": "a", "b": "b", "c": "c"},
+        "b_section_1": {"a": "a", "b": "b", "c": "c"},
+        "c_section_1": {"a": "a", "b": "b", "c": "c"},
+    }

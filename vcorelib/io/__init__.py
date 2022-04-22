@@ -6,12 +6,13 @@ A module exposing data-file encoders and decoders.
 from enum import Enum
 import logging
 from pathlib import Path
+from typing import Any as _Any
 from typing import Callable as _Callable
 from typing import NamedTuple
 from typing import Optional as _Optional
 
 # internal
-from vcorelib.dict import merge
+from vcorelib.dict import consume, merge
 from vcorelib.io.decode import (
     decode_ini,
     decode_json,
@@ -124,6 +125,7 @@ class DataArbiter:
         pathlike: _Pathlike,
         logger: logging.Logger = None,
         require_success: bool = False,
+        includes_key: _Any = None,
         **kwargs,
     ) -> LoadResult:
         """Attempt to load data from a file."""
@@ -138,6 +140,24 @@ class DataArbiter:
                 result = self.decode_stream(
                     get_file_ext(path, maxsplit=1), path_fd, logger, **kwargs
                 )
+
+                # Resolve includes if necessary.
+                if includes_key is not None:
+                    for include in consume(result.data, includes_key, []):
+                        inc_path = Path(include)
+                        if not inc_path.is_absolute():
+                            inc_path = path.parent.joinpath(inc_path)
+
+                        # Load the included file.
+                        result = result.merge(
+                            self.decode(
+                                inc_path,
+                                logger,
+                                require_success,
+                                includes_key,
+                                **kwargs,
+                            )
+                        )
 
         if not result.success:
             logger.error("Failed to decode '%s'.", path)
