@@ -31,6 +31,7 @@ from vcorelib.io.types import DataEncoder as _DataEncoder
 from vcorelib.io.types import DataStream as _DataStream
 from vcorelib.io.types import EncodeResult as _EncodeResult
 from vcorelib.io.types import FileExtension, LoadResult
+from vcorelib.io.types import StreamProcessor as _StreamProcessor
 from vcorelib.paths import Pathlike as _Pathlike
 from vcorelib.paths import get_file_ext, get_file_name, normalize
 
@@ -126,6 +127,7 @@ class DataArbiter:
         logger: logging.Logger = None,
         require_success: bool = False,
         includes_key: _Any = None,
+        preprocessor: _StreamProcessor = None,
         **kwargs,
     ) -> LoadResult:
         """Attempt to load data from a file."""
@@ -137,8 +139,15 @@ class DataArbiter:
         path = normalize(pathlike)
         if path.is_file():
             with path.open(encoding=self.encoding) as path_fd:
+                # Preprocess the stream if specified. This can be useful for
+                # external code to treat data files as templates.
                 result = self.decode_stream(
-                    get_file_ext(path, maxsplit=1), path_fd, logger, **kwargs
+                    get_file_ext(path, maxsplit=1),
+                    preprocessor(path_fd)
+                    if preprocessor is not None
+                    else path_fd,
+                    logger,
+                    **kwargs,
                 )
 
                 # Resolve includes if necessary.
