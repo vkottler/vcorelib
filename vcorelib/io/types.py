@@ -168,6 +168,7 @@ class LoadResult(NamedTuple):
 
 EncodeResult = _Tuple[bool, int]
 DataStream = _Union[TextIO, StringIO]
+StreamProcessor = _Callable[[DataStream], DataStream]
 DataDecoder = _Callable[[DataStream, Logger], LoadResult]
 DataEncoder = _Callable[[dict, DataStream, Logger], int]
 

@@ -38,7 +38,9 @@ def test_arbiter_encode_decode_basic():
             path = ext.apply(Path(ext_root, fname))
             expected = {f"{fname}_section_1": {"a": "a", "b": "b", "c": "c"}}
 
-            data = ARBITER.decode(path, require_success=True).data
+            data = ARBITER.decode(
+                path, require_success=True, preprocessor=lambda x: x
+            ).data
             with suppress(KeyError):
                 del data["DEFAULT"]
 
