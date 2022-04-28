@@ -12,3 +12,4 @@ dev_requirements:
 init_local: |
 
   DEFAULT_INDENT = 2
+  DEFAULT_ENCODING = "utf-8"

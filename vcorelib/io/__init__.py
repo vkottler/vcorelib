@@ -12,6 +12,7 @@ from typing import NamedTuple
 from typing import Optional as _Optional
 
 # internal
+from vcorelib import DEFAULT_ENCODING as _DEFAULT_ENCODING
 from vcorelib.dict import consume, merge
 from vcorelib.io.decode import (
     decode_ini,
@@ -86,7 +87,7 @@ class DataArbiter:
     def __init__(
         self,
         logger: logging.Logger = logging.getLogger(__name__),
-        encoding: str = "utf-8",
+        encoding: str = _DEFAULT_ENCODING,
     ) -> None:
         """Initialize a new data arbiter."""
         self.logger = logger
@@ -128,6 +129,7 @@ class DataArbiter:
         require_success: bool = False,
         includes_key: _Any = None,
         preprocessor: _StreamProcessor = None,
+        maxsplit: int = 1,
         **kwargs,
     ) -> LoadResult:
         """Attempt to load data from a file."""
@@ -142,7 +144,7 @@ class DataArbiter:
                 # Preprocess the stream if specified. This can be useful for
                 # external code to treat data files as templates.
                 result = self.decode_stream(
-                    get_file_ext(path, maxsplit=1),
+                    get_file_ext(path, maxsplit=maxsplit),
                     preprocessor(path_fd)
                     if preprocessor is not None
                     else path_fd,
@@ -260,6 +262,7 @@ class DataArbiter:
         pathlike: _Pathlike,
         data: dict,
         logger: logging.Logger = None,
+        maxsplit: int = 1,
         **kwargs,
     ) -> _EncodeResult:
         """Encode data to a file on disk."""
@@ -267,7 +270,11 @@ class DataArbiter:
         path = normalize(pathlike)
         with path.open("w", encoding=self.encoding) as path_fd:
             return self.encode_stream(
-                get_file_ext(path, maxsplit=1), path_fd, data, logger, **kwargs
+                get_file_ext(path, maxsplit=maxsplit),
+                path_fd,
+                data,
+                logger,
+                **kwargs,
             )
 
     def encode_directory(
