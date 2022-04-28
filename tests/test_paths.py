@@ -2,9 +2,12 @@
 datazen - Tests for the 'paths' API.
 """
 
+# internal
+from tests.resources import resource
+
 # module under test
 from vcorelib.io.types import FileExtension
-from vcorelib.paths import get_file_name
+from vcorelib.paths import file_md5_hex, get_file_name, str_md5_hex
 
 
 def test_file_name_ext():
@@ -28,3 +31,13 @@ def test_file_name():
 
     assert get_file_name("a/b/c.yaml") == "c"
     assert get_file_name("a/b/c") == "c"
+
+
+def test_md5_hex():
+    """Test that various md5 functions provide the correct results."""
+
+    assert str_md5_hex("test") == "098f6bcd4621d373cade4e832627b4f6"
+    assert (
+        file_md5_hex(resource("test.txt"))
+        == "d8e8fca2dc0f896fd7cb4cb0031ba249"
+    )
