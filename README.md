@@ -2,7 +2,7 @@
     =====================================
     generator=datazen
     version=2.1.0
-    hash=4a3141a2d1d67ee71cb24fbed6e55f61
+    hash=a62aa05440334d78ad0a9122f4462ef4
     =====================================
 -->
 
@@ -13,6 +13,9 @@
 [![codecov](https://codecov.io/gh/vkottler/vcorelib/branch/master/graphs/badge.svg?branch=master)](https://codecov.io/github/vkottler/vcorelib)
 
 *A collection of core Python utilities.*
+
+See also: [generated documentation](https://vkottler.github.io/python/pydoc/vcorelib.html)
+(created with [`pydoc`](https://docs.python.org/3/library/pydoc.html)).
 
 # Internal Dependency Graph
 
