@@ -13,9 +13,9 @@ from tomli_w import dumps
 # internal
 from vcorelib import DEFAULT_INDENT as _DEFAULT_INDENT
 from vcorelib.dict import consume
-from vcorelib.io.definitions import DataStream as _DataStream
-from vcorelib.io.definitions import YAML_INTERFACE as _YAML_INTERFACE
-from vcorelib.math.timing import TIMER as _TIMER
+from vcorelib.io.types import DataStream as _DataStream
+from vcorelib.io.types import YAML_INTERFACE as _YAML_INTERFACE
+from vcorelib.math.time import TIMER as _TIMER
 
 _LOG = getLogger(__name__)
 

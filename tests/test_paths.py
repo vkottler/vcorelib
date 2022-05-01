@@ -6,7 +6,7 @@ datazen - Tests for the 'paths' API.
 from tests.resources import resource
 
 # module under test
-from vcorelib.io.definitions import FileExtension
+from vcorelib.io.types import FileExtension
 from vcorelib.paths import file_md5_hex, get_file_name, str_md5_hex
 
 
