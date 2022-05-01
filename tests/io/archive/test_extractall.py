@@ -12,7 +12,7 @@ from tests.resources import get_archives_root
 
 # module under test
 from vcorelib.io.archive import extractall
-from vcorelib.io.types import FileExtension
+from vcorelib.io.definitions import FileExtension
 
 
 def test_extractall():

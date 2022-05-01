@@ -20,19 +20,19 @@ from vcorelib.io.decode import (
     decode_toml,
     decode_yaml,
 )
+from vcorelib.io.definitions import DEFAULT_DATA_EXT as _DEFAULT_DATA_EXT
+from vcorelib.io.definitions import DataDecoder as _DataDecoder
+from vcorelib.io.definitions import DataEncoder as _DataEncoder
+from vcorelib.io.definitions import DataStream as _DataStream
+from vcorelib.io.definitions import EncodeResult as _EncodeResult
+from vcorelib.io.definitions import FileExtension, LoadResult
+from vcorelib.io.definitions import StreamProcessor as _StreamProcessor
 from vcorelib.io.encode import (
     encode_ini,
     encode_json,
     encode_toml,
     encode_yaml,
 )
-from vcorelib.io.types import DEFAULT_DATA_EXT as _DEFAULT_DATA_EXT
-from vcorelib.io.types import DataDecoder as _DataDecoder
-from vcorelib.io.types import DataEncoder as _DataEncoder
-from vcorelib.io.types import DataStream as _DataStream
-from vcorelib.io.types import EncodeResult as _EncodeResult
-from vcorelib.io.types import FileExtension, LoadResult
-from vcorelib.io.types import StreamProcessor as _StreamProcessor
 from vcorelib.paths import Pathlike as _Pathlike
 from vcorelib.paths import get_file_ext, get_file_name, normalize
 

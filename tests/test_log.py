@@ -1,12 +1,12 @@
 """
-vcorelib - Test the 'logging' module.
+vcorelib - Test the 'log' module.
 """
 
 # internal
 from logging import getLogger
 
 # module under test
-from vcorelib.logging import log_time
+from vcorelib.log import log_time
 
 
 def test_log_time_basic():

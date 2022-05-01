@@ -12,7 +12,7 @@ from tests.resources import resource
 
 # module under test
 from vcorelib.io import ARBITER, DataMapping
-from vcorelib.io.types import FileExtension
+from vcorelib.io.definitions import FileExtension
 
 
 def test_arbiter_encode_decode_basic():

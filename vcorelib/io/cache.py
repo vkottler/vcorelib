@@ -18,11 +18,11 @@ from vcorelib.io import DataArbiter
 
 # internal
 from vcorelib.io.archive import extractall, make_archive
-from vcorelib.io.types import DEFAULT_ARCHIVE_EXT as _DEFAULT_ARCHIVE_EXT
-from vcorelib.io.types import DEFAULT_DATA_EXT as _DEFAULT_DATA_EXT
-from vcorelib.io.types import FileExtension
-from vcorelib.math.time import TIMER as _TIMER
-from vcorelib.math.time import byte_count_str, nano_str
+from vcorelib.io.definitions import DEFAULT_ARCHIVE_EXT as _DEFAULT_ARCHIVE_EXT
+from vcorelib.io.definitions import DEFAULT_DATA_EXT as _DEFAULT_DATA_EXT
+from vcorelib.io.definitions import FileExtension
+from vcorelib.math.timing import TIMER as _TIMER
+from vcorelib.math.timing import byte_count_str, nano_str
 from vcorelib.paths import Pathlike as _Pathlike
 
 

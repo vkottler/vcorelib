@@ -1,5 +1,5 @@
 """
-Test the 'io.types' module.
+Test the 'io.definitions' module.
 """
 
 # built-in
@@ -9,7 +9,7 @@ from pathlib import Path
 from tests.resources import resource
 
 # module under test
-from vcorelib.io.types import FileExtension, LoadResult
+from vcorelib.io.definitions import FileExtension, LoadResult
 
 
 def test_data_files_simple():

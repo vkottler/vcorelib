@@ -9,7 +9,7 @@ from logging import Logger
 from typing import Iterator as _Iterator
 
 # internal
-from vcorelib.math.time import TIMER as _TIMER
+from vcorelib.math.timing import TIMER as _TIMER
 
 
 @contextmanager

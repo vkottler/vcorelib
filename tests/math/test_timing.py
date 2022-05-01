@@ -1,9 +1,9 @@
 """
-vcorelib - Test the 'math.time' module.
+vcorelib - Test the 'math.timing' module.
 """
 
 # module under test
-from vcorelib.math.time import byte_count_str, nano_str, seconds_str
+from vcorelib.math.timing import byte_count_str, nano_str, seconds_str
 
 
 def test_nano_str_basic():
