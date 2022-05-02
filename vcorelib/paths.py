@@ -5,6 +5,8 @@ Common path manipulation utilities.
 # built-in
 from hashlib import md5 as _md5
 from pathlib import Path as _Path
+from typing import Iterable as _Iterable
+from typing import Optional as _Optional
 from typing import Union as _Union
 
 # internal
@@ -52,3 +54,43 @@ def file_md5_hex(path: Pathlike) -> str:
     """Get an md5 hex string for a file by path."""
     with normalize(path).open("rb") as stream:
         return _md5(stream.read()).hexdigest()
+
+
+def find_file(
+    path: Pathlike,
+    search_paths: _Iterable[Pathlike] = None,
+    include_cwd: bool = False,
+    relative_to: Pathlike = None,
+) -> _Optional[_Path]:
+    """Combines a few simple strategies to locate a file on disk."""
+
+    path = normalize(path)
+
+    # If path is absolute we can't search for it.
+    if path.is_absolute():
+        if path.is_file():
+            return path
+        return None
+
+    to_check = list(search_paths) if search_paths else []
+
+    # Check the working directory if it was specified.
+    if include_cwd:
+        to_check.append(_Path.cwd())
+
+    # Check if the provided path exists relative to some other path.
+    if relative_to is not None:
+        relative_to = normalize(relative_to)
+        to_check.append(
+            relative_to if relative_to.is_dir() else relative_to.parent
+        )
+
+    # Return the first file we find on the search path, if we find one.
+    for search in to_check:
+        search = normalize(search)
+        if search.is_dir():
+            candidate = search.joinpath(path)
+            if candidate.is_file():
+                return candidate
+
+    return None

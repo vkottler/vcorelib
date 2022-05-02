@@ -34,7 +34,7 @@ from vcorelib.io.types import EncodeResult as _EncodeResult
 from vcorelib.io.types import FileExtension, LoadResult
 from vcorelib.io.types import StreamProcessor as _StreamProcessor
 from vcorelib.paths import Pathlike as _Pathlike
-from vcorelib.paths import get_file_ext, get_file_name, normalize
+from vcorelib.paths import find_file, get_file_ext, get_file_name, normalize
 
 
 class _DataHandle(NamedTuple):
@@ -155,14 +155,10 @@ class DataArbiter:
                 # Resolve includes if necessary.
                 if includes_key is not None:
                     for include in consume(result.data, includes_key, []):
-                        inc_path = Path(include)
-                        if not inc_path.is_absolute():
-                            inc_path = path.parent.joinpath(inc_path)
-
                         # Load the included file.
                         result = result.merge(
                             self.decode(
-                                inc_path,
+                                find_file(include, relative_to=path),
                                 logger,
                                 require_success,
                                 includes_key,
