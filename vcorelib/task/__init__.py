@@ -74,18 +74,22 @@ class Task:  # pylint: disable=too-many-instance-attributes
 
         return wrapper
 
-    def depend_on(self, task: "Task") -> None:
+    def depend_on(self, task: "Task", **kwargs) -> None:
         """Register other tasks' output data to your input box."""
 
         self.inbox[task.name] = task.outbox
-        self.dependencies.append(asyncio.create_task(task.dispatch(self)))
+        self.dependencies.append(
+            asyncio.create_task(task.dispatch(self, **kwargs))
+        )
 
-    def depend_on_all(self, tasks: Iterable["Task"]) -> None:
+    def depend_on_all(self, tasks: Iterable["Task"], **kwargs) -> None:
         """Register multiple dependencies."""
         for task in tasks:
-            self.depend_on(task)
+            self.depend_on(task, **kwargs)
 
-    async def dispatch(self, caller: "Task" = None) -> None:
+    async def dispatch(
+        self, caller: "Task" = None, init_only: bool = False
+    ) -> None:
         """Dispatch this task and return whether or not it succeeded."""
 
         self.times_invoked += 1
@@ -100,6 +104,10 @@ class Task:  # pylint: disable=too-many-instance-attributes
             await asyncio.gather(*self.dependencies)
         self.dependency_time = self.timer.result(token)
         self.log.debug("dependencies: %s", nano_str(self.dependency_time))
+
+        # Allow a dry-run pass get only this far (before executing).
+        if init_only:
+            return
 
         # Execute this task and don't propagate to tasks if this task failed.
         with self.timer.measure_ns() as token:
