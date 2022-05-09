@@ -36,3 +36,18 @@ def test_task_manager_dry_run():
     manager.register(Task("test"), ["a", "b", "c"])
     manager.execute(["test"], init_only=True)
     assert manager.tasks["test"].resolved is False
+
+
+def test_task_manager_dynamic():
+    """Test that we can run dynamically resolved tasks."""
+
+    manager = TaskManager()
+    manager.register(Task("a"))
+    manager.register(Task("b"))
+    manager.register(Task("c"))
+    manager.register(Task("a:{a}"), ["a", "b", "c"])
+    manager.execute(["a:1", "a:2", "a:3"])
+    manager.execute(["a:1"])
+    manager.execute(["a:2"])
+    manager.execute(["a:3"])
+    manager.execute(["a:4"])

@@ -3,8 +3,10 @@ Dictionary manipulation utilities.
 """
 
 # built-in
+from contextlib import contextmanager as _contextmanager
 from logging import Logger, getLogger
 from typing import Any as _Any
+from typing import Iterator as _Iterator
 from typing import List as _List
 
 _LOG = getLogger(__name__)
@@ -21,6 +23,34 @@ def consume(data: dict, key: _Any, default: _Any = None) -> _Any:
     except KeyError:
         pass
     return result
+
+
+@_contextmanager
+def limited(data: dict, key: _Any, value: _Any = None) -> _Iterator[None]:
+    """Ensure that dictionary data is only temporarily added."""
+
+    had_key = False
+    orig_value = None
+
+    # Provide the new value.
+    if value is not None:
+        had_key = key in data
+        if had_key:
+            orig_value = data[key]
+        data[key] = value
+
+    # If no value is provided, ensure that this key isn't already present
+    # to prevent ambiguity.
+    else:
+        assert key not in data
+
+    yield
+
+    # Restore the dictionary to its initial state.
+    if value is not None:
+        del data[key]
+        if had_key:
+            data[key] = orig_value
 
 
 def merge(
