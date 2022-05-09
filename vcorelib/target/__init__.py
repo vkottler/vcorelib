@@ -34,6 +34,7 @@ class TargetMatch(NamedTuple):
         return subs[data]
 
 
+LITERAL_MATCH = TargetMatch(True)
 NO_MATCH = TargetMatch(False)
 
 
