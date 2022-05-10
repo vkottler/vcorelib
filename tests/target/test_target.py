@@ -27,3 +27,10 @@ def test_target_basic():
     assert int(match_data.get("b")) == 2
     assert int(match_data.get("c")) == 3
     assert target.evaluate("a:1,b:2,c:3,d:4").matched is False
+
+
+def test_target_compile():
+    """Verify we can compile a target from input data."""
+
+    target = Target("a:{a},b:{b},c:{c}")
+    assert target.evaluator.compile({"a": 1, "b": 2, "c": 3}) == "a:1,b:2,c:3"

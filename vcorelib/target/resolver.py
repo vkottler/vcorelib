@@ -3,10 +3,29 @@ Implements management of target objects.
 """
 
 # built-in
-from typing import Any, Dict, List, Optional, Tuple
+from typing import (
+    Any,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    NamedTuple,
+    Optional,
+    Tuple,
+)
 
 # internal
 from vcorelib.target import LITERAL_MATCH, NO_MATCH, Target, TargetMatch
+
+
+class TargetResolution(NamedTuple):
+    """A return type for the target resolver."""
+
+    result: TargetMatch
+    data: Optional[Any] = None
+
+
+NOT_RESOLVED = TargetResolution(NO_MATCH, None)
 
 
 class TargetResolver:
@@ -33,13 +52,13 @@ class TargetResolver:
             return
         self.dynamic[target] = value
 
-    def evaluate(self, data: str) -> Tuple[TargetMatch, Optional[Any]]:
+    def evaluate(self, data: str) -> TargetResolution:
         """Find the target that matches data, if one can be found."""
 
         # Optimize matching candidate data against many targets by first
         # testing the literal set.
         if data in self.literals:
-            return LITERAL_MATCH, self.literals[data]
+            return TargetResolution(LITERAL_MATCH, self.literals[data])
 
         matches: List[Tuple[Target, TargetMatch, Any]] = []
         for candidate, value in self.dynamic.items():
@@ -54,6 +73,24 @@ class TargetResolver:
                 f"Matched '{data}' to {len(matches)} targets: "
                 f"{', '.join(x[0].data for x in matches)}!"
             )
-            return matches[0][1], matches[0][2]
+            return TargetResolution(matches[0][1], matches[0][2])
 
-        return NO_MATCH, None
+        return NOT_RESOLVED
+
+    def evaluate_all(
+        self, data: Iterable[str], ensure_match: bool = True
+    ) -> Iterator[TargetResolution]:
+        """
+        Evaluate all targets and optionally enforce that they all matched.
+        """
+
+        for item in data:
+            evaluation = self.evaluate(item)
+
+            # Optionally enforce that all targets are resolved.
+            if ensure_match:
+                assert (
+                    evaluation.result.matched
+                ), f"Couldn't match '{item}' to any target!"
+
+            yield evaluation

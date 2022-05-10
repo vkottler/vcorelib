@@ -4,7 +4,9 @@ A module defining an interface for dynamic task targets.
 
 # built-in
 import re
-from typing import Dict, List, NamedTuple, Optional
+from typing import Dict, List, NamedTuple, Optional, Tuple
+
+Substitutions = Dict[str, str]
 
 
 class DynamicTargetEvaluator(NamedTuple):
@@ -14,8 +16,24 @@ class DynamicTargetEvaluator(NamedTuple):
     associated with the data that was matched inside each group.
     """
 
+    original: str
     pattern: re.Pattern
     keys: List[str]
+    markers: List[Tuple[int, int]]
+
+    def compile(self, values: Substitutions) -> str:
+        """
+        Build a string from this target with values replaced for keys that
+        appeared in the original string.
+        """
+
+        result = ""
+        orig_idx = 0
+        for key, marker in zip(self.keys, self.markers):
+            result += self.original[orig_idx : marker[0]]
+            result += str(values[key])
+            orig_idx = marker[1] + 1
+        return result
 
 
 class TargetMatch(NamedTuple):
@@ -26,7 +44,7 @@ class TargetMatch(NamedTuple):
     """
 
     matched: bool
-    substitutions: Optional[Dict[str, str]] = None
+    substitutions: Optional[Substitutions] = None
 
     def get(self, data: str) -> str:
         """Get data for keys that matched the target."""
@@ -79,17 +97,27 @@ class Target:
 
         pattern = "^"
         keys = []
+        markers: List[Tuple[int, int]] = []
+        live = data
+        abs_idx = 0
         for _ in range(open_len):
-            start = data.index(cls.dynamic_start) + 1
-            end = data.index(cls.dynamic_end)
-            pattern += data[: start - 1]
+            start = live.index(cls.dynamic_start)
+            end = live.index(cls.dynamic_end)
+
+            # Store the absolute index into the string that the control
+            # characters appeared.
+            markers.append((abs_idx + start, abs_idx + end))
+
+            pattern += live[:start]
             pattern += f"({cls.valid})"
-            keys.append(data[start:end])
-            data = data[end + 1 :]
-        pattern += data + "$"
+
+            keys.append(live[start + 1 : end])
+            live = live[end + 1 :]
+            abs_idx += end + 1
+        pattern += live + "$"
 
         assert len(keys) == open_len
-        return DynamicTargetEvaluator(re.compile(pattern), keys)
+        return DynamicTargetEvaluator(data, re.compile(pattern), keys, markers)
 
     def evaluate(self, data: str) -> TargetMatch:
         """Attempt to match this target with some string data."""
