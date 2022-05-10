@@ -4,26 +4,16 @@ A module for implementing tasks in a dependency tree.
 
 # built-in
 import asyncio
-from collections import UserDict
-from io import StringIO
 from logging import Logger, getLogger
-from typing import Any, Callable, Coroutine, Dict, Iterable, List, Set
+from typing import Any, Callable, Coroutine, Dict, Iterable, List
 
 # internal
+from vcorelib.dict import merge
 from vcorelib.math.time import Timer, nano_str
+from vcorelib.target import Substitutions
 
 Outbox = dict
-
-
-class Inbox(UserDict):
-    """A simple dictionary with a separate member for private data."""
-
-    def __init__(self, initialdata: Dict[str, Outbox] = None) -> None:
-        """Initialize this inbox."""
-        super().__init__(initialdata)
-        self.private: dict = {}
-
-
+Inbox = Dict[str, Outbox]
 TaskExecute = Callable[[Inbox, Outbox], Coroutine[Any, Any, bool]]
 
 
@@ -42,11 +32,10 @@ class Task:  # pylint: disable=too-many-instance-attributes
         """Initialize this task."""
 
         self.name = name
-        self.inbox: Inbox = Inbox()
+        self.inbox: Inbox = {}
         self.outbox: dict = {}
         self.dependencies: List[asyncio.Task] = []
-        self.resolved = False
-        self.literals_resolved: Set[str] = set()
+        self._resolved = False
 
         # Metrics.
         self.times_invoked: int = 0
@@ -66,6 +55,19 @@ class Task:  # pylint: disable=too-many-instance-attributes
             execute = self.create_execute(*args, **kwargs)
         self.execute = execute
 
+    def __str__(self) -> str:
+        """Convert this task into a string."""
+        return self.name
+
+    @property
+    def resolved(self) -> bool:
+        """Override this in a derived task to implement more complex logic."""
+        return self._resolved
+
+    def resolve(self) -> None:
+        """Mark this task resolved."""
+        self._resolved = True
+
     async def run(self, inbox: Inbox, outbox: Outbox, *args, **kwargs) -> bool:
         """Override this method to implement the task."""
 
@@ -78,23 +80,16 @@ class Task:  # pylint: disable=too-many-instance-attributes
         )
         return True
 
-    def __str__(self) -> str:
-        """Convert this task to a string."""
-
-        with StringIO() as stream:
-            stream.write(self.name)
-            if self.dynamic:
-                stream.write(" (")
-                stream.write(self.inbox.private["literal"])
-                stream.write(")")
-            return stream.getvalue()
-
     def create_execute(self, *args, **kwargs) -> TaskExecute:
         """Create a default execute function for this task."""
 
-        async def wrapper(inbox: Inbox, outbox: Outbox) -> bool:
+        async def wrapper(
+            inbox: Inbox, outbox: Outbox, **substitutions
+        ) -> bool:
             """A default implementation for a basic task. Override this."""
-            return await self.run(inbox, outbox, *args, **kwargs)
+            return await self.run(
+                inbox, outbox, *args, **merge(kwargs, substitutions)
+            )
 
         return wrapper
 
@@ -111,39 +106,37 @@ class Task:  # pylint: disable=too-many-instance-attributes
         for task in tasks:
             self.depend_on(task, **kwargs)
 
-    @property
-    def dynamic(self) -> bool:
-        """Determine if this is a dynamic task or not."""
-        return self.inbox.private.get("substitutions") is not None
+    async def resolve_dependencies(self, **_) -> None:
+        """
+        A default dependency resolver for tasks. Note that the default
+        dependency resolver cannot propagate current-task substitutions to
+        its dependencies as they've already been explicitly registered.
+        """
+        await asyncio.gather(*self.dependencies)
 
     async def dispatch(
         self,
         caller: "Task" = None,
         init_only: bool = False,
+        substitutions: Substitutions = None,
     ) -> None:
         """Dispatch this task and return whether or not it succeeded."""
 
         self.times_invoked += 1
-
-        # Pass information about target resolution, if we're a dynamic target,
-        # to any dependencies.
-        if self.dynamic:
-            self.outbox["substitutions"] = self.inbox.private["substitutions"]
-            literal = self.inbox.private["literal"]
-            self.outbox["literal"] = literal
-            self.log = getLogger(literal)
-
-            if literal in self.literals_resolved:
-                return
-        elif self.resolved:
+        if self.resolved:
             return
 
         if caller is not None:
             self.log.debug("triggered by '%s'", caller)
 
+        if substitutions is not None:
+            self.log.debug("substitutions: '%s'", substitutions)
+        else:
+            substitutions = {}
+
         # Wait for dependencies to finish processing.
         with self.timer.measure_ns() as token:
-            await asyncio.gather(*self.dependencies)
+            await self.resolve_dependencies(**substitutions)
         self.dependency_time = self.timer.result(token)
         self.log.debug("dependencies: %s", nano_str(self.dependency_time))
 
@@ -154,13 +147,9 @@ class Task:  # pylint: disable=too-many-instance-attributes
         with self.timer.measure_ns() as token:
             # Execute this task and don't propagate to tasks if this task
             # failed.
-            assert await self.execute(self.inbox, self.outbox)
-
+            assert await self.execute(self.inbox, self.outbox, **substitutions)
         self.execute_time = self.timer.result(token)
         self.log.debug("execute: %s", nano_str(self.execute_time))
 
         # Track that this task was resolved.
-        literal = self.inbox.private.get("literal")
-        if literal is not None:
-            self.literals_resolved.add(literal)
-        self.resolved = True
+        self.resolve()

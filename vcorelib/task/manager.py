@@ -6,11 +6,10 @@ import asyncio
 from collections import defaultdict
 
 # built-in
-from contextlib import ExitStack
-from typing import Dict, Iterable, List, Set
+from typing import Dict, Iterable, List, Set, Tuple, cast
 
 # internal
-from vcorelib.dict import limited
+from vcorelib.target import TargetMatch
 from vcorelib.target.resolver import TargetResolver
 from vcorelib.task import Task
 
@@ -73,37 +72,18 @@ class TaskManager:
             """Wait for all of the configured tasks to complete."""
             await self.finalize(**kwargs)
 
-            with ExitStack() as stack:
-                # Gather all tasks by finding matches via the target resolver.
-                task_objs: List[Task] = []
-                for task in tasks:
-                    match_obj, data = self.resolver.evaluate(task)
+            # Gather all tasks by finding matches via the target resolver.
+            task_objs: List[Tuple[Task, TargetMatch]] = [
+                (cast(Task, x.data), x.result)
+                for x in self.resolver.evaluate_all(tasks)
+            ]
 
-                    # Don't proceed if we couldn't match this task to a target.
-                    assert (
-                        match_obj.matched
-                    ), f"Couldn't match '{task}' to any target!"
-                    assert isinstance(data, Task)
-
-                    # Inject private data into the task's inbox so that it can
-                    # know about any target-resolver substitutions as well as
-                    # the literal string that triggered the task.
-                    stack.enter_context(
-                        limited(
-                            data.inbox.private,
-                            "substitutions",
-                            match_obj.substitutions,
-                        )
-                    )
-                    stack.enter_context(
-                        limited(data.inbox.private, "literal", task)
-                    )
-
-                    task_objs.append(data)
-
-                # Run all tasks together in the event loop.
-                await asyncio.gather(
-                    *[x.dispatch(**kwargs) for x in task_objs]
-                )
+            # Run all tasks together in the event loop.
+            await asyncio.gather(
+                *[
+                    x[0].dispatch(substitutions=x[1].substitutions, **kwargs)
+                    for x in task_objs
+                ]
+            )
 
         self.eloop.run_until_complete(executor())
