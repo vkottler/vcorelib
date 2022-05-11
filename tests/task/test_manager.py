@@ -35,7 +35,7 @@ def test_task_manager_dry_run():
     manager.register(Task("c"))
     manager.register(Task("test"), ["a", "b", "c"])
     manager.execute(["test"], init_only=True)
-    assert manager.tasks["test"].resolved is False
+    assert manager.tasks["test"].resolved() is False
 
 
 def test_task_manager_dynamic():
