@@ -2,7 +2,7 @@
 A task definition for melding inbox data into outbox data.
 """
 
-# third-party
+# internal
 from vcorelib.dict import merge
 from vcorelib.task import Inbox, Outbox, Task
 
@@ -15,8 +15,8 @@ class DictMerger(Task):
 
         # Forward the foreign argument to the ouput box (provided by the
         # caller).
-        merge(self.outbox, args[0], logger=self.log)
+        merge(outbox, args[0], logger=self.log)
 
         # Forward all inputs to the output box.
-        merge(self.outbox, inbox, logger=self.log)
+        merge(outbox, inbox, logger=self.log)
         return True
