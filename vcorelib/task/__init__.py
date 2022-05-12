@@ -175,6 +175,11 @@ class Task:  # pylint: disable=too-many-instance-attributes
         if self.resolved(merged):
             return
 
+        # Reset the outbox for this execution. Don't re-assign it or it will
+        # lose its association with anything depending on it.
+        for key in list(self.outbox.keys()):
+            self.outbox.pop(key)
+
         if substitutions is not None:
             self.log.debug("substitutions: '%s'", merged)
 

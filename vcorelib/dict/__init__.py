@@ -17,12 +17,7 @@ def consume(data: dict, key: _Any, default: _Any = None) -> _Any:
     Attempt to obtain dictionary data via key, removing the data if it was
     present.
     """
-    result = data.get(key, default)
-    try:
-        del data[key]
-    except KeyError:
-        pass
-    return result
+    return data.pop(key, default)
 
 
 @_contextmanager

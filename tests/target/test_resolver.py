@@ -15,6 +15,6 @@ def test_resovler_basic():
     resolver.register("b:{b}")
     resolver.register("c:{c}")
 
-    assert resolver.evaluate("test")[0].matched
-    assert resolver.evaluate("a:1")[0].matched
-    assert not resolver.evaluate("d:4")[0].matched
+    assert resolver.evaluate("test").result.matched
+    assert resolver.evaluate("a:1").result.matched
+    assert not resolver.evaluate("d:4").result.matched

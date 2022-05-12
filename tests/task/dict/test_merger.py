@@ -10,7 +10,7 @@ from vcorelib.task import Task
 from vcorelib.task.dict.melder import DictMerger
 
 
-def test_dict_merger_basic():
+def test_task_dict_merger_basic():
     """Verify that dict-merger tasks work correctly."""
 
     async def tasks(task: Task) -> None:
