@@ -3,29 +3,29 @@ Implements management of target objects.
 """
 
 # built-in
-from typing import (
-    Any,
-    Dict,
-    Iterable,
-    Iterator,
-    List,
-    NamedTuple,
-    Optional,
-    Tuple,
-)
+from typing import Any as _Any
+from typing import Dict as _Dict
+from typing import Iterable as _Iterable
+from typing import Iterator as _Iterator
+from typing import List as _List
+from typing import NamedTuple as _NamedTuple
+from typing import Optional as _Optional
+from typing import Tuple as _Tuple
 
 # internal
-from vcorelib.target import LITERAL_MATCH, NO_MATCH, Target, TargetMatch
+from vcorelib.target import LITERAL_MATCH as _LITERAL_MATCH
+from vcorelib.target import NO_MATCH as _NO_MATCH
+from vcorelib.target import Target, TargetMatch
 
 
-class TargetResolution(NamedTuple):
+class TargetResolution(_NamedTuple):
     """A return type for the target resolver."""
 
     result: TargetMatch
-    data: Optional[Any] = None
+    data: _Optional[_Any] = None
 
 
-NOT_RESOLVED = TargetResolution(NO_MATCH, None)
+NOT_RESOLVED = TargetResolution(_NO_MATCH, None)
 
 
 class TargetResolver:
@@ -37,10 +37,10 @@ class TargetResolver:
     def __init__(self) -> None:
         """Initialize this target resolver."""
 
-        self.literals: Dict[str, Any] = {}
-        self.dynamic: Dict[Target, Any] = {}
+        self.literals: _Dict[str, _Any] = {}
+        self.dynamic: _Dict[Target, _Any] = {}
 
-    def register(self, data: str, value: Any = None) -> None:
+    def register(self, data: str, value: _Any = None) -> None:
         """
         Register a target to this resolver. If it is ever resolved in
         evaluation, value will be returned.
@@ -58,9 +58,9 @@ class TargetResolver:
         # Optimize matching candidate data against many targets by first
         # testing the literal set.
         if data in self.literals:
-            return TargetResolution(LITERAL_MATCH, self.literals[data])
+            return TargetResolution(_LITERAL_MATCH, self.literals[data])
 
-        matches: List[Tuple[Target, TargetMatch, Any]] = []
+        matches: _List[_Tuple[Target, TargetMatch, _Any]] = []
         for candidate, value in self.dynamic.items():
             test = candidate.evaluate(data)
             if test.matched:
@@ -78,8 +78,8 @@ class TargetResolver:
         return NOT_RESOLVED
 
     def evaluate_all(
-        self, data: Iterable[str], ensure_match: bool = True
-    ) -> Iterator[TargetResolution]:
+        self, data: _Iterable[str], ensure_match: bool = True
+    ) -> _Iterator[TargetResolution]:
         """
         Evaluate all targets and optionally enforce that they all matched.
         """
