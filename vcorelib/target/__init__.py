@@ -4,12 +4,16 @@ A module defining an interface for dynamic task targets.
 
 # built-in
 import re
-from typing import Dict, List, NamedTuple, Optional, Tuple
+from typing import Dict as _Dict
+from typing import List as _List
+from typing import NamedTuple as _NamedTuple
+from typing import Optional as _Optional
+from typing import Tuple as _Tuple
 
-Substitutions = Dict[str, str]
+Substitutions = _Dict[str, str]
 
 
-class DynamicTargetEvaluator(NamedTuple):
+class DynamicTargetEvaluator(_NamedTuple):
     """
     A regular expression configured to match as many groups as in the provided
     keys. When the pattern matches some data, the names of the keys can become
@@ -18,8 +22,8 @@ class DynamicTargetEvaluator(NamedTuple):
 
     original: str
     pattern: re.Pattern
-    keys: List[str]
-    markers: List[Tuple[int, int]]
+    keys: _List[str]
+    markers: _List[_Tuple[int, int]]
 
     def compile(self, values: Substitutions) -> str:
         """
@@ -36,7 +40,7 @@ class DynamicTargetEvaluator(NamedTuple):
         return result
 
 
-class TargetMatch(NamedTuple):
+class TargetMatch(_NamedTuple):
     """
     An encapsulation of results when attempting to patch a target name to a
     pattern. If a target was matched and had keyword substitutions, the actual
@@ -44,7 +48,7 @@ class TargetMatch(NamedTuple):
     """
 
     matched: bool
-    substitutions: Optional[Substitutions] = None
+    substitutions: _Optional[Substitutions] = None
 
     def get(self, data: str) -> str:
         """Get data for keys that matched the target."""
@@ -81,7 +85,7 @@ class Target:
         )
 
     @classmethod
-    def parse(cls, data: str) -> Optional[DynamicTargetEvaluator]:
+    def parse(cls, data: str) -> _Optional[DynamicTargetEvaluator]:
         """
         Obtain a compiled target evaluator if data is a dynamic target, else
         None.
@@ -97,7 +101,7 @@ class Target:
 
         pattern = "^"
         keys = []
-        markers: List[Tuple[int, int]] = []
+        markers: _List[_Tuple[int, int]] = []
         live = data
         abs_idx = 0
         for _ in range(open_len):
