@@ -3,11 +3,13 @@ A task definition for wrapping subprocess's 'run' method.
 """
 
 # built-in
-import asyncio
-from sys import executable
+from asyncio import create_subprocess_exec, create_subprocess_shell
+from asyncio.subprocess import PIPE as _PIPE
+from sys import executable as _executable
 
 # internal
-from vcorelib.task import Inbox, Outbox, Task
+from vcorelib.task import Inbox as _Inbox
+from vcorelib.task import Outbox, Task
 
 
 class SubprocessExec(Task):
@@ -15,11 +17,11 @@ class SubprocessExec(Task):
 
     async def run(
         self,
-        inbox: Inbox,
+        inbox: _Inbox,
         outbox: Outbox,
         *caller_args,
         args: str = "--version",
-        program: str = executable,
+        program: str = _executable,
         separator: str = "::",
         **kwargs,
     ) -> bool:
@@ -27,11 +29,11 @@ class SubprocessExec(Task):
         Create a subprocess, wait for it to exit and add results to the outbox.
         """
 
-        proc = await asyncio.create_subprocess_exec(
+        proc = await create_subprocess_exec(
             program,
             *(args.split(separator) + list(*caller_args)),
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
+            stdout=_PIPE,
+            stderr=_PIPE,
         )
         stdout, stderr = await proc.communicate()
         outbox["stdout"] = stdout
@@ -46,11 +48,11 @@ class SubprocessShell(Task):
 
     async def run(
         self,
-        inbox: Inbox,
+        inbox: _Inbox,
         outbox: Outbox,
         *caller_args,
         args: str = "",
-        cmd: str = f"{executable} --version",
+        cmd: str = f"{_executable} --version",
         joiner: str = " ",
         separator: str = "::",
         **kwargs,
@@ -59,10 +61,10 @@ class SubprocessShell(Task):
         Run a shell command, wait for it to exit and add results to the outbox.
         """
 
-        proc = await asyncio.create_subprocess_shell(
+        proc = await create_subprocess_shell(
             cmd + joiner.join(args.split(separator) + list(*caller_args)),
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
+            stdout=_PIPE,
+            stderr=_PIPE,
         )
         stdout, stderr = await proc.communicate()
         outbox["stdout"] = stdout
