@@ -5,7 +5,13 @@ A module for implementing tasks in a dependency tree.
 # built-in
 import asyncio
 from logging import Logger, getLogger
-from typing import Any, Callable, Coroutine, Dict, Iterable, List, Set
+from typing import Any as _Any
+from typing import Callable as _Callable
+from typing import Coroutine as _Coroutine
+from typing import Dict as _Dict
+from typing import Iterable as _Iterable
+from typing import List as _List
+from typing import Set as _Set
 
 # internal
 from vcorelib.dict import merge_dicts
@@ -13,8 +19,8 @@ from vcorelib.math.time import Timer, nano_str
 from vcorelib.target import Substitutions, Target
 
 Outbox = dict
-Inbox = Dict[str, Outbox]
-TaskExecute = Callable[[Inbox, Outbox], Coroutine[Any, Any, bool]]
+Inbox = _Dict[str, Outbox]
+TaskExecute = _Callable[[Inbox, Outbox], _Coroutine[_Any, _Any, bool]]
 
 
 class Task:  # pylint: disable=too-many-instance-attributes
@@ -35,9 +41,9 @@ class Task:  # pylint: disable=too-many-instance-attributes
         self.name = name
         self.inbox: Inbox = {}
         self.outbox: dict = {}
-        self.dependencies: List[Callable[..., asyncio.Task]] = []
+        self.dependencies: _List[_Callable[..., asyncio.Task]] = []
         self._resolved = False
-        self.literals: Set[str] = set()
+        self.literals: _Set[str] = set()
 
         # Metrics.
         self.times_invoked: int = 0
@@ -141,7 +147,7 @@ class Task:  # pylint: disable=too-many-instance-attributes
         self.inbox[task.name] = task.outbox
         self.dependencies.append(task_factory)
 
-    def depend_on_all(self, tasks: Iterable["Task"], **kwargs) -> None:
+    def depend_on_all(self, tasks: _Iterable["Task"], **kwargs) -> None:
         """Register multiple dependencies."""
         for task in tasks:
             self.depend_on(task, **kwargs)

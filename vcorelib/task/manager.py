@@ -2,11 +2,16 @@
 A simple task management interface.
 """
 
-import asyncio
-from collections import defaultdict
-
 # built-in
-from typing import Dict, Iterable, List, Set, Tuple, cast
+from asyncio import gather
+from asyncio import get_event_loop as _get_event_loop
+from collections import defaultdict
+from typing import Dict as _Dict
+from typing import Iterable as _Iterable
+from typing import List as _List
+from typing import Set as _Set
+from typing import Tuple as _Tuple
+from typing import cast
 
 # internal
 from vcorelib.target import TargetMatch
@@ -23,18 +28,18 @@ class TaskManager:
     def __init__(self, resolver: TargetResolver = None) -> None:
         """Initialize this task manager."""
 
-        self.tasks: Dict[str, Task] = {}
-        self.dependencies: Dict[str, Set[str]] = defaultdict(set)
+        self.tasks: _Dict[str, Task] = {}
+        self.dependencies: _Dict[str, _Set[str]] = defaultdict(set)
         self.finalized: bool = False
         if resolver is None:
             resolver = TargetResolver()
         self.resolver = resolver
-        self.eloop = asyncio.get_event_loop()
+        self.eloop = _get_event_loop()
 
     def register(
         self,
         task: Task,
-        dependencies: Iterable[str] = None,
+        dependencies: _Iterable[str] = None,
         target: str = None,
     ) -> None:
         """Register a new task and apply any requested dependencies."""
@@ -51,7 +56,7 @@ class TaskManager:
         self.dependencies[task.name].update(dependencies)
         self.finalized = False
 
-    def register_to(self, target: str, dependencies: Iterable[str]) -> None:
+    def register_to(self, target: str, dependencies: _Iterable[str]) -> None:
         """Register dependencies to a task by name."""
         self.register(self.tasks[target], dependencies)
 
@@ -65,7 +70,7 @@ class TaskManager:
                 )
             self.finalized = True
 
-    def execute(self, tasks: Iterable[str], **kwargs) -> None:
+    def execute(self, tasks: _Iterable[str], **kwargs) -> None:
         """Execute some set of provided tasks."""
 
         async def executor() -> None:
@@ -73,13 +78,13 @@ class TaskManager:
             await self.finalize(**kwargs)
 
             # Gather all tasks by finding matches via the target resolver.
-            task_objs: List[Tuple[Task, TargetMatch]] = [
+            task_objs: _List[_Tuple[Task, TargetMatch]] = [
                 (cast(Task, x.data), x.result)
                 for x in self.resolver.evaluate_all(tasks)
             ]
 
             # Run all tasks together in the event loop.
-            await asyncio.gather(
+            await gather(
                 *[
                     x[0].dispatch(substitutions=x[1].substitutions, **kwargs)
                     for x in task_objs
