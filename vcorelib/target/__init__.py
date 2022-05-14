@@ -77,6 +77,18 @@ class Target:
         self.evaluator = self.parse(self.data)
         self.literal = self.evaluator is None
 
+    def __str__(self) -> str:
+        """Get this target as a string."""
+        return self.data
+
+    def __eq__(self, other: object) -> bool:
+        """Check if two targets are equal."""
+        return str(self) == str(other)
+
+    def __hash__(self) -> int:
+        """Get the hash for this target."""
+        return hash(str(self))
+
     @classmethod
     def is_literal(cls, data: str) -> bool:
         """Determine if a target is guaranteed to be literal or not."""

@@ -11,6 +11,7 @@ from typing import List as _List
 from typing import NamedTuple as _NamedTuple
 from typing import Optional as _Optional
 from typing import Tuple as _Tuple
+from typing import Union as _Union
 
 # internal
 from vcorelib.target import LITERAL_MATCH as _LITERAL_MATCH
@@ -40,17 +41,26 @@ class TargetResolver:
         self.literals: _Dict[str, _Any] = {}
         self.dynamic: _Dict[Target, _Any] = {}
 
-    def register(self, data: str, value: _Any = None) -> None:
+    def register(self, data: str, value: _Any = None) -> bool:
         """
         Register a target to this resolver. If it is ever resolved in
-        evaluation, value will be returned.
+        evaluation, value will be returned. Return whether or not any target
+        was registered.
         """
 
+        added = False
         target = Target(data)
+
+        # Don't allow double registration but let the caller handle this.
         if target.literal:
-            self.literals[data] = value
-            return
-        self.dynamic[target] = value
+            if data not in self.literals:
+                self.literals[data] = value
+                added = True
+        elif target not in self.dynamic:
+            self.dynamic[target] = value
+            added = True
+
+        return added
 
     def evaluate(self, data: str) -> TargetResolution:
         """Find the target that matches data, if one can be found."""
@@ -78,19 +88,11 @@ class TargetResolver:
         return NOT_RESOLVED
 
     def evaluate_all(
-        self, data: _Iterable[str], ensure_match: bool = True
-    ) -> _Iterator[TargetResolution]:
+        self, data: _Iterable[str]
+    ) -> _Iterator[_Union[TargetResolution, str]]:
         """
         Evaluate all targets and optionally enforce that they all matched.
         """
-
         for item in data:
             evaluation = self.evaluate(item)
-
-            # Optionally enforce that all targets are resolved.
-            if ensure_match:
-                assert (
-                    evaluation.result.matched
-                ), f"Couldn't match '{item}' to any target!"
-
-            yield evaluation
+            yield evaluation if evaluation.result.matched else item

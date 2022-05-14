@@ -10,7 +10,6 @@ from typing import Callable as _Callable
 from typing import Coroutine as _Coroutine
 from typing import Dict as _Dict
 from typing import Iterable as _Iterable
-from typing import List as _List
 from typing import Set as _Set
 
 # internal
@@ -21,6 +20,7 @@ from vcorelib.target import Substitutions, Target
 Outbox = dict
 Inbox = _Dict[str, Outbox]
 TaskExecute = _Callable[[Inbox, Outbox], _Coroutine[_Any, _Any, bool]]
+TaskGenerator = _Callable[..., asyncio.Task]
 
 
 class Task:  # pylint: disable=too-many-instance-attributes
@@ -41,7 +41,7 @@ class Task:  # pylint: disable=too-many-instance-attributes
         self.name = name
         self.inbox: Inbox = {}
         self.outbox: dict = {}
-        self.dependencies: _List[_Callable[..., asyncio.Task]] = []
+        self.dependencies: _Dict[Target, TaskGenerator] = {}
         self._resolved = False
         self.literals: _Set[str] = set()
 
@@ -130,27 +130,44 @@ class Task:  # pylint: disable=too-many-instance-attributes
 
         return wrapper
 
-    def depend_on(self, task: "Task", **kwargs) -> None:
-        """Register other tasks' output data to your input box."""
+    def depend_on(self, task: "Task", **kwargs) -> bool:
+        """
+        Register other tasks' output data to your input box. Return true
+        if a new dependency was added.
+        """
 
-        def task_factory(**substitutions) -> asyncio.Task:
-            """Create a task while injecting additional keyword arguments."""
-            return asyncio.create_task(
-                task.dispatch(
-                    self,
-                    **merge_dicts(
-                        [{}, kwargs, substitutions], logger=self.log
-                    ),
+        added = False
+        if task.target not in self.dependencies:
+
+            def task_factory(**substitutions) -> asyncio.Task:
+                """
+                Create a task while injecting additional keyword arguments.
+                """
+                return asyncio.create_task(
+                    task.dispatch(
+                        self,
+                        **merge_dicts(
+                            [{}, kwargs, substitutions], logger=self.log
+                        ),
+                    )
                 )
-            )
 
-        self.inbox[task.name] = task.outbox
-        self.dependencies.append(task_factory)
+            self.inbox[task.name] = task.outbox
+            self.dependencies[task.target] = task_factory
+            added = True
 
-    def depend_on_all(self, tasks: _Iterable["Task"], **kwargs) -> None:
-        """Register multiple dependencies."""
+        return added
+
+    def depend_on_all(self, tasks: _Iterable["Task"], **kwargs) -> int:
+        """
+        Register multiple dependencies. Return the number of dependencies
+        added.
+        """
+
+        added_count = 0
         for task in tasks:
-            self.depend_on(task, **kwargs)
+            added_count += int(self.depend_on(task, **kwargs))
+        return added_count
 
     async def resolve_dependencies(self, **substitutions) -> None:
         """
@@ -158,7 +175,9 @@ class Task:  # pylint: disable=too-many-instance-attributes
         dependency resolver cannot propagate current-task substitutions to
         its dependencies as they've already been explicitly registered.
         """
-        await asyncio.gather(*[x(**substitutions) for x in self.dependencies])
+        await asyncio.gather(
+            *[x(**substitutions) for x in self.dependencies.values()]
+        )
 
     async def dispatch(
         self,

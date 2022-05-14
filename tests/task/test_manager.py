@@ -50,4 +50,4 @@ def test_task_manager_dynamic():
     manager.execute(["a:1"])
     manager.execute(["a:2"])
     manager.execute(["a:3"])
-    manager.execute(["a:4"])
+    assert "d:5" in manager.execute(["a:4", "d:5"])

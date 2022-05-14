@@ -10,6 +10,7 @@ def test_target_basic():
     """Test basic interactions with target objects."""
 
     target = Target("test")
+    assert target == Target("test")
     assert target.literal
     match_data = target.evaluate("test")
     assert match_data.matched is True
