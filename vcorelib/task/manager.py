@@ -17,6 +17,7 @@ from typing import Tuple as _Tuple
 from typing import cast
 
 # internal
+from vcorelib.script import ScriptableMixin
 from vcorelib.target import TargetMatch
 from vcorelib.target.resolver import TargetResolver
 from vcorelib.task import Task
@@ -24,7 +25,7 @@ from vcorelib.task import Task
 BasicCoroutine = _Callable[[], _Coroutine[_Any, _Any, None]]
 
 
-class TaskManager:
+class TaskManager(ScriptableMixin):
     """
     A class for managing concurrent execution of tasks and also interfacing
     them via names.
@@ -33,6 +34,7 @@ class TaskManager:
     def __init__(self, resolver: TargetResolver = None) -> None:
         """Initialize this task manager."""
 
+        super().__init__()
         self.tasks: _Dict[str, Task] = {}
         self.dependencies: _Dict[str, _Set[str]] = defaultdict(set)
         self.finalized: bool = False
