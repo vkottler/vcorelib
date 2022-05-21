@@ -43,6 +43,33 @@ class SubprocessExec(Task):
         return True
 
 
+class SubprocessExecStreamed(Task):
+    """A task wrapping a subprocess."""
+
+    async def run(
+        self,
+        inbox: _Inbox,
+        outbox: Outbox,
+        *caller_args,
+        args: str = "--version",
+        program: str = _executable,
+        separator: str = "::",
+        **kwargs,
+    ) -> bool:
+        """
+        Create a subprocess, wait for it to exit and add results to the outbox.
+        """
+
+        proc = await create_subprocess_exec(
+            program,
+            *(args.split(separator) + list(*caller_args)),
+        )
+        await proc.communicate()
+        outbox["code"] = proc.returncode
+
+        return True
+
+
 class SubprocessShell(Task):
     """A task wrapping a shell command."""
 
@@ -69,6 +96,33 @@ class SubprocessShell(Task):
         stdout, stderr = await proc.communicate()
         outbox["stdout"] = stdout
         outbox["stderr"] = stderr
+        outbox["code"] = proc.returncode
+
+        return True
+
+
+class SubprocessShellStreamed(Task):
+    """A task wrapping a shell command."""
+
+    async def run(
+        self,
+        inbox: _Inbox,
+        outbox: Outbox,
+        *caller_args,
+        args: str = "",
+        cmd: str = f"{_executable} --version",
+        joiner: str = " ",
+        separator: str = "::",
+        **kwargs,
+    ) -> bool:
+        """
+        Run a shell command, wait for it to exit and add results to the outbox.
+        """
+
+        proc = await create_subprocess_shell(
+            cmd + joiner.join(args.split(separator) + list(*caller_args)),
+        )
+        await proc.communicate()
         outbox["code"] = proc.returncode
 
         return True

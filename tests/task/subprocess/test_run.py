@@ -6,7 +6,12 @@ Test the 'task.subprocess.run' module.
 import asyncio
 
 # module under test
-from vcorelib.task.subprocess.run import SubprocessExec, SubprocessShell
+from vcorelib.task.subprocess.run import (
+    SubprocessExec,
+    SubprocessExecStreamed,
+    SubprocessShell,
+    SubprocessShellStreamed,
+)
 
 
 def test_task_subprocess_run_exec_basic():
@@ -25,5 +30,17 @@ def test_task_subprocess_run_shell_basic():
     """Test that we can run a basic shell command."""
 
     task = SubprocessShell("test")
+    asyncio.run(task.dispatch())
+    assert task.outbox["code"] == 0
+
+
+def test_task_subprocess_run_streamed_basic():
+    """Test streamed versions of subprocess and shell command tasks."""
+
+    task = SubprocessExecStreamed("test")
+    asyncio.run(task.dispatch())
+    assert task.outbox["code"] == 0
+
+    task = SubprocessShellStreamed("test")
     asyncio.run(task.dispatch())
     assert task.outbox["code"] == 0
