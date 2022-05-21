@@ -46,6 +46,7 @@ class Task:  # pylint: disable=too-many-instance-attributes
         self.dependencies: _Dict[Target, TaskGenerator] = {}
         self._resolved = False
         self.literals: _Set[str] = set()
+        self._continue = True
 
         # Metrics.
         self.times_invoked: int = 0
@@ -136,8 +137,9 @@ class Task:  # pylint: disable=too-many-instance-attributes
 
             # Run through all of the stages.
             result = True
+            self._continue = True
             for stage in self.stages:
-                if result:
+                if result and self._continue:
                     result = await getattr(self, stage)(
                         inbox, outbox, *args, **merged
                     )
