@@ -20,6 +20,17 @@ def consume(data: dict, key: _Any, default: _Any = None) -> _Any:
     return data.pop(key, default)
 
 
+def set_if_not(data: dict, key: _Any, value: _Any = None) -> _Any:
+    """
+    Set a value in a dictionary if one wasn't already set and return the value
+    that ends up at that key.
+    """
+
+    if key not in data:
+        data[key] = value
+    return data[key]
+
+
 @_contextmanager
 def limited(data: dict, key: _Any, value: _Any = None) -> _Iterator[None]:
     """Ensure that dictionary data is only temporarily added."""

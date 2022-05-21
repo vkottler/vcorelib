@@ -7,14 +7,17 @@ from copy import deepcopy
 from typing import List
 
 # module under test
-from vcorelib.dict import merge, merge_dicts
+from vcorelib.dict import merge, merge_dicts, set_if_not
 
 
 def test_merge_bad_overwrite():
     """Test that if we don't want to overwrite, we don't."""
 
-    dict_a = {"a": "a"}
-    dict_b = {"a": "b"}
+    dict_a = {}
+    assert set_if_not(dict_a, "a", "a") == "a"
+    dict_b = {}
+    assert set_if_not(dict_b, "a", "b") == "b"
+
     assert merge(dict_a, dict_b) == dict_a
     assert merge(dict_a, dict_b, expect_overwrite=True) == dict_b
 
