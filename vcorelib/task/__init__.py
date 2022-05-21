@@ -26,6 +26,8 @@ TaskGenerator = _Callable[..., asyncio.Task]
 class Task:  # pylint: disable=too-many-instance-attributes
     """A basic task interface definition."""
 
+    stages = ["run_enter", "run", "run_exit"]
+
     def __init__(
         self,
         name: str,
@@ -96,6 +98,20 @@ class Task:  # pylint: disable=too-many-instance-attributes
         assert substitutions is not None
         self.literals.add(self.target.compile(substitutions))
 
+    async def run_enter(
+        self, _inbox: Inbox, _outbox: Outbox, *_args, **_kwargs
+    ) -> bool:
+        """A default enter method."""
+        assert self
+        return True
+
+    async def run_exit(
+        self, _inbox: Inbox, _outbox: Outbox, *_args, **_kwargs
+    ) -> bool:
+        """A default exit method."""
+        assert self
+        return True
+
     async def run(self, inbox: Inbox, outbox: Outbox, *args, **kwargs) -> bool:
         """Override this method to implement the task."""
 
@@ -116,12 +132,16 @@ class Task:  # pylint: disable=too-many-instance-attributes
         ) -> bool:
             """A default implementation for a basic task. Override this."""
 
-            return await self.run(
-                inbox,
-                outbox,
-                *args,
-                **merge_dicts([{}, kwargs, substitutions], logger=self.log),
-            )
+            merged = merge_dicts([{}, kwargs, substitutions], logger=self.log)
+
+            # Run through all of the stages.
+            result = True
+            for stage in self.stages:
+                if result:
+                    result = await getattr(self, stage)(
+                        inbox, outbox, *args, **merged
+                    )
+            return result
 
         return wrapper
 
