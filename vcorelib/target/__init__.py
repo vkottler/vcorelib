@@ -96,6 +96,18 @@ class Target:
             data.count(cls.dynamic_start) == data.count(cls.dynamic_end) == 0
         )
 
+    def compile(self, substitutions: Substitutions = None) -> str:
+        """
+        Attempt to get a target literal from this target and optional
+        substitutions.
+        """
+
+        result = self.data
+        if self.evaluator is not None:
+            assert substitutions is not None
+            result = self.evaluator.compile(substitutions)
+        return result
+
     @classmethod
     def parse(cls, data: str) -> _Optional[DynamicTargetEvaluator]:
         """

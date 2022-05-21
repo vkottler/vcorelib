@@ -72,11 +72,6 @@ class Task:  # pylint: disable=too-many-instance-attributes
         """Convert this task into a string."""
         return self.name
 
-    def compile_literal(self, substitutions: Substitutions) -> str:
-        """Attempt to compile a literal string from this task's target."""
-        assert self.target.evaluator is not None
-        return self.target.evaluator.compile(substitutions)
-
     def resolved(self, substitutions: Substitutions = None) -> bool:
         """Override this in a derived task to implement more complex logic."""
 
@@ -87,7 +82,7 @@ class Task:  # pylint: disable=too-many-instance-attributes
         # This task is only resolved if the compiled literal appears in the
         # completed set.
         assert substitutions is not None
-        return self.compile_literal(substitutions) in self.literals
+        return self.target.compile(substitutions) in self.literals
 
     def resolve(self, substitutions: Substitutions = None) -> None:
         """Mark this task resolved."""
@@ -99,7 +94,7 @@ class Task:  # pylint: disable=too-many-instance-attributes
 
         # A non-literal task must have valid substitutions.
         assert substitutions is not None
-        self.literals.add(self.compile_literal(substitutions))
+        self.literals.add(self.target.compile(substitutions))
 
     async def run(self, inbox: Inbox, outbox: Outbox, *args, **kwargs) -> bool:
         """Override this method to implement the task."""
