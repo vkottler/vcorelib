@@ -226,10 +226,18 @@ class Task:  # pylint: disable=too-many-instance-attributes
 
         self.times_invoked += 1
 
-        compiled = self.target.compile(substitutions)
-
         if caller is not None:
             self.log.debug("triggered by '%s'", caller)
+
+        if substitutions is None:
+            substitutions = {}
+
+        # Merge substitutions in with other command-line arguments.
+        merged = merge_dicts([{}, kwargs, substitutions], logger=self.log)
+        if merged is not None:
+            self.log.debug("substitutions: '%s'", merged)
+
+        compiled = self.target.compile(merged)
 
         # If this task is already running, wait for it to complete.
         if compiled in self._running:
@@ -237,12 +245,6 @@ class Task:  # pylint: disable=too-many-instance-attributes
             self.log.debug("Waiting for existing '%s' to resolve.", compiled)
             await self._sem.acquire()
             return
-
-        if substitutions is None:
-            substitutions = {}
-
-        # Merge substitutions in with other command-line arguments.
-        merged = merge_dicts([{}, kwargs, substitutions], logger=self.log)
 
         # Return early if this task has already been executed.
         if self.resolved(compiled, merged):
@@ -255,9 +257,6 @@ class Task:  # pylint: disable=too-many-instance-attributes
         # lose its association with anything depending on it.
         for key in list(self.outbox.keys()):
             self.outbox.pop(key)
-
-        if substitutions is not None:
-            self.log.debug("substitutions: '%s'", merged)
 
         # Wait for dependencies to finish processing.
         with self.timer.measure_ns() as token:

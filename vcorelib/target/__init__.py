@@ -104,7 +104,7 @@ class Target:
 
         result = self.data
         if self.evaluator is not None:
-            assert substitutions is not None
+            assert substitutions is not None, f"Can't compile '{self.data}'!"
             result = self.evaluator.compile(substitutions)
         return result
 

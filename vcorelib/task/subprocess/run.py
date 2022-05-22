@@ -31,7 +31,7 @@ class SubprocessLogMixin(Task):
         Create a process using subprocess exec and log what the arguments were.
         """
 
-        exec_args = args.split(separator) + list(*caller_args)
+        exec_args = [x for x in args.split(separator) + [*caller_args] if x]
         self.log.info("exec '%s': %s", program, " ".join(exec_args))
         proc = await create_subprocess_exec(
             program,
@@ -55,7 +55,9 @@ class SubprocessLogMixin(Task):
         Create a process using subprocess shell and log what the command is.
         """
 
-        command = cmd + joiner.join(args.split(separator) + list(*caller_args))
+        command = cmd + joiner.join(
+            x for x in args.split(separator) + [*caller_args] if x
+        )
         self.log.info("shell: '%s'", command)
         proc = await create_subprocess_shell(
             command, stdout=stdout, stderr=stderr
