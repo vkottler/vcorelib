@@ -21,9 +21,9 @@ class SubprocessLogMixin(Task):
     async def subprocess_exec(
         self,
         program: str,
-        args: str,
-        separator: str,
         *caller_args,
+        args: str = "",
+        separator: str = "::",
         stdout: int = None,
         stderr: int = None,
     ) -> _Process:
@@ -44,10 +44,10 @@ class SubprocessLogMixin(Task):
     async def subprocess_shell(
         self,
         cmd: str,
-        args: str,
-        joiner: str,
-        separator: str,
         *caller_args,
+        args: str = "",
+        joiner: str = " ",
+        separator: str = "::",
         stdout: int = None,
         stderr: int = None,
     ) -> _Process:
@@ -82,9 +82,9 @@ class SubprocessExec(SubprocessLogMixin):
 
         proc = await self.subprocess_exec(
             program,
-            args,
-            separator,
             *caller_args,
+            args=args,
+            separator=separator,
             stdout=_PIPE,
             stderr=_PIPE,
         )
@@ -114,7 +114,7 @@ class SubprocessExecStreamed(SubprocessLogMixin):
         """
 
         proc = await self.subprocess_exec(
-            program, args, separator, *caller_args
+            program, *caller_args, args=args, separator=separator
         )
         await proc.communicate()
         outbox["code"] = proc.returncode
@@ -142,10 +142,10 @@ class SubprocessShell(SubprocessLogMixin):
 
         proc = await self.subprocess_shell(
             cmd,
-            args,
-            joiner,
-            separator,
             *caller_args,
+            args=args,
+            joiner=joiner,
+            separator=separator,
             stdout=_PIPE,
             stderr=_PIPE,
         )
@@ -176,7 +176,7 @@ class SubprocessShellStreamed(SubprocessLogMixin):
         """
 
         proc = await self.subprocess_shell(
-            cmd, args, joiner, separator, *caller_args
+            cmd, *caller_args, args=args, joiner=joiner, separator=separator
         )
         await proc.communicate()
         outbox["code"] = proc.returncode
