@@ -13,8 +13,11 @@ from vcorelib.task.dict.melder import DictMerger
 def test_task_dict_merger_basic():
     """Verify that dict-merger tasks work correctly."""
 
-    async def tasks(task: Task) -> None:
+    async def tasks() -> None:
         """Add task dependencies and then dispatch the original task."""
+
+        task = Task("test")
+
         task.depend_on_all(
             [
                 DictMerger("a", {"a": 1}),
@@ -24,8 +27,7 @@ def test_task_dict_merger_basic():
         )
         await task.dispatch()
 
-    task = Task("test")
-    asyncio.run(tasks(task))
+        # Verify that data was merged.
+        assert task.inbox == {"a": {"a": 1}, "b": {"b": 2}, "c": {"c": 3}}
 
-    # Verify that data was merged.
-    assert task.inbox == {"a": {"a": 1}, "b": {"b": 2}, "c": {"c": 3}}
+    asyncio.run(tasks())

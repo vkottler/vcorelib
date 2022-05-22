@@ -2,8 +2,8 @@
 Test the 'task.subprocess.run' module.
 """
 
-# built-in
-import asyncio
+# third-party
+import pytest
 
 # module under test
 from vcorelib.task.subprocess.run import (
@@ -14,7 +14,8 @@ from vcorelib.task.subprocess.run import (
 )
 
 
-def test_task_subprocess_run_exec_basic():
+@pytest.mark.asyncio
+async def test_task_subprocess_run_exec_basic():
     """Test that we can run a basic subprocess."""
 
     # Test that the default task works.
@@ -22,25 +23,27 @@ def test_task_subprocess_run_exec_basic():
     task.outbox["a"] = 1
     task.outbox["b"] = 2
     task.outbox["c"] = 3
-    asyncio.run(task.dispatch())
+    await task.dispatch()
     assert task.outbox["code"] == 0
 
 
-def test_task_subprocess_run_shell_basic():
+@pytest.mark.asyncio
+async def test_task_subprocess_run_shell_basic():
     """Test that we can run a basic shell command."""
 
     task = SubprocessShell("test")
-    asyncio.run(task.dispatch())
+    await task.dispatch()
     assert task.outbox["code"] == 0
 
 
-def test_task_subprocess_run_streamed_basic():
+@pytest.mark.asyncio
+async def test_task_subprocess_run_streamed_basic():
     """Test streamed versions of subprocess and shell command tasks."""
 
     task = SubprocessExecStreamed("test")
-    asyncio.run(task.dispatch())
+    await task.dispatch()
     assert task.outbox["code"] == 0
 
     task = SubprocessShellStreamed("test")
-    asyncio.run(task.dispatch())
+    await task.dispatch()
     assert task.outbox["code"] == 0

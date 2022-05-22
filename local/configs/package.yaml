@@ -7,6 +7,7 @@ requirements:
   - tomli
   - tomli-w
 dev_requirements:
+  - pytest-asyncio
   - setuptools-wrapper
   - types-setuptools
 init_local: |

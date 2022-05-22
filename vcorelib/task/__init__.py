@@ -44,9 +44,16 @@ class Task:  # pylint: disable=too-many-instance-attributes
         self.inbox: Inbox = {}
         self.outbox: dict = {}
         self.dependencies: _Dict[Target, TaskGenerator] = {}
+
+        # Dependency resolution state.
         self._resolved = False
         self.literals: _Set[str] = set()
+
+        # Invocation state.
         self._continue = True
+        self._running: _Set[str] = set()
+        self._to_signal: int = 0
+        self._sem = asyncio.Semaphore(0)
 
         # Metrics.
         self.times_invoked: int = 0
@@ -75,7 +82,9 @@ class Task:  # pylint: disable=too-many-instance-attributes
         """Convert this task into a string."""
         return self.name
 
-    def resolved(self, substitutions: Substitutions = None) -> bool:
+    def resolved(
+        self, compiled: str, substitutions: Substitutions = None
+    ) -> bool:
         """Override this in a derived task to implement more complex logic."""
 
         # Only a literal target has a boolean resolved state.
@@ -85,19 +94,29 @@ class Task:  # pylint: disable=too-many-instance-attributes
         # This task is only resolved if the compiled literal appears in the
         # completed set.
         assert substitutions is not None
-        return self.target.compile(substitutions) in self.literals
+        return compiled in self.literals
 
-    def resolve(self, substitutions: Substitutions = None) -> None:
+    def resolve(
+        self, compiled: str, substitutions: Substitutions = None
+    ) -> None:
         """Mark this task resolved."""
+
+        self._running.remove(compiled)
+        self.literals.add(compiled)
 
         # A literal target only needs to be resovled once.
         if self.target.literal:
             self._resolved = True
-            return
 
         # A non-literal task must have valid substitutions.
-        assert substitutions is not None
-        self.literals.add(self.target.compile(substitutions))
+        else:
+            assert substitutions is not None
+
+        # Signal to any other active tasks that this is complete.
+        for _ in range(self._to_signal):
+            self._sem.release()
+        self.log.debug("Signaled %d waiting tasks.", self._to_signal)
+        self._to_signal = 0
 
     async def run_enter(
         self, _inbox: Inbox, _outbox: Outbox, *_args, **_kwargs
@@ -207,6 +226,18 @@ class Task:  # pylint: disable=too-many-instance-attributes
 
         self.times_invoked += 1
 
+        compiled = self.target.compile(substitutions)
+
+        if caller is not None:
+            self.log.debug("triggered by '%s'", caller)
+
+        # If this task is already running, wait for it to complete.
+        if compiled in self._running:
+            self._to_signal += 1
+            self.log.debug("Waiting for existing '%s' to resolve.", compiled)
+            await self._sem.acquire()
+            return
+
         if substitutions is None:
             substitutions = {}
 
@@ -214,8 +245,11 @@ class Task:  # pylint: disable=too-many-instance-attributes
         merged = merge_dicts([{}, kwargs, substitutions], logger=self.log)
 
         # Return early if this task has already been executed.
-        if self.resolved(merged):
+        if self.resolved(compiled, merged):
             return
+
+        # Signal to other task invocations that this instance is running.
+        self._running.add(compiled)
 
         # Reset the outbox for this execution. Don't re-assign it or it will
         # lose its association with anything depending on it.
@@ -224,9 +258,6 @@ class Task:  # pylint: disable=too-many-instance-attributes
 
         if substitutions is not None:
             self.log.debug("substitutions: '%s'", merged)
-
-        if caller is not None:
-            self.log.debug("triggered by '%s'", caller)
 
         # Wait for dependencies to finish processing.
         with self.timer.measure_ns() as token:
@@ -246,4 +277,4 @@ class Task:  # pylint: disable=too-many-instance-attributes
         self.log.debug("execute: %s", nano_str(self.execute_time))
 
         # Track that this task was resolved.
-        self.resolve(merged)
+        self.resolve(compiled, merged)

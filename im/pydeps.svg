@@ -128,7 +128,7 @@
 <!-- vcorelib_task -->
 <g id="node17" class="node">
 <title>vcorelib_task</title><style>.edge>path:hover{stroke-width:8}</style>
-<ellipse fill="#2020b6" stroke="black" cx="738.83" cy="-129.34" rx="43.08" ry="18"/>
+<ellipse fill="#1515c1" stroke="black" cx="738.83" cy="-129.34" rx="43.08" ry="18"/>
 <text text-anchor="middle" x="738.83" y="-126.34" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#ffffff">vcorelib.task</text>
 </g>
 <!-- vcorelib_dict&#45;&gt;vcorelib_task -->
