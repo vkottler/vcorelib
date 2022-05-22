@@ -1,3 +1,4 @@
+pytest-asyncio
 setuptools-wrapper
 types-setuptools
 pylint

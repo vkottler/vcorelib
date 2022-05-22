@@ -5,6 +5,7 @@ A task definition for wrapping subprocess's 'run' method.
 # built-in
 from asyncio import create_subprocess_exec, create_subprocess_shell
 from asyncio.subprocess import PIPE as _PIPE
+from asyncio.subprocess import Process as _Process
 from sys import executable as _executable
 
 # internal
@@ -12,7 +13,57 @@ from vcorelib.task import Inbox as _Inbox
 from vcorelib.task import Outbox, Task
 
 
-class SubprocessExec(Task):
+class SubprocessLogMixin(Task):
+    """
+    A class for creating asyncio subprocesses and logging what gets created.
+    """
+
+    async def subprocess_exec(
+        self,
+        program: str,
+        args: str,
+        separator: str,
+        *caller_args,
+        stdout: int = None,
+        stderr: int = None,
+    ) -> _Process:
+        """
+        Create a process using subprocess exec and log what the arguments were.
+        """
+
+        exec_args = args.split(separator) + list(*caller_args)
+        self.log.info("exec '%s': %s", program, " ".join(exec_args))
+        proc = await create_subprocess_exec(
+            program,
+            *exec_args,
+            stdout=stdout,
+            stderr=stderr,
+        )
+        return proc
+
+    async def subprocess_shell(
+        self,
+        cmd: str,
+        args: str,
+        joiner: str,
+        separator: str,
+        *caller_args,
+        stdout: int = None,
+        stderr: int = None,
+    ) -> _Process:
+        """
+        Create a process using subprocess shell and log what the command is.
+        """
+
+        command = cmd + joiner.join(args.split(separator) + list(*caller_args))
+        self.log.info("shell: '%s'", command)
+        proc = await create_subprocess_shell(
+            command, stdout=stdout, stderr=stderr
+        )
+        return proc
+
+
+class SubprocessExec(SubprocessLogMixin):
     """A task wrapping a subprocess."""
 
     async def run(
@@ -29,9 +80,11 @@ class SubprocessExec(Task):
         Create a subprocess, wait for it to exit and add results to the outbox.
         """
 
-        proc = await create_subprocess_exec(
+        proc = await self.subprocess_exec(
             program,
-            *(args.split(separator) + list(*caller_args)),
+            args,
+            separator,
+            *caller_args,
             stdout=_PIPE,
             stderr=_PIPE,
         )
@@ -43,7 +96,7 @@ class SubprocessExec(Task):
         return True
 
 
-class SubprocessExecStreamed(Task):
+class SubprocessExecStreamed(SubprocessLogMixin):
     """A task wrapping a subprocess."""
 
     async def run(
@@ -60,9 +113,8 @@ class SubprocessExecStreamed(Task):
         Create a subprocess, wait for it to exit and add results to the outbox.
         """
 
-        proc = await create_subprocess_exec(
-            program,
-            *(args.split(separator) + list(*caller_args)),
+        proc = await self.subprocess_exec(
+            program, args, separator, *caller_args
         )
         await proc.communicate()
         outbox["code"] = proc.returncode
@@ -70,7 +122,7 @@ class SubprocessExecStreamed(Task):
         return True
 
 
-class SubprocessShell(Task):
+class SubprocessShell(SubprocessLogMixin):
     """A task wrapping a shell command."""
 
     async def run(
@@ -88,8 +140,12 @@ class SubprocessShell(Task):
         Run a shell command, wait for it to exit and add results to the outbox.
         """
 
-        proc = await create_subprocess_shell(
-            cmd + joiner.join(args.split(separator) + list(*caller_args)),
+        proc = await self.subprocess_shell(
+            cmd,
+            args,
+            joiner,
+            separator,
+            *caller_args,
             stdout=_PIPE,
             stderr=_PIPE,
         )
@@ -101,7 +157,7 @@ class SubprocessShell(Task):
         return True
 
 
-class SubprocessShellStreamed(Task):
+class SubprocessShellStreamed(SubprocessLogMixin):
     """A task wrapping a shell command."""
 
     async def run(
@@ -119,8 +175,8 @@ class SubprocessShellStreamed(Task):
         Run a shell command, wait for it to exit and add results to the outbox.
         """
 
-        proc = await create_subprocess_shell(
-            cmd + joiner.join(args.split(separator) + list(*caller_args)),
+        proc = await self.subprocess_shell(
+            cmd, args, joiner, separator, *caller_args
         )
         await proc.communicate()
         outbox["code"] = proc.returncode
