@@ -2,17 +2,26 @@
 datazen - Tests for the 'paths' API.
 """
 
-from os import sep
-
 # built-in
+from os import linesep, sep
 from pathlib import Path
+from tempfile import TemporaryDirectory
+from time import sleep
 
 # internal
 from tests.resources import resource
 
 # module under test
 from vcorelib.io.types import FileExtension
-from vcorelib.paths import file_md5_hex, find_file, get_file_name, str_md5_hex
+from vcorelib.paths import (
+    file_md5_hex,
+    find_file,
+    get_file_name,
+    modified_after,
+    modified_ns,
+    stats,
+    str_md5_hex,
+)
 
 
 def test_file_name_ext():
@@ -54,3 +63,37 @@ def test_find_file():
     assert find_file(Path(sep), "a", "b", "c") is None
     assert find_file(Path(__file__).resolve())
     assert find_file("test.txt", include_cwd=True) is None
+
+
+def test_file_stats_basic():
+    """Test that we can obtain basic file statistics."""
+
+    path = resource("test.txt")
+    assert stats(path) is not None
+    assert modified_ns(path)
+
+    with TemporaryDirectory() as tmpdir:
+        tmpdir = Path(tmpdir)
+        first_file = tmpdir.joinpath("test1.txt")
+        second_file = tmpdir.joinpath("test2.txt")
+
+        # Write to the first file.
+        with first_file.open("w", encoding="utf-8") as path_fd:
+            path_fd.write("test")
+            path_fd.write(linesep)
+            path_fd.flush()
+
+        # Wait some amount so that the second file is modified after the first.
+        sleep(0.01)
+
+        # Write to the second file.
+        with second_file.open("w", encoding="utf-8") as path_fd:
+            for i in range(1000):
+                path_fd.write(str(i))
+                path_fd.write(linesep)
+            path_fd.flush()
+
+        assert modified_after(first_file, [second_file])
+        assert not modified_after(second_file, [first_file])
+        assert modified_after(tmpdir.joinpath("test3.txt"), [first_file])
+        assert modified_after(tmpdir.joinpath("test4.txt"), [second_file])

@@ -6,7 +6,7 @@ Test the 'task' module.
 import asyncio
 
 # module under test
-from vcorelib.task import Task
+from vcorelib.task import Phony, Task
 
 
 def test_task_basic():
@@ -18,6 +18,6 @@ def test_task_basic():
         await task.dispatch()
         await task.dispatch()
 
-    task_a = Task("a")
+    task_a = Phony("a")
     asyncio.run(tasks(task_a))
     assert task_a.times_invoked == 2

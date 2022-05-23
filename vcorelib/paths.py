@@ -2,8 +2,10 @@
 Common path manipulation utilities.
 """
 
-# built-in
 from hashlib import md5 as _md5
+
+# built-in
+from os import stat_result as _stat_result
 from pathlib import Path as _Path
 from typing import Iterable as _Iterable
 from typing import Optional as _Optional
@@ -22,6 +24,48 @@ def normalize(path: Pathlike) -> _Path:
         if not isinstance(path, _Path)
         else path
     )
+
+
+def stats(path: Pathlike) -> _Optional[_stat_result]:
+    """Get stats for a file on disk if it exists."""
+
+    result = None
+    path = normalize(path)
+    if path.exists():
+        result = path.stat()
+    return result
+
+
+def modified_ns(path: Pathlike) -> _Optional[int]:
+    """Get the last-modified time from a path if the data can be obtained."""
+
+    result = None
+    stat = stats(path)
+    if stat is not None:
+        result = stat.st_mtime_ns
+    return result
+
+
+def modified_after(path: Pathlike, candidates: _Iterable[Pathlike]) -> bool:
+    """
+    Check if any candidate paths are more recently modified than the provided
+    path. If the path doesn't exists but one or more of the candidates do, this
+    method returns True.
+    """
+
+    mtime = modified_ns(path)
+
+    # Use zero to compare so that even candidates that exist meet the criteria
+    # for being updated after path.
+    if mtime is None:
+        mtime = 0
+
+    for candidate in candidates:
+        curr_mtime = modified_ns(candidate)
+        if curr_mtime is not None and curr_mtime > mtime:
+            return True
+
+    return False
 
 
 def get_file_name(path: Pathlike, maxsplit: int = -1) -> str:

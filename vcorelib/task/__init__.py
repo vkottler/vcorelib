@@ -277,3 +277,14 @@ class Task:  # pylint: disable=too-many-instance-attributes
 
         # Track that this task was resolved.
         self.resolve(compiled, merged)
+
+
+class Phony(Task):
+    """
+    A task stub that doesn't do anything. Useful for top-level targets that
+    depend on other concrete tasks.
+    """
+
+    async def run(self, inbox: Inbox, outbox: Outbox, *args, **kwargs) -> bool:
+        """Override this method to implement the task."""
+        return True
