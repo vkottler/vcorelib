@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import Dict
 
 # third-party
-from vcorelib.target.resolver import TargetResolver
 from vcorelib.task.manager import TaskManager
 
 
@@ -19,12 +18,8 @@ def register(
 ) -> bool:
     """Register project tasks to the manager."""
 
-    # Ensure that the task manager can't resolve the virtual environment
-    # target.
-    del manager.tasks["venv"]
-    del manager.dependencies["venv"]
-    manager.resolver = TargetResolver()
-
+    # No project tasks yet.
+    del manager
     del project
     del cwd
     del substitutions
