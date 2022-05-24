@@ -20,6 +20,9 @@ async def test_task_subprocess_run_exec_basic():
 
     # Test that the default task works.
     task = SubprocessExec("test")
+    assert await task.exec("python", "--version")
+    assert await task.shell("python --version")
+
     task.outbox["a"] = 1
     task.outbox["b"] = 2
     task.outbox["c"] = 3

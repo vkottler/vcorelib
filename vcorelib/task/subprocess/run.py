@@ -41,6 +41,28 @@ class SubprocessLogMixin(Task):
         )
         return proc
 
+    async def exec(
+        self,
+        program: str,
+        *caller_args,
+        args: str = "",
+        separator: str = "::",
+        stdout: int = None,
+        stderr: int = None,
+    ) -> bool:
+        """Execute a command and return whether or not it succeeded."""
+
+        proc = await self.subprocess_exec(
+            program,
+            *caller_args,
+            args=args,
+            separator=separator,
+            stdout=stdout,
+            stderr=stderr,
+        )
+        await proc.communicate()
+        return proc.returncode == 0
+
     async def subprocess_shell(
         self,
         cmd: str,
@@ -64,6 +86,30 @@ class SubprocessLogMixin(Task):
         )
         return proc
 
+    async def shell(
+        self,
+        cmd: str,
+        *caller_args,
+        args: str = "",
+        joiner: str = " ",
+        separator: str = "::",
+        stdout: int = None,
+        stderr: int = None,
+    ) -> bool:
+        """Execute a shell command and return whether or not it succeeded."""
+
+        proc = await self.subprocess_shell(
+            cmd,
+            *caller_args,
+            args=args,
+            joiner=joiner,
+            separator=separator,
+            stdout=stdout,
+            stderr=stderr,
+        )
+        await proc.communicate()
+        return proc.returncode == 0
+
 
 class SubprocessExec(SubprocessLogMixin):
     """A task wrapping a subprocess."""
@@ -76,6 +122,7 @@ class SubprocessExec(SubprocessLogMixin):
         args: str = "--version",
         program: str = _executable,
         separator: str = "::",
+        require_success: bool = True,
         **kwargs,
     ) -> bool:
         """
@@ -95,7 +142,7 @@ class SubprocessExec(SubprocessLogMixin):
         outbox["stderr"] = stderr
         outbox["code"] = proc.returncode
 
-        return True
+        return True if not require_success else proc.returncode == 0
 
 
 class SubprocessExecStreamed(SubprocessLogMixin):
@@ -109,6 +156,7 @@ class SubprocessExecStreamed(SubprocessLogMixin):
         args: str = "--version",
         program: str = _executable,
         separator: str = "::",
+        require_success: bool = True,
         **kwargs,
     ) -> bool:
         """
@@ -121,7 +169,7 @@ class SubprocessExecStreamed(SubprocessLogMixin):
         await proc.communicate()
         outbox["code"] = proc.returncode
 
-        return True
+        return True if not require_success else proc.returncode == 0
 
 
 class SubprocessShell(SubprocessLogMixin):
@@ -136,6 +184,7 @@ class SubprocessShell(SubprocessLogMixin):
         cmd: str = f"{_executable} --version",
         joiner: str = " ",
         separator: str = "::",
+        require_success: bool = True,
         **kwargs,
     ) -> bool:
         """
@@ -156,7 +205,7 @@ class SubprocessShell(SubprocessLogMixin):
         outbox["stderr"] = stderr
         outbox["code"] = proc.returncode
 
-        return True
+        return True if not require_success else proc.returncode == 0
 
 
 class SubprocessShellStreamed(SubprocessLogMixin):
@@ -171,6 +220,7 @@ class SubprocessShellStreamed(SubprocessLogMixin):
         cmd: str = f"{_executable} --version",
         joiner: str = " ",
         separator: str = "::",
+        require_success: bool = True,
         **kwargs,
     ) -> bool:
         """
@@ -183,4 +233,4 @@ class SubprocessShellStreamed(SubprocessLogMixin):
         await proc.communicate()
         outbox["code"] = proc.returncode
 
-        return True
+        return True if not require_success else proc.returncode == 0
