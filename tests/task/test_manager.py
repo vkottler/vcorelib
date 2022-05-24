@@ -52,3 +52,7 @@ def test_task_manager_dynamic():
     manager.execute(["a:2"])
     manager.execute(["a:3"])
     assert "d:5" in manager.execute(["a:4", "d:5"])
+
+    # Verify that we can depend on tasks that aren't resolved yet.
+    manager.register(Task("test"), ["a:5", "a:6", "a:7"])
+    manager.execute(["test"])

@@ -25,6 +25,10 @@ class TargetResolution(_NamedTuple):
     result: TargetMatch
     data: _Optional[_Any] = None
 
+    def __bool__(self) -> bool:
+        """Return whether or not this target resolution is a match."""
+        return self.result.matched
+
 
 NOT_RESOLVED = TargetResolution(_NO_MATCH, None)
 

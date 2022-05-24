@@ -4,12 +4,15 @@ A module for implementing tasks in a dependency tree.
 
 # built-in
 import asyncio
+from json import dumps as _dumps
 from logging import Logger, getLogger
+from os import linesep as _linesep
 from typing import Any as _Any
 from typing import Callable as _Callable
 from typing import Coroutine as _Coroutine
 from typing import Dict as _Dict
 from typing import Iterable as _Iterable
+from typing import List as _List
 from typing import Set as _Set
 
 # internal
@@ -21,6 +24,10 @@ Outbox = dict
 Inbox = _Dict[str, Outbox]
 TaskExecute = _Callable[[Inbox, Outbox], _Coroutine[_Any, _Any, bool]]
 TaskGenerator = _Callable[..., asyncio.Task]
+
+
+class TaskFailed(Exception):
+    """A custom exception to indicate that a task failed."""
 
 
 class Task:  # pylint: disable=too-many-instance-attributes
@@ -43,7 +50,7 @@ class Task:  # pylint: disable=too-many-instance-attributes
         self.name = name
         self.inbox: Inbox = {}
         self.outbox: dict = {}
-        self.dependencies: _Dict[Target, TaskGenerator] = {}
+        self.dependencies: _List[TaskGenerator] = []
 
         # Dependency resolution state.
         self._resolved = False
@@ -97,7 +104,7 @@ class Task:  # pylint: disable=too-many-instance-attributes
         return compiled in self.literals
 
     def resolve(
-        self, compiled: str, substitutions: Substitutions = None
+        self, log: Logger, compiled: str, substitutions: Substitutions = None
     ) -> None:
         """Mark this task resolved."""
 
@@ -115,7 +122,7 @@ class Task:  # pylint: disable=too-many-instance-attributes
         # Signal to any other active tasks that this is complete.
         for _ in range(self._to_signal):
             self._sem.release()
-        self.log.debug("Signaled %d waiting tasks.", self._to_signal)
+        log.debug("Signaled %d waiting tasks.", self._to_signal)
         self._to_signal = 0
 
     async def run_enter(
@@ -172,27 +179,22 @@ class Task:  # pylint: disable=too-many-instance-attributes
         if a new dependency was added.
         """
 
-        added = False
-        if task.target not in self.dependencies:
-
-            def task_factory(**substitutions) -> asyncio.Task:
-                """
-                Create a task while injecting additional keyword arguments.
-                """
-                return asyncio.create_task(
-                    task.dispatch(
-                        self,
-                        **merge_dicts(
-                            [{}, kwargs, substitutions], logger=self.log
-                        ),
-                    )
+        def task_factory(**substitutions) -> asyncio.Task:
+            """
+            Create a task while injecting additional keyword arguments.
+            """
+            return asyncio.create_task(
+                task.dispatch(
+                    self,
+                    substitutions={**substitutions},
+                    **kwargs,
                 )
+            )
 
-            self.inbox[task.name] = task.outbox
-            self.dependencies[task.target] = task_factory
-            added = True
+        self.inbox[task.name] = task.outbox
+        self.dependencies.append(task_factory)
 
-        return added
+        return True
 
     def depend_on_all(self, tasks: _Iterable["Task"], **kwargs) -> int:
         """
@@ -211,9 +213,24 @@ class Task:  # pylint: disable=too-many-instance-attributes
         dependency resolver cannot propagate current-task substitutions to
         its dependencies as they've already been explicitly registered.
         """
-        await asyncio.gather(
-            *[x(**substitutions) for x in self.dependencies.values()]
-        )
+        await asyncio.gather(*[x(**substitutions) for x in self.dependencies])
+
+    def task_fail(
+        self,
+        compiled: str,
+        substitutions: Substitutions,
+        caller: "Task" = None,
+        indent: int = 4,
+    ) -> TaskFailed:
+        """Build an exception message for when this task fails."""
+
+        lines = [
+            f"Task '{compiled}' failed in {nano_str(self.execute_time)}s."
+        ]
+        if caller is not None:
+            lines.append(f"Called by: '{caller}'")
+        lines.append(_dumps(substitutions, indent=indent))
+        return TaskFailed(_linesep.join(lines))
 
     async def dispatch(
         self,
@@ -233,21 +250,26 @@ class Task:  # pylint: disable=too-many-instance-attributes
             substitutions = {}
 
         # Merge substitutions in with other command-line arguments.
-        merged = merge_dicts([{}, kwargs, substitutions], logger=self.log)
-        if merged is not None:
-            self.log.debug("substitutions: '%s'", merged)
-
+        merged = merge_dicts([{}, substitutions, kwargs], logger=self.log)
         compiled = self.target.compile(merged)
+
+        # Wire our outbox to the caller's inbox.
+        if caller is not None:
+            caller.inbox[compiled] = self.outbox
+
+        # Return early if this task has already been executed.
+        if self.resolved(compiled, merged):
+            return
+
+        log = getLogger(compiled)
+        if merged and self.times_invoked == 1:
+            log.debug("substitutions: '%s'", merged)
 
         # If this task is already running, wait for it to complete.
         if compiled in self._running:
             self._to_signal += 1
-            self.log.debug("Waiting for existing '%s' to resolve.", compiled)
+            log.debug("Waiting for existing '%s' to resolve.", compiled)
             await self._sem.acquire()
-            return
-
-        # Return early if this task has already been executed.
-        if self.resolved(compiled, merged):
             return
 
         # Signal to other task invocations that this instance is running.
@@ -262,7 +284,7 @@ class Task:  # pylint: disable=too-many-instance-attributes
         with self.timer.measure_ns() as token:
             await self.resolve_dependencies(**merged)
         self.dependency_time = self.timer.result(token)
-        self.log.debug("dependencies: %s", nano_str(self.dependency_time))
+        log.debug("dependencies: %ss", nano_str(self.dependency_time))
 
         # Allow a dry-run pass get only this far (before executing).
         if init_only:
@@ -271,12 +293,17 @@ class Task:  # pylint: disable=too-many-instance-attributes
         with self.timer.measure_ns() as token:
             # Execute this task and don't propagate to tasks if this task
             # failed.
-            assert await self.execute(self.inbox, self.outbox, **merged)
+            result = await self.execute(self.inbox, self.outbox, **merged)
         self.execute_time = self.timer.result(token)
-        self.log.debug("execute: %s", nano_str(self.execute_time))
+
+        # Raise an exception if this task failed.
+        if not result:
+            raise self.task_fail(compiled, merged, caller)
+
+        log.debug("execute: %ss", nano_str(self.execute_time))
 
         # Track that this task was resolved.
-        self.resolve(compiled, merged)
+        self.resolve(log, compiled, merged)
 
 
 class Phony(Task):
@@ -287,4 +314,9 @@ class Phony(Task):
 
     async def run(self, inbox: Inbox, outbox: Outbox, *args, **kwargs) -> bool:
         """Override this method to implement the task."""
+
+        # Pass the inbox items through to the outbox. This makes phony tasks
+        # much more useful.
+        for key, value in inbox.items():
+            outbox[key] = value
         return True

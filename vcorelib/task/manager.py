@@ -17,6 +17,7 @@ from typing import Tuple as _Tuple
 from typing import cast
 
 # internal
+from vcorelib.dict import merge
 from vcorelib.script import ScriptableMixin
 from vcorelib.target import TargetMatch
 from vcorelib.target.resolver import TargetResolver
@@ -83,9 +84,34 @@ class TaskManager(ScriptableMixin):
 
         if not self.finalized:
             for task, deps in self.dependencies.items():
-                self.tasks[task].depend_on_all(
-                    (self.tasks[x] for x in deps), **kwargs
-                )
+                task_obj = self.tasks[task]
+                task_obj.dependencies = []
+                for dep in deps:
+                    # If the dependency points to a task by name, add it.
+                    if dep in self.tasks:
+                        task_obj.depend_on(self.tasks[dep], **kwargs)
+                        continue
+
+                    # Ensure the dependency can be matched to a task otherwise.
+                    resolution = self.resolver.evaluate(dep)
+                    assert (
+                        resolution
+                    ), f"Couldn't match '{dep}' to task '{task}'!"
+
+                    assert resolution.data is not None
+
+                    # Make sure the substitutions from the target resolution
+                    # make it to the dependency registration.
+                    assert resolution.result.substitutions is not None
+                    task_obj.depend_on(
+                        cast(Task, resolution.data),
+                        **merge(
+                            {**kwargs},
+                            resolution.result.substitutions,
+                            expect_overwrite=True,
+                        ),
+                    )
+
             self.finalized = True
 
     def evaluate(
