@@ -22,6 +22,7 @@ from vcorelib.paths import (
     stats,
     str_md5_hex,
 )
+from vcorelib.paths.context import in_dir
 
 
 def test_file_name_ext():
@@ -97,3 +98,11 @@ def test_file_stats_basic():
         assert not modified_after(second_file, [first_file])
         assert modified_after(tmpdir.joinpath("test3.txt"), [first_file])
         assert modified_after(tmpdir.joinpath("test4.txt"), [second_file])
+
+
+def test_paths_in_dir():
+    """Test that we can change directories as a context manager."""
+
+    with TemporaryDirectory() as tmpdir:
+        with in_dir(tmpdir):
+            assert Path.cwd().samefile(Path(tmpdir))

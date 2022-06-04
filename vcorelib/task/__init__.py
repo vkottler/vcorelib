@@ -4,6 +4,7 @@ A module for implementing tasks in a dependency tree.
 
 # built-in
 import asyncio
+from contextlib import ExitStack as _ExitStack
 from json import dumps as _dumps
 from logging import Logger, getLogger
 from os import linesep as _linesep
@@ -13,6 +14,7 @@ from typing import Coroutine as _Coroutine
 from typing import Dict as _Dict
 from typing import Iterable as _Iterable
 from typing import List as _List
+from typing import Optional as _Optional
 from typing import Set as _Set
 
 # internal
@@ -52,6 +54,7 @@ class Task:  # pylint: disable=too-many-instance-attributes
         self.inbox: Inbox = {}
         self.outbox: dict = {}
         self.dependencies: _List[TaskGenerator] = []
+        self._stack: _Optional[_ExitStack] = None
 
         # Dependency resolution state.
         self._resolved = False
@@ -89,6 +92,12 @@ class Task:  # pylint: disable=too-many-instance-attributes
     def __str__(self) -> str:
         """Convert this task into a string."""
         return self.name
+
+    @property
+    def stack(self) -> _ExitStack:
+        """Get this task's execution stack."""
+        assert self._stack is not None
+        return self._stack
 
     def resolved(
         self, compiled: str, substitutions: Substitutions = None
@@ -295,7 +304,9 @@ class Task:  # pylint: disable=too-many-instance-attributes
         with self.timer.measure_ns() as token:
             # Execute this task and don't propagate to tasks if this task
             # failed.
-            result = await self.execute(self.inbox, self.outbox, **merged)
+            with _ExitStack() as stack:
+                self._stack = stack
+                result = await self.execute(self.inbox, self.outbox, **merged)
         self.execute_time = self.timer.result(token)
 
         # Raise an exception if this task failed.
@@ -322,3 +333,12 @@ class Phony(Task):
         for key, value in inbox.items():
             outbox[key] = value
         return True
+
+
+class FailTask(Task):
+    """A task that always fails."""
+
+    async def run(self, inbox: Inbox, outbox: Outbox, *args, **kwargs) -> bool:
+        """Task fails by default."""
+        assert self.stack
+        return False
