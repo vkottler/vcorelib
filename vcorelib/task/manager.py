@@ -69,8 +69,12 @@ class TaskManager(ScriptableMixin):
             assert self.tasks[task.name] == task
 
         if dependencies is None:
-            dependencies = []
+            dependencies = set()
+
         self.dependencies[task.name].update(dependencies)
+
+        # Also add this task's default requirements, if there are any.
+        self.dependencies[task.name].update(task.default_requirements)
 
         self.finalized = False
         return new_task

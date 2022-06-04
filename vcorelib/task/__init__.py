@@ -34,6 +34,7 @@ class Task:  # pylint: disable=too-many-instance-attributes
     """A basic task interface definition."""
 
     stages = ["run_enter", "run", "run_exit"]
+    default_requirements: _Set[str] = set()
 
     def __init__(
         self,
@@ -122,7 +123,8 @@ class Task:  # pylint: disable=too-many-instance-attributes
         # Signal to any other active tasks that this is complete.
         for _ in range(self._to_signal):
             self._sem.release()
-        log.debug("Signaled %d waiting tasks.", self._to_signal)
+        if self._to_signal:
+            log.debug("Signaled %d waiting tasks.", self._to_signal)
         self._to_signal = 0
 
     async def run_enter(
