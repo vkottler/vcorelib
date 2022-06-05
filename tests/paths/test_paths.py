@@ -99,6 +99,18 @@ def test_file_stats_basic():
 
         assert modified_after(first_file, [second_file])
         assert not modified_after(second_file, [first_file])
+
+        # Open both files for reading and then perform the same verification.
+        with first_file.open(encoding="utf-8") as path_fd:
+            sleep(0.01)
+            assert path_fd.read()
+        with second_file.open(encoding="utf-8") as path_fd:
+            sleep(0.01)
+            assert path_fd.read()
+
+        assert modified_after(first_file, [second_file])
+        assert not modified_after(second_file, [first_file])
+
         assert modified_after(tmpdir.joinpath("test3.txt"), [first_file])
         assert modified_after(tmpdir.joinpath("test4.txt"), [second_file])
 
