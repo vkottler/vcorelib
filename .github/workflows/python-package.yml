@@ -39,19 +39,16 @@ jobs:
 
       - run: pip${{matrix.python-version}} install vmklib
 
-      - run: mk venv
-      - run: mk python-sa-types
+      - run: mk venv python-install-yamllint python-sa-types
 
       - name: lint and build
-        run: mk -- -j python-lint yaml python-build-once
-
-      - run: mk python-sa
+        run: mk python-lint python-sa yaml python-build-once
         env:
-          PY_LINT_EXTRA_ARGS: --no-incremental
+          PY_LINT_MYPY_EXTRA_ARGS: --no-incremental
 
       - run: mk python-test
         env:
-          PYTEST_EXTRA_ARGS: --cov-report=xml
+          PY_TEST_EXTRA_ARGS: --cov-report=xml
 
       - uses: codecov/codecov-action@master
 

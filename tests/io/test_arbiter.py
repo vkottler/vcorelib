@@ -48,7 +48,8 @@ def test_arbiter_encode_decode_basic():
 
             # Verify we can encode data.
             with NamedTemporaryFile(suffix=f".{str(ext)}") as tfile:
-                ARBITER.encode(tfile.name, data)
+                name = tfile.name
+            ARBITER.encode(name, data)
 
 
 def test_arbiter_decode_empty():

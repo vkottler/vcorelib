@@ -23,6 +23,7 @@ from vcorelib.paths import (
     str_md5_hex,
 )
 from vcorelib.paths.context import in_dir
+from vcorelib.task.subprocess.run import is_windows
 
 
 def test_file_name_ext():
@@ -52,10 +53,12 @@ def test_md5_hex():
     """Test that various md5 functions provide the correct results."""
 
     assert str_md5_hex("test") == "098f6bcd4621d373cade4e832627b4f6"
-    assert (
-        file_md5_hex(resource("test.txt"))
-        == "d8e8fca2dc0f896fd7cb4cb0031ba249"
+    expect = (
+        "9f06243abcb89c70e0c331c61d871fa7"
+        if is_windows()
+        else "d8e8fca2dc0f896fd7cb4cb0031ba249"
     )
+    assert file_md5_hex(resource("test.txt")) == expect
 
 
 def test_find_file():
