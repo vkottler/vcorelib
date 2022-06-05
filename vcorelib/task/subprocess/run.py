@@ -6,11 +6,32 @@ A task definition for wrapping subprocess's 'run' method.
 from asyncio import create_subprocess_exec, create_subprocess_shell
 from asyncio.subprocess import PIPE as _PIPE
 from asyncio.subprocess import Process as _Process
+from platform import system as _system
 from sys import executable as _executable
+from typing import List as _List
+from typing import Tuple as _Tuple
 
 # internal
 from vcorelib.task import Inbox as _Inbox
 from vcorelib.task import Outbox, Task
+
+
+def is_windows() -> bool:
+    """Determine if the current platform is Windows or not."""
+    return _system() == "Windows"
+
+
+def reconcile_platform(
+    program: str, args: _List[str]
+) -> _Tuple[str, _List[str]]:
+    """
+    Handle arguments for Windows. You cannot run a program directly on Windows
+    under any circumstance, so pass arguments through to the shell.
+    """
+
+    args = ["/c", program] + args if is_windows() else args
+    program = "cmd.exe" if is_windows() else program
+    return program, args
 
 
 class SubprocessLogMixin(Task):
@@ -33,6 +54,7 @@ class SubprocessLogMixin(Task):
 
         exec_args = [x for x in args.split(separator) + [*caller_args] if x]
         self.log.info("exec '%s': %s", program, " ".join(exec_args))
+        program, exec_args = reconcile_platform(program, exec_args)
         proc = await create_subprocess_exec(
             program,
             *exec_args,
