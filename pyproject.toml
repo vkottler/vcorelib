@@ -23,6 +23,7 @@ classifiers = [
   "Operating System :: MacOS",
   "Operating System :: POSIX :: Linux",
   "Operating System :: Unix",
+  "Development Status :: 5 - Production/Stable",
   "License :: OSI Approved :: MIT License"
 ]
 dependencies = [
