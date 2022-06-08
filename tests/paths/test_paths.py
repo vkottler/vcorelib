@@ -1,5 +1,5 @@
 """
-datazen - Tests for the 'paths' API.
+Tests for the 'paths' module.
 """
 
 # built-in
