@@ -8,6 +8,7 @@ from io import StringIO
 from logging import Logger
 from pathlib import Path
 from typing import Callable as _Callable
+from typing import Dict as _Dict
 from typing import Iterator as _Iterator
 from typing import List as _List
 from typing import NamedTuple
@@ -26,6 +27,11 @@ from vcorelib.paths import get_file_ext
 
 DEFAULT_ARCHIVE_EXT = "tar.gz"
 DEFAULT_DATA_EXT = "json"
+
+# A simple type system for JSON.
+JsonValue = _Union[str, int, float, bool, None, dict, list]
+JsonArray = _List[JsonValue]
+JsonObject = _Dict[str, JsonValue]
 
 
 class FileExtension(Enum):

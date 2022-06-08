@@ -50,6 +50,7 @@ def test_arbiter_encode_decode_basic():
             with NamedTemporaryFile(suffix=f".{str(ext)}") as tfile:
                 name = tfile.name
             ARBITER.encode(name, data)
+            Path(name).unlink()
 
 
 def test_arbiter_decode_empty():
