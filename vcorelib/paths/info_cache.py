@@ -14,7 +14,7 @@ from typing import Tuple as _Tuple
 from typing import cast as _cast
 
 # internal
-from vcorelib.dict.cache import FileCache
+from vcorelib.dict.cache import DirectoryCache, FileCache
 from vcorelib.io.types import JsonObject as _JsonObject
 from vcorelib.paths import Pathlike as _Pathlike
 from vcorelib.paths import file_md5_hex as _file_md5_hex
@@ -57,11 +57,7 @@ class FileInfo(_NamedTuple):
 
         if not self.path.is_file():
             return True, None
-
-        stats = _stats(self.path)
-        assert stats is not None
-
-        new_info = FileInfo(self.path, stats.st_size, _file_md5_hex(self.path))
+        new_info = FileInfo.from_file(self.path)
         return self.same(new_info), new_info
 
     def to_json(self, data: _JsonObject = None) -> _JsonObject:
@@ -114,7 +110,7 @@ class FileInfoManager:
         self.infos = initial
 
         # If we have initial files, poll them all.
-        for path in self.infos:
+        for path in list(self.infos.keys()):
             self.poll_file(path)
 
     def poll_directory(self, path: _Pathlike, recurse: bool = True) -> None:
@@ -137,29 +133,34 @@ class FileInfoManager:
 
         old_info = None
         norm = _normalize(path).resolve()
+        to_del = []
 
         # Don't do anything if this isn't a file.
         if norm.is_file():
             info = FileInfo.from_file(norm)
 
-            if info.path in self.infos:
+            if norm in self.infos:
                 old_info = self.infos[info.path]
                 # If we know something about this file and it has changed,
                 # invoke the callback.
                 if not info.same(old_info):
                     self.poll(info, old_info)
-                    self.infos[info.path] = info
 
             # If the file didn't exist when we last polled, invoke the
             # callback.
             else:
                 self.poll(info, old_info)
 
+            self.infos[info.path] = info
+
         # If we have previous info on the file but it's not present now, invoke
         # the callback.
         elif norm in self.infos:
             self.poll(None, self.infos[norm])
-            del self.infos[norm]
+            to_del.append(norm)
+
+        for old in to_del:
+            del self.infos[old]
 
 
 @_contextmanager
@@ -168,7 +169,9 @@ def file_info_cache(
 ) -> _Iterator[FileInfoManager]:
     """Obtain a file-info manager as a cached context."""
 
-    with FileCache(cache_path).loaded() as data:
+    path = _normalize(cache_path)
+    cache = DirectoryCache if path.is_dir() else FileCache
+    with cache(path).loaded() as data:
         manager = FileInfoManager(poll_cb, FileInfo.from_json(data))
         yield manager
 
