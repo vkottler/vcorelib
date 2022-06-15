@@ -2,8 +2,10 @@
 A module implementing a file-info cache.
 """
 
-# built-in
 from contextlib import contextmanager as _contextmanager
+
+# built-in
+from os import stat_result as _stat_result
 from pathlib import Path as _Path
 from typing import Callable as _Callable
 from typing import Dict as _Dict
@@ -28,6 +30,7 @@ class FileInfo(_NamedTuple):
     path: _Path
     size: int
     md5_hex: str
+    modified_ns: int
 
     def __eq__(self, other: object) -> bool:
         """Determine if two file info's are equivalent."""
@@ -42,22 +45,30 @@ class FileInfo(_NamedTuple):
         return other.size == self.size and other.md5_hex == self.md5_hex
 
     @staticmethod
-    def from_file(path: _Pathlike) -> "FileInfo":
+    def from_file(path: _Pathlike, stats: _stat_result = None) -> "FileInfo":
         """Create file info from a file."""
 
         path = _normalize(path).resolve()
         assert path.is_file()
-        stats = _stats(path)
+        if stats is None:
+            stats = _stats(path)
         assert stats is not None
         md5_hex = _file_md5_hex(path)
-        return FileInfo(path, stats.st_size, md5_hex)
+        return FileInfo(path, stats.st_size, md5_hex, stats.st_mtime_ns)
 
     def poll(self) -> _Tuple[bool, _Optional["FileInfo"]]:
         """Determine if this file is in a new state or not."""
 
         if not self.path.is_file():
             return True, None
-        new_info = FileInfo.from_file(self.path)
+
+        # If the file hasn't been modified, skip re-reading it for a new
+        # checksum.
+        stats = _stats(self.path)
+        if stats is not None and stats.st_mtime_ns == self.modified_ns:
+            return False, self
+
+        new_info = FileInfo.from_file(self.path, stats)
         return self.same(new_info), new_info
 
     def to_json(self, data: _JsonObject = None) -> _JsonObject:
@@ -72,6 +83,7 @@ class FileInfo(_NamedTuple):
         to_update = _cast(_JsonObject, data[path_str])
         to_update["size"] = self.size
         to_update["md5_hex"] = self.md5_hex
+        to_update["modified_ns"] = self.modified_ns
 
         return data
 
@@ -83,7 +95,9 @@ class FileInfo(_NamedTuple):
         for key, info in data.items():
             path = _Path(key)
             if path.is_file():
-                result[path] = FileInfo(path, info["size"], info["md5_hex"])
+                result[path] = FileInfo(
+                    path, info["size"], info["md5_hex"], info["modified_ns"]
+                )
         return result
 
 
@@ -131,36 +145,23 @@ class FileInfoManager:
     def poll_file(self, path: _Pathlike) -> None:
         """Check if a file has changed and invoke the callback if so."""
 
-        old_info = None
         norm = _normalize(path).resolve()
-        to_del = []
+        old_info = self.infos.get(norm)
 
-        # Don't do anything if this isn't a file.
-        if norm.is_file():
+        info = None
+        if norm not in self.infos:
             info = FileInfo.from_file(norm)
+            new = True
+        else:
+            new, info = self.infos[norm].poll()
 
-            if norm in self.infos:
-                old_info = self.infos[info.path]
-                # If we know something about this file and it has changed,
-                # invoke the callback.
-                if not info.same(old_info):
-                    self.poll(info, old_info)
+        if new:
+            self.poll(info, old_info)
 
-            # If the file didn't exist when we last polled, invoke the
-            # callback.
-            else:
-                self.poll(info, old_info)
-
+        if info is not None:
             self.infos[info.path] = info
-
-        # If we have previous info on the file but it's not present now, invoke
-        # the callback.
-        elif norm in self.infos:
-            self.poll(None, self.infos[norm])
-            to_del.append(norm)
-
-        for old in to_del:
-            del self.infos[old]
+        else:
+            del self.infos[norm]
 
 
 @_contextmanager
