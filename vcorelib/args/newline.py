@@ -15,6 +15,15 @@ class LineEnding(str, Enum):
     DOS = "\r\n"
     PLATFORM = linesep
 
+    def __str__(self) -> str:
+        """Get this enum as a string."""
+        result = "platform"
+        if self is LineEnding.UNIX:
+            result = "unix"
+        if self is LineEnding.DOS:
+            result = "dos"
+        return result
+
     @staticmethod
     def from_arg(opt: str) -> "LineEnding":
         """Convert a string option to an instance of this enum."""
