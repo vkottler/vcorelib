@@ -19,7 +19,7 @@ from vcorelib.math.time import TIMER as _TIMER
 
 
 def extractall(
-    src: Path, dst: Path = None, **extract_kwargs
+    src: Path, dst: Path = None, maxsplit: int = 1, **extract_kwargs
 ) -> _Tuple[bool, int]:
     """
     Attempt to extract an arbitrary archive to a destination. Return whether or
@@ -28,7 +28,7 @@ def extractall(
 
     success = False
     time_ns = -1
-    ext = FileExtension.from_path(src)
+    ext = FileExtension.from_path(src, maxsplit=maxsplit)
 
     # Ensure that the source directory is an archive.
     if ext is None or not ext.is_archive() or not src.is_file():
