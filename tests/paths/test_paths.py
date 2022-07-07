@@ -22,7 +22,7 @@ from vcorelib.paths import (
     stats,
     str_md5_hex,
 )
-from vcorelib.paths.context import in_dir
+from vcorelib.paths.context import in_dir, tempfile
 from vcorelib.task.subprocess.run import is_windows
 
 
@@ -119,5 +119,13 @@ def test_paths_in_dir():
     """Test that we can change directories as a context manager."""
 
     with TemporaryDirectory() as tmpdir:
-        with in_dir(tmpdir):
+        with in_dir(tmpdir, True):
             assert Path.cwd().samefile(Path(tmpdir))
+
+
+def test_paths_tempfile():
+    """Test that we can create a temporary file."""
+
+    with tempfile() as temp:
+        path = temp
+    assert not path.is_file()
