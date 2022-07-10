@@ -123,7 +123,7 @@ class DataArbiter:
         result = LoadResult({}, False)
         decoder = self._decoder(ext)
         if decoder is not None:
-            result = decoder(stream, logger, **kwargs)
+            result = decoder(stream, logger, **kwargs)  # type: ignore
         return result
 
     def decode(
@@ -253,7 +253,7 @@ class DataArbiter:
         encoder = self._encoder(ext)
         time_ns = -1
         if encoder is not None:
-            time_ns = encoder(data, stream, logger, **kwargs)
+            time_ns = encoder(data, stream, logger, **kwargs)  # type: ignore
             result = True
         return result, time_ns
 
