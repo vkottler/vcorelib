@@ -2,8 +2,11 @@
 Dictionary manipulation utilities.
 """
 
-# built-in
 from contextlib import contextmanager as _contextmanager
+
+# built-in
+from enum import Enum as _Enum
+from enum import auto as _auto
 from logging import Logger, getLogger
 from typing import Any as _Any
 from typing import Iterator as _Iterator
@@ -59,7 +62,16 @@ def limited(data: dict, key: _Any, value: _Any = None) -> _Iterator[None]:
             data[key] = orig_value
 
 
-def merge(
+class MergeStrategy(_Enum):
+    """
+    An enumeration describing strategies for combining various data structures.
+    """
+
+    RECURSIVE = _auto()
+    UPDATE = _auto()
+
+
+def merge_recursive(
     dict_a: dict,
     dict_b: dict,
     path: _List[str] = None,
@@ -116,10 +128,34 @@ def merge(
     return dict_a
 
 
+def merge(
+    dict_a: dict,
+    dict_b: dict,
+    path: _List[str] = None,
+    expect_overwrite: bool = False,
+    logger: Logger = None,
+    strategy: MergeStrategy = MergeStrategy.RECURSIVE,
+) -> dict:
+    """Combine two dictionaries based on a provided merge strategy."""
+
+    if strategy is MergeStrategy.UPDATE:
+        dict_a.update(dict_b)
+        return dict_a
+
+    return merge_recursive(
+        dict_a,
+        dict_b,
+        path=path,
+        expect_overwrite=expect_overwrite,
+        logger=logger,
+    )
+
+
 def merge_dicts(
     dicts: _List[dict],
     expect_overwrite: bool = False,
     logger: Logger = None,
+    strategy: MergeStrategy = MergeStrategy.RECURSIVE,
 ) -> dict:
     """
     Merge a list of dictionary data into a single set (mutates the first
@@ -133,5 +169,6 @@ def merge_dicts(
             right_dict,
             expect_overwrite=expect_overwrite,
             logger=logger,
+            strategy=strategy,
         )
     return result

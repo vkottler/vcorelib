@@ -7,7 +7,7 @@ from copy import deepcopy
 from typing import List
 
 # module under test
-from vcorelib.dict import merge, merge_dicts, set_if_not
+from vcorelib.dict import MergeStrategy, merge, merge_dicts, set_if_not
 
 
 def test_merge_bad_overwrite():
@@ -20,6 +20,11 @@ def test_merge_bad_overwrite():
 
     assert merge(dict_a, dict_b) == dict_a
     assert merge(dict_a, dict_b, expect_overwrite=True) == dict_b
+
+
+def test_merge_update():
+    """Test the 'update' strategy of dictionary merges."""
+    assert merge({"a": 1}, {"a": 2}, strategy=MergeStrategy.UPDATE) == {"a": 2}
 
 
 def test_merge_basic():
