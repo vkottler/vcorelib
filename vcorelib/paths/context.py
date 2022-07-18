@@ -43,4 +43,6 @@ def tempfile(*args, **kwargs) -> _Iterator[_Path]:
         yield path
     finally:
         with suppress(FileNotFoundError):
-            path.unlink()
+            # Respect the 'delete' argument.
+            if kwargs.get("delete", True):
+                path.unlink()
