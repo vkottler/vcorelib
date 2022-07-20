@@ -77,3 +77,11 @@ class NamespaceMixin:
         """Apply some names to this object's namespace as a managed context."""
         with self._namespace.pushed(*names):
             yield
+
+    def push_name(self, name: str) -> None:
+        """Push a name onto the stack."""
+        self._namespace.push(name)
+
+    def pop_name(self, name: str = None) -> str:
+        """Pop the latest name off the stack."""
+        return self._namespace.pop(name=name)
