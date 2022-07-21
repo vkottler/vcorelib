@@ -7,13 +7,16 @@ from contextlib import contextmanager as _contextmanager
 from typing import Iterator as _Iterator
 from typing import List as _List
 
+DEFAULT_DELIM = "."
+
 
 class Namespace:
     """A class for implementing a basic namespace interface."""
 
-    def __init__(self, *names: str) -> None:
+    def __init__(self, *names: str, delim: str = DEFAULT_DELIM) -> None:
         """Initialize this namespace."""
         self.stack: _List[str] = [*names]
+        self.delim = delim
 
     def push(self, name: str) -> None:
         """Push a name onto the stack."""
@@ -44,12 +47,17 @@ class Namespace:
         for name in reversed(to_push):
             self.pop(name)
 
-    def namespace(self, name: str = None, delim: str = ".") -> str:
+    def namespace(self, name: str = None, delim: str = None) -> str:
         """
         Get the current namespace string with or without an additional name
         applied.
         """
-        result = delim.join(self.stack)
+        if delim is None:
+            delim = self.delim
+
+        # Skip empty names.
+        result = delim.join(x for x in self.stack if x)
+
         if name is not None:
             if result:
                 result += delim
@@ -60,15 +68,17 @@ class Namespace:
 class NamespaceMixin:
     """A class for giving arbitrary objects namespace capabilities."""
 
-    def __init__(self, namespace: Namespace = None) -> None:
+    def __init__(
+        self, namespace: Namespace = None, namespace_delim: str = DEFAULT_DELIM
+    ) -> None:
         """Initialize a namespace for this object."""
 
         if not hasattr(self, "_namespace"):
             if namespace is None:
-                namespace = Namespace()
+                namespace = Namespace(delim=namespace_delim)
             self._namespace = namespace
 
-    def namespace(self, name: str = None, delim: str = ".") -> str:
+    def namespace(self, name: str = None, delim: str = None) -> str:
         """Get a namespace string for this object."""
         return self._namespace.namespace(name=name, delim=delim)
 
