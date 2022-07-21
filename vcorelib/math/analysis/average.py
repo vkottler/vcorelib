@@ -17,6 +17,8 @@ class MovingAverage:
         self.data: _List[float] = []
         self.sum: float = initial
         self.value: float = initial
+        self.max: float = initial
+        self.min: float = initial
         self.reset(initial=initial)
 
     def __call__(self, value: float) -> float:
@@ -30,6 +32,8 @@ class MovingAverage:
 
         # Calculate the new average.
         self.value = self.sum / self.depth
+        self.max = max(self.max, self.value)
+        self.min = min(self.min, self.value)
 
         # Leave the new value behind.
         self.data[self.index] = value
@@ -43,6 +47,8 @@ class MovingAverage:
         self.data = [initial for _ in range(self.depth)]
         self.sum = sum(self.data)
         self.value = self.sum / self.depth
+        self.max = initial
+        self.min = initial
 
     def resize(self, depth: int, initial: float = 0.0) -> None:
         """Set a new depth for this moving average and reset the value."""
