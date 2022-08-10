@@ -6,7 +6,7 @@ A module for working with averages.
 from typing import List as _List
 
 
-class MovingAverage:
+class MovingAverage:  # pylint: disable=too-many-instance-attributes
     """A class for managing a moving average of floats."""
 
     def __init__(self, depth: int = 10, initial: float = 0.0) -> None:
@@ -20,6 +20,7 @@ class MovingAverage:
         self.max: float = initial
         self.min: float = initial
         self.reset(initial=initial)
+        self.initialized = False
 
     def __call__(self, value: float) -> float:
         """Add a new value to the dataset and get the average."""
@@ -32,8 +33,15 @@ class MovingAverage:
 
         # Calculate the new average.
         self.value = self.sum / self.depth
-        self.max = max(self.max, self.value)
-        self.min = min(self.min, self.value)
+
+        # Ensure that max and min don't retain an initial value.
+        if not self.initialized:
+            self.max = self.value
+            self.min = self.value
+            self.initialized = True
+        else:
+            self.max = max(self.max, self.value)
+            self.min = min(self.min, self.value)
 
         # Leave the new value behind.
         self.data[self.index] = value
@@ -49,6 +57,7 @@ class MovingAverage:
         self.value = self.sum / self.depth
         self.max = initial
         self.min = initial
+        self.initialized = False
 
     def resize(self, depth: int, initial: float = 0.0) -> None:
         """Set a new depth for this moving average and reset the value."""
