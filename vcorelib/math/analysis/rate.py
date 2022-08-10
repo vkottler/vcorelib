@@ -47,15 +47,19 @@ class RateTracker:
         # Only start tracking when a second data point is encountered.
         if self.prev_time_ns != 0:
             assert time_ns > self.prev_time_ns
-            delta_ns = float(time_ns - self.prev_time_ns)
-            value *= 10e9
 
             # Consider 'value' as the amount of change since the last data
             # entry, so divide value by the change in time to get a rate.
-            result = self.average(value / delta_ns)
+            result = self.with_dt(
+                float(time_ns - self.prev_time_ns) / 10e9, value=value
+            )
 
         self.prev_time_ns = time_ns
         return result
+
+    def with_dt(self, delta_s: float, value: float = 1.0) -> float:
+        """Update this rate by directly providing the delta-time value."""
+        return self.average(value / delta_s)
 
     def reset(self, initial: float = 0.0) -> None:
         """Reset this rate tracker."""
