@@ -9,6 +9,7 @@ from logging import INFO as _INFO
 from logging import Logger
 from math import floor as _floor
 from time import perf_counter_ns as _perf_counter_ns
+from time import time_ns as _time_ns
 from typing import Dict as _Dict
 from typing import Iterator as _Iterator
 from typing import Tuple as _Tuple
@@ -19,6 +20,11 @@ from vcorelib.math import KIBI_UNITS as _KIBI_UNITS
 from vcorelib.math import SI_UNITS as _SI_UNITS
 from vcorelib.math import UnitSystem as _UnitSystem
 from vcorelib.math import unit_traverse as _unit_traverse
+
+
+def default_time_ns() -> int:
+    """Get a timestamp value using a default method."""
+    return _time_ns()
 
 
 def seconds_str(seconds: int) -> _Tuple[str, int]:

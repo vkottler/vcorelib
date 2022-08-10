@@ -12,54 +12,59 @@ class MovingAverage:  # pylint: disable=too-many-instance-attributes
     def __init__(self, depth: int = 10, initial: float = 0.0) -> None:
         """Initialize this moving average."""
 
-        self.index: int = 0
+        self._index: int = 0
+        self._data: _List[float] = []
+        self._sum: float = initial
+
+        # Intentionally public members.
         self.depth: int = depth
-        self.data: _List[float] = []
-        self.sum: float = initial
         self.value: float = initial
         self.max: float = initial
         self.min: float = initial
+
         self.reset(initial=initial)
-        self.initialized = False
+        self._initialized = False
 
     def __call__(self, value: float) -> float:
         """Add a new value to the dataset and get the average."""
 
         # Remove the oldest value.
-        self.sum -= self.data[self.index]
+        self._sum -= self._data[self._index]
 
         # Add the new value.
-        self.sum += value
+        self._sum += value
 
         # Calculate the new average.
-        self.value = self.sum / self.depth
+        self.value = self._sum / self.depth
 
         # Ensure that max and min don't retain an initial value.
-        if not self.initialized:
-            self.max = self.value
-            self.min = self.value
-            self.initialized = True
+        if not self._initialized:
+            self.max = value
+            self.min = value
+            self._initialized = True
         else:
-            self.max = max(self.max, self.value)
-            self.min = min(self.min, self.value)
+            self.max = max(self.max, value)
+            self.min = min(self.min, value)
 
         # Leave the new value behind.
-        self.data[self.index] = value
-        self.index += 1
-        self.index %= self.depth
+        self._data[self._index] = value
+        self._index += 1
+        self._index %= self.depth
 
         return self.value
 
     def reset(self, initial: float = 0.0) -> None:
         """Reset the average value."""
-        self.data = [initial for _ in range(self.depth)]
-        self.sum = sum(self.data)
-        self.value = self.sum / self.depth
+
+        self._data = [initial for _ in range(self.depth)]
+        self._sum = sum(self._data)
+        self.value = self._sum / self.depth
         self.max = initial
         self.min = initial
-        self.initialized = False
+        self._initialized = False
 
     def resize(self, depth: int, initial: float = 0.0) -> None:
         """Set a new depth for this moving average and reset the value."""
+
         self.depth = depth
         self.reset(initial=initial)
