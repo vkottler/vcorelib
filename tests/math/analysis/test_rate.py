@@ -2,6 +2,9 @@
 Test the 'math.analysis.rate' module.
 """
 
+# internal
+from time import sleep
+
 # third-party
 from pytest import approx
 
@@ -16,6 +19,7 @@ def test_rate_tracker_basic():
 
     for _ in range(1000):
         tracker()
+        sleep(0.001)
 
     assert tracker.value > 0.0
     assert tracker.min > 0.0
@@ -25,6 +29,7 @@ def test_rate_tracker_basic():
 
     for i in range(tracker.average.depth * 10):
         tracker(i * 10e9)
+        sleep(0.001)
 
     # Confirm that the rate tracking approaches a correct value.
     assert tracker.value == approx(1.0)
