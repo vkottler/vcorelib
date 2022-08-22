@@ -11,9 +11,9 @@ from typing import Tuple as _Tuple
 
 # third-party
 from fastjsonschema import compile as _compile
-from vcorelib.io import ARBITER as _ARBITER
 
 # internal
+from vcorelib.io import ARBITER as _ARBITER
 from vcorelib.paths import Pathlike as _Pathlike
 from vcorelib.paths import get_file_name as _get_file_name
 from vcorelib.paths import normalize as _normalize
