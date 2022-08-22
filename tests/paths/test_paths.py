@@ -68,6 +68,14 @@ def test_find_file():
     assert find_file(Path(__file__).resolve())
     assert find_file("test.txt", include_cwd=True) is None
 
+    # Verify that we can load package resources.
+    assert find_file("valid", package="tests")
+    assert find_file("valid", "scripts", package="tests")
+    assert find_file("valid", "test.txt", package="tests")
+    assert not find_file(
+        "valid", "a", package="tests", search_paths=[Path(sep)]
+    )
+
 
 def test_file_stats_basic():
     """Test that we can obtain basic file statistics."""
