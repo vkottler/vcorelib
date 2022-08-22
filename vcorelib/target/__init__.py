@@ -6,14 +6,14 @@ A module defining an interface for dynamic task targets.
 import re
 from typing import Dict as _Dict
 from typing import List as _List
-from typing import NamedTuple as _NamedTuple
+from typing import NamedTuple
 from typing import Optional as _Optional
 from typing import Tuple as _Tuple
 
 Substitutions = _Dict[str, str]
 
 
-class DynamicTargetEvaluator(_NamedTuple):
+class DynamicTargetEvaluator(NamedTuple):
     """
     A regular expression configured to match as many groups as in the provided
     keys. When the pattern matches some data, the names of the keys can become
@@ -40,7 +40,7 @@ class DynamicTargetEvaluator(_NamedTuple):
         return result
 
 
-class TargetMatch(_NamedTuple):
+class TargetMatch(NamedTuple):
     """
     An encapsulation of results when attempting to patch a target name to a
     pattern. If a target was matched and had keyword substitutions, the actual

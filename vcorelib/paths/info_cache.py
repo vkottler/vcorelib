@@ -10,7 +10,7 @@ from pathlib import Path as _Path
 from typing import Callable as _Callable
 from typing import Dict as _Dict
 from typing import Iterator as _Iterator
-from typing import NamedTuple as _NamedTuple
+from typing import NamedTuple
 from typing import Optional as _Optional
 from typing import Tuple as _Tuple
 from typing import cast as _cast
@@ -24,7 +24,7 @@ from vcorelib.paths import normalize as _normalize
 from vcorelib.paths import stats as _stats
 
 
-class FileInfo(_NamedTuple):
+class FileInfo(NamedTuple):
     """A collection of data to describe an identity of a file."""
 
     path: _Path
