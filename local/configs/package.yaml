@@ -6,6 +6,7 @@ requirements:
   - ruamel.yaml
   - tomli
   - tomli-w
+  - fastjsonschema
 dev_requirements:
   - pytest-asyncio
   - setuptools-wrapper

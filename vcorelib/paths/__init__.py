@@ -2,14 +2,17 @@
 Common path manipulation utilities.
 """
 
-from hashlib import md5 as _md5
-
 # built-in
+from hashlib import md5 as _md5
 from os import stat_result as _stat_result
 from pathlib import Path as _Path
 from typing import Iterable as _Iterable
+from typing import List as _List
 from typing import Optional as _Optional
 from typing import Union as _Union
+
+# third-party
+from pkg_resources import resource_filename as _resource_filename
 
 # internal
 from vcorelib import DEFAULT_ENCODING as _DEFAULT_ENCODING
@@ -17,13 +20,14 @@ from vcorelib import DEFAULT_ENCODING as _DEFAULT_ENCODING
 Pathlike = _Union[_Path, str, None]
 
 
-def normalize(path: Pathlike) -> _Path:
+def normalize(path: Pathlike, *parts: _Union[str, _Path]) -> _Path:
     """Normalize an input that could be a path into a path."""
-    return (
+    path = (
         _Path("." if path is None else path)
         if not isinstance(path, _Path)
         else path
     )
+    return path.joinpath(*parts)
 
 
 def stats(path: Pathlike) -> _Optional[_stat_result]:
@@ -102,21 +106,31 @@ def file_md5_hex(path: Pathlike) -> str:
 
 def find_file(
     path: Pathlike,
+    *parts: _Union[str, _Path],
     search_paths: _Iterable[Pathlike] = None,
     include_cwd: bool = False,
     relative_to: Pathlike = None,
+    package: str = None,
+    package_subdir: str = "data",
 ) -> _Optional[_Path]:
     """Combines a few simple strategies to locate a file on disk."""
 
-    path = normalize(path)
+    path = normalize(path, *parts)
 
     # If path is absolute we can't search for it.
     if path.is_absolute():
-        if path.is_file():
+        if path.exists():
             return path
         return None
 
-    to_check = list(search_paths) if search_paths else []
+    to_check: _List[Pathlike] = []
+
+    # Add a package resource to the search path if a package name was provided.
+    if package is not None:
+        to_check.append(_resource_filename(package, package_subdir))
+
+    if search_paths:
+        to_check += list(search_paths)
 
     # Check the working directory if it was specified.
     if include_cwd:
@@ -130,11 +144,14 @@ def find_file(
         )
 
     # Return the first file we find on the search path, if we find one.
-    for search in to_check:
-        search = normalize(search)
+    for search in [normalize(x) for x in to_check]:
         if search.is_dir():
             candidate = search.joinpath(path)
-            if candidate.is_file():
+            if candidate.exists():
                 return candidate
 
     return None
+
+
+# An alias for 'find_file' for convenience.
+resource = find_file
