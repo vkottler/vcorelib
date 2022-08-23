@@ -2,6 +2,8 @@
 Tests for the 'paths' module.
 """
 
+from logging import getLogger
+
 # built-in
 from os import linesep, sep
 from pathlib import Path
@@ -64,17 +66,27 @@ def test_md5_hex():
 def test_find_file():
     """Test that we can correctly locate files."""
 
-    assert find_file(Path(sep), "a", "b", "c") is None
-    assert find_file(Path(__file__).resolve())
-    assert find_file("test.txt", include_cwd=True) is None
+    logger = getLogger(__name__)
+
+    assert find_file(Path(sep), "a", "b", "c", logger=logger) is None
+    assert find_file(Path(__file__).resolve(), logger=logger)
+    assert find_file("test.txt", include_cwd=True, logger=logger) is None
 
     # Verify that we can load package resources.
-    assert find_file("valid", package="tests")
-    assert find_file("valid", "scripts", package="tests")
-    assert find_file("valid", "test.txt", package="tests")
-    assert not find_file(
-        "valid", "a", package="tests", search_paths=[Path(sep)]
+    assert find_file("valid", package="tests", logger=logger)
+    assert find_file("valid", "scripts", package="tests", logger=logger)
+    assert find_file("valid", "test.txt", package="tests", logger=logger)
+    assert (
+        find_file(
+            "valid",
+            "a",
+            package="tests",
+            search_paths=[Path(sep)],
+            logger=logger,
+        )
+        is None
     )
+    assert find_file("resource", package="fake_package", logger=logger) is None
 
 
 def test_file_stats_basic():

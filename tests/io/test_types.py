@@ -17,6 +17,8 @@ def test_data_files_simple():
 
     assert LoadResult({}, False) == LoadResult({}, False)
 
+    assert FileExtension.JINJA.is_template()
+
     root = resource("simple_decode").joinpath("json")
     for path in "abc":
         candidates = list(

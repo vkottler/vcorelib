@@ -1,4 +1,5 @@
+cerberus
+fastjsonschema
 ruamel.yaml
 tomli
 tomli-w
-fastjsonschema

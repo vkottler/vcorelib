@@ -38,9 +38,12 @@ class FileExtension(Enum):
     """A mapping of expected encoding type to file extensions."""
 
     UNKNOWN: _List[str] = ["unknown"]
+    # Data formats.
     JSON: _List[str] = [DEFAULT_DATA_EXT]
     YAML: _List[str] = ["yaml", "yml", "eyaml"]
     INI: _List[str] = ["ini", "cfg"]
+    TOML: _List[str] = ["toml"]
+    # Archive formats.
     ZIP: _List[str] = ["zip"]
     TAR: _List[str] = [
         DEFAULT_ARCHIVE_EXT,
@@ -49,11 +52,16 @@ class FileExtension(Enum):
         "tar.lzma",
         "tar.xz",
     ]
-    TOML: _List[str] = ["toml"]
+    # Template formats.
+    JINJA: _List[str] = ["j2", "jinja", "j2_template", "j2_macro"]
 
     def __str__(self) -> str:
         """Get this extension as a string."""
         return self.value[0]
+
+    def is_template(self) -> bool:
+        """Determine if this extension is a kind of template."""
+        return self in {FileExtension.JINJA}
 
     def is_archive(self) -> bool:
         """Determine if this extension is a kind of archive file."""
