@@ -3,21 +3,19 @@ A module for implementing schema-validated classes.
 """
 
 # internal
-from vcorelib.schemas import JsonSchema as _JsonSchema
-from vcorelib.schemas import JsonSchemaMap as _JsonSchemaMap
+from vcorelib.schemas.base import Schema as _Schema
+from vcorelib.schemas.base import SchemaMap as _SchemaMap
 
 
-class JsonSchemaMixin:  # pylint: disable=too-few-public-methods
+class SchemaMixin:  # pylint: disable=too-few-public-methods
     """
     A class that allows inheriting classes to validate an attribute with a
     schema.
     """
 
-    schema: _JsonSchema
+    schema: _Schema
 
-    def __init__(
-        self, schemas: _JsonSchemaMap, valid_attr: str = "data"
-    ) -> None:
+    def __init__(self, schemas: _SchemaMap, valid_attr: str = "data") -> None:
         """Initialize this object instance by performing schema validation."""
 
         # Don't double initialize.

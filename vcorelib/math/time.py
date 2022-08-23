@@ -111,8 +111,10 @@ class Timer:
         curr = self.curr
         self.curr += 1
         start = _perf_counter_ns()
-        yield curr
-        self.data[curr] = _perf_counter_ns() - start
+        try:
+            yield curr
+        finally:
+            self.data[curr] = _perf_counter_ns() - start
 
     def result(self, token: int) -> int:
         """Get the timer result."""

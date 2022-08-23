@@ -4,6 +4,7 @@ Common path manipulation utilities.
 
 # built-in
 from hashlib import md5 as _md5
+from logging import Logger as _Logger
 from os import stat_result as _stat_result
 from pathlib import Path as _Path
 from typing import Iterable as _Iterable
@@ -104,30 +105,27 @@ def file_md5_hex(path: Pathlike) -> str:
         return _md5(stream.read()).hexdigest()
 
 
-def find_file(
-    path: Pathlike,
-    *parts: _Union[str, _Path],
+def _construct_search_path(
     search_paths: _Iterable[Pathlike] = None,
     include_cwd: bool = False,
     relative_to: Pathlike = None,
     package: str = None,
     package_subdir: str = "data",
-) -> _Optional[_Path]:
-    """Combines a few simple strategies to locate a file on disk."""
-
-    path = normalize(path, *parts)
-
-    # If path is absolute we can't search for it.
-    if path.is_absolute():
-        if path.exists():
-            return path
-        return None
+    logger: _Logger = None,
+) -> _List[Pathlike]:
+    """Construct a list of paths to search for a resource."""
 
     to_check: _List[Pathlike] = []
 
     # Add a package resource to the search path if a package name was provided.
     if package is not None:
-        to_check.append(_resource_filename(package, package_subdir))
+        try:
+            to_check.append(_resource_filename(package, package_subdir))
+        except ModuleNotFoundError:
+            if logger is not None:
+                logger.warning(
+                    "Can't search package '%s', not found.", package
+                )
 
     if search_paths:
         to_check += list(search_paths)
@@ -143,12 +141,50 @@ def find_file(
             relative_to if relative_to.is_dir() else relative_to.parent
         )
 
+    return to_check
+
+
+def find_file(
+    path: Pathlike,
+    *parts: _Union[str, _Path],
+    search_paths: _Iterable[Pathlike] = None,
+    include_cwd: bool = False,
+    relative_to: Pathlike = None,
+    package: str = None,
+    package_subdir: str = "data",
+    logger: _Logger = None,
+) -> _Optional[_Path]:
+    """Combines a few simple strategies to locate a file on disk."""
+
+    path = normalize(path, *parts)
+
+    # If path is absolute we can't search for it.
+    if path.is_absolute():
+        if path.exists():
+            return path
+        return None
+
     # Return the first file we find on the search path, if we find one.
-    for search in [normalize(x) for x in to_check]:
+    for search in [
+        normalize(x)
+        for x in _construct_search_path(
+            search_paths=search_paths,
+            include_cwd=include_cwd,
+            relative_to=relative_to,
+            package=package,
+            package_subdir=package_subdir,
+            logger=logger,
+        )
+    ]:
         if search.is_dir():
             candidate = search.joinpath(path)
             if candidate.exists():
+                if logger is not None:
+                    logger.debug("Found '%s' at '%s'.", path, search)
                 return candidate
+
+            if logger is not None:
+                logger.debug("Didn't find '%s' at '%s'.", path, search)
 
     return None
 
