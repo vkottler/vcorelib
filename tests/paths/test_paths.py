@@ -21,6 +21,7 @@ from vcorelib.paths import (
     get_file_name,
     modified_after,
     modified_ns,
+    normalize,
     stats,
     str_md5_hex,
 )
@@ -61,6 +62,9 @@ def test_md5_hex():
         else "d8e8fca2dc0f896fd7cb4cb0031ba249"
     )
     assert file_md5_hex(resource("test.txt")) == expect
+
+    # Verify we can assert that files exist.
+    assert normalize(resource("scripts"), "test.py", require=True)
 
 
 def test_find_file():

@@ -21,14 +21,21 @@ from vcorelib import DEFAULT_ENCODING as _DEFAULT_ENCODING
 Pathlike = _Union[_Path, str, None]
 
 
-def normalize(path: Pathlike, *parts: _Union[str, _Path]) -> _Path:
+def normalize(
+    path: Pathlike, *parts: _Union[str, _Path], require: bool = False
+) -> _Path:
     """Normalize an input that could be a path into a path."""
     path = (
         _Path("." if path is None else path)
         if not isinstance(path, _Path)
         else path
     )
-    return path.joinpath(*parts)
+    path = path.joinpath(*parts)
+
+    if require:
+        assert path.exists(), f"Path '{path}' doesn't exist!"
+
+    return path
 
 
 def stats(path: Pathlike) -> _Optional[_stat_result]:
