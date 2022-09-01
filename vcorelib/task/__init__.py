@@ -64,7 +64,7 @@ class Task:  # pylint: disable=too-many-instance-attributes
         self._continue = True
         self._running: _Set[str] = set()
         self._to_signal: int = 0
-        self._sem = asyncio.Semaphore(0)
+        self._sem: _Optional[asyncio.Semaphore] = None
 
         # Metrics.
         self.times_invoked: int = 0
@@ -130,6 +130,7 @@ class Task:  # pylint: disable=too-many-instance-attributes
             assert substitutions is not None
 
         # Signal to any other active tasks that this is complete.
+        assert self._sem is not None
         for _ in range(self._to_signal):
             self._sem.release()
         if self._to_signal:
@@ -184,7 +185,9 @@ class Task:  # pylint: disable=too-many-instance-attributes
 
         return wrapper
 
-    def depend_on(self, task: "Task", **kwargs) -> bool:
+    def depend_on(
+        self, task: "Task", eloop: asyncio.AbstractEventLoop = None, **kwargs
+    ) -> bool:
         """
         Register other tasks' output data to your input box. Return true
         if a new dependency was added.
@@ -194,7 +197,12 @@ class Task:  # pylint: disable=too-many-instance-attributes
             """
             Create a task while injecting additional keyword arguments.
             """
-            return asyncio.create_task(
+
+            nonlocal eloop
+            if eloop is None:
+                eloop = asyncio.get_running_loop()
+
+            return eloop.create_task(
                 task.dispatch(
                     self,
                     substitutions={**substitutions},
@@ -275,6 +283,9 @@ class Task:  # pylint: disable=too-many-instance-attributes
         log = getLogger(compiled)
         if merged and self.times_invoked == 1:
             log.debug("substitutions: '%s'", merged)
+
+        if self._sem is None:
+            self._sem = asyncio.Semaphore(0)
 
         # If this task is already running, wait for it to complete.
         if compiled in self._running:
