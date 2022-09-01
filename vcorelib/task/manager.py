@@ -4,7 +4,7 @@ A simple task management interface.
 
 # built-in
 from asyncio import gather
-from asyncio import get_event_loop as _get_event_loop
+from asyncio import new_event_loop as _new_event_loop
 from collections import defaultdict
 from typing import Any as _Any
 from typing import Callable as _Callable
@@ -17,6 +17,7 @@ from typing import Tuple as _Tuple
 from typing import cast
 
 # internal
+from vcorelib.asyncio import run_handle_interrupt as _run_handle_interrupt
 from vcorelib.dict import merge
 from vcorelib.script import ScriptableMixin
 from vcorelib.target import TargetMatch
@@ -42,7 +43,7 @@ class TaskManager(ScriptableMixin):
         if resolver is None:
             resolver = TargetResolver()
         self.resolver = resolver
-        self.eloop = _get_event_loop()
+        self.eloop = _new_event_loop()
 
     def register(
         self,
@@ -93,7 +94,9 @@ class TaskManager(ScriptableMixin):
                 for dep in deps:
                     # If the dependency points to a task by name, add it.
                     if dep in self.tasks:
-                        task_obj.depend_on(self.tasks[dep], **kwargs)
+                        task_obj.depend_on(
+                            self.tasks[dep], eloop=self.eloop, **kwargs
+                        )
                         continue
 
                     # Ensure the dependency can be matched to a task otherwise.
@@ -109,6 +112,7 @@ class TaskManager(ScriptableMixin):
                     assert resolution.result.substitutions is not None
                     task_obj.depend_on(
                         cast(Task, resolution.data),
+                        eloop=self.eloop,
                         **merge(
                             {**kwargs},
                             resolution.result.substitutions,
@@ -171,5 +175,5 @@ class TaskManager(ScriptableMixin):
         """
 
         unresolved, executor = self.prepare_execute(tasks, **kwargs)
-        self.eloop.run_until_complete(executor())
+        _run_handle_interrupt(executor(), eloop=self.eloop)
         return unresolved

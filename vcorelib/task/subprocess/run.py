@@ -3,10 +3,12 @@ A task definition for wrapping subprocess's 'run' method.
 """
 
 # built-in
+from asyncio import CancelledError as _CancelledError
 from asyncio import create_subprocess_exec, create_subprocess_shell
 from asyncio.subprocess import PIPE as _PIPE
 from asyncio.subprocess import Process as _Process
 from platform import system as _system
+from signal import SIGINT as _SIGINT
 from sys import executable as _executable
 from typing import List as _List
 from typing import Tuple as _Tuple
@@ -32,6 +34,22 @@ def reconcile_platform(
     args = ["/c", program] + args if is_windows() else args
     program = "cmd.exe" if is_windows() else program
     return program, args
+
+
+async def handle_process_cancel(
+    proc: _Process, stdin: bytes = None, signal: int = _SIGINT
+) -> None:
+    """
+    Communicate with a process and send a signal to it if this task gets
+    cancelled.
+    """
+
+    try:
+        await proc.communicate(input=stdin)
+    except _CancelledError:
+        # Send the process a signal and wait for it to terminate.
+        proc.send_signal(signal)
+        await proc.wait()
 
 
 class SubprocessLogMixin(Task):
@@ -82,7 +100,7 @@ class SubprocessLogMixin(Task):
             stdout=stdout,
             stderr=stderr,
         )
-        await proc.communicate()
+        await handle_process_cancel(proc)
         return proc.returncode == 0
 
     async def subprocess_shell(
@@ -129,7 +147,7 @@ class SubprocessLogMixin(Task):
             stdout=stdout,
             stderr=stderr,
         )
-        await proc.communicate()
+        await handle_process_cancel(proc)
         return proc.returncode == 0
 
 
@@ -159,9 +177,9 @@ class SubprocessExec(SubprocessLogMixin):
             stdout=_PIPE,
             stderr=_PIPE,
         )
-        stdout, stderr = await proc.communicate()
-        outbox["stdout"] = stdout
-        outbox["stderr"] = stderr
+        await handle_process_cancel(proc)
+        outbox["stdout"] = proc.stdout
+        outbox["stderr"] = proc.stderr
         outbox["code"] = proc.returncode
 
         return True if not require_success else proc.returncode == 0
@@ -188,7 +206,7 @@ class SubprocessExecStreamed(SubprocessLogMixin):
         proc = await self.subprocess_exec(
             program, *caller_args, args=args, separator=separator
         )
-        await proc.communicate()
+        await handle_process_cancel(proc)
         outbox["code"] = proc.returncode
 
         return True if not require_success else proc.returncode == 0
@@ -222,9 +240,9 @@ class SubprocessShell(SubprocessLogMixin):
             stdout=_PIPE,
             stderr=_PIPE,
         )
-        stdout, stderr = await proc.communicate()
-        outbox["stdout"] = stdout
-        outbox["stderr"] = stderr
+        await handle_process_cancel(proc)
+        outbox["stdout"] = proc.stdout
+        outbox["stderr"] = proc.stderr
         outbox["code"] = proc.returncode
 
         return True if not require_success else proc.returncode == 0
@@ -252,7 +270,7 @@ class SubprocessShellStreamed(SubprocessLogMixin):
         proc = await self.subprocess_shell(
             cmd, *caller_args, args=args, joiner=joiner, separator=separator
         )
-        await proc.communicate()
+        await handle_process_cancel(proc)
         outbox["code"] = proc.returncode
 
         return True if not require_success else proc.returncode == 0
