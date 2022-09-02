@@ -72,7 +72,7 @@ def test_arbiter_decode_empty():
 def test_arbiter_decode_failures():
     """Test various invalid loading scenarios."""
 
-    base = resource("simple_decode", False)
+    base = resource("simple_decode", valid=False)
 
     # Verify we can't load data of all mapped file types.
     for ext in list(DataMapping.mapping.keys()) + [FileExtension.UNKNOWN]:
