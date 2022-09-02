@@ -63,6 +63,7 @@ async def handle_process_cancel(
         proc.send_signal(signal)
         logger.warning("Sending signal %d to process '%s'.", signal, name)
         await proc.wait()
+        raise
 
     finally:
         if proc.returncode is not None:
