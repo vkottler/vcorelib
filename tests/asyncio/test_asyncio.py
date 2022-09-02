@@ -3,6 +3,7 @@ Test the 'asyncio' module.
 """
 
 # built-in
+from contextlib import suppress
 from multiprocessing import Process
 from os import kill
 from pathlib import Path
@@ -83,7 +84,8 @@ def handle_interrupt_subprocess_test(idx: int) -> bool:
         kill(proc.pid, getattr(signal, "CTRL_C_EVENT", signal.SIGINT))
 
         # This will raise an exception if reached.
-        proc.wait(timeout=2.5)
+        with suppress(subprocess.TimeoutExpired):
+            proc.wait(timeout=1.0)
 
         result = proc.returncode == 0
     return result
