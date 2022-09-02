@@ -4,6 +4,7 @@ Test the 'asyncio' module.
 
 # built-in
 from multiprocessing import Process
+from os import kill
 from pathlib import Path
 import signal
 import subprocess
@@ -32,14 +33,15 @@ def iterative_tester(test: TestIteration, iterations: int) -> bool:
 def handle_interrupt_process_test(idx: int) -> bool:
     """Attempt to trigger the interrupt handling logic."""
 
-    proc = Process(target=task_runner)
+    proc = Process(target=task_runner, daemon=True)
     proc.start()
 
     # Wait some time to ensure that it has started sleeping.
     time.sleep(0.1 * idx)
 
     # Send SIGTERM.
-    proc.terminate()
+    assert proc.pid is not None
+    kill(proc.pid, getattr(signal, "CTRL_C_EVENT", signal.SIGINT))
 
     # Wait for it to clean up.
     proc.join()
@@ -70,18 +72,18 @@ def handle_interrupt_subprocess_test(idx: int) -> bool:
             sys.executable,
             "-m",
             "coverage",
+            "run",
             "-a",
-            str(Path(__name__).with_name("interrupt_tester.py")),
+            str(Path(__file__).with_name("interrupt_tester.py")),
         ],
-        creationflags=getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0),
     ) as proc:
         time.sleep(0.1 * idx)
 
         # Send a platform-specific signal.
-        proc.send_signal(getattr(signal, "CTRL_C_EVENT", signal.SIGINT))
+        kill(proc.pid, getattr(signal, "CTRL_C_EVENT", signal.SIGINT))
 
         # This will raise an exception if reached.
-        proc.wait(timeout=6.0)
+        proc.wait(timeout=1.5)
 
         result = proc.returncode == 1
     return result

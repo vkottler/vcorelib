@@ -8,7 +8,7 @@ from asyncio import create_subprocess_exec, create_subprocess_shell
 from asyncio.subprocess import PIPE as _PIPE
 from asyncio.subprocess import Process as _Process
 from platform import system as _system
-from signal import SIGINT as _SIGINT
+import signal as _signal
 from sys import executable as _executable
 from typing import List as _List
 from typing import Tuple as _Tuple
@@ -37,12 +37,17 @@ def reconcile_platform(
 
 
 async def handle_process_cancel(
-    proc: _Process, stdin: bytes = None, signal: int = _SIGINT
+    proc: _Process, stdin: bytes = None, signal: int = None
 ) -> None:
     """
     Communicate with a process and send a signal to it if this task gets
     cancelled.
     """
+
+    # Default to a valid interrupt signal.
+    if signal is None:
+        signal = getattr(_signal, "CTRL_C_EVENT", _signal.SIGINT)
+    assert signal is not None
 
     try:
         await proc.communicate(input=stdin)
