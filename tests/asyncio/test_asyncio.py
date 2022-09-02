@@ -37,7 +37,7 @@ def handle_interrupt_process_test(idx: int) -> bool:
     proc.start()
 
     # Wait some time to ensure that it has started sleeping.
-    time.sleep(0.1 * idx)
+    time.sleep(0.2 * idx)
 
     # Send SIGTERM.
     assert proc.pid is not None
@@ -45,7 +45,7 @@ def handle_interrupt_process_test(idx: int) -> bool:
 
     # Wait for it to clean up.
     proc.join()
-    success = proc.exitcode == 1
+    success = proc.exitcode == 0
     proc.close()
 
     return success
@@ -77,15 +77,15 @@ def handle_interrupt_subprocess_test(idx: int) -> bool:
             str(Path(__file__).with_name("interrupt_tester.py")),
         ],
     ) as proc:
-        time.sleep(0.1 * idx)
+        time.sleep(0.2 * idx)
 
         # Send a platform-specific signal.
         kill(proc.pid, getattr(signal, "CTRL_C_EVENT", signal.SIGINT))
 
         # This will raise an exception if reached.
-        proc.wait(timeout=1.5)
+        proc.wait(timeout=2.5)
 
-        result = proc.returncode == 1
+        result = proc.returncode == 0
     return result
 
 

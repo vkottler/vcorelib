@@ -30,7 +30,7 @@ def task_runner() -> None:
     for sig in list(
         {
             signal.SIGINT,
-            signal.SIGBREAK,
+            getattr(signal, "SIGBREAK", signal.SIGINT),
             getattr(signal, "CTRL_C_EVENT", signal.SIGINT),
             getattr(signal, "CTRL_BREAK_EVENT", signal.SIGINT),
             signal.SIGTERM,
@@ -46,11 +46,14 @@ def task_runner() -> None:
     print(f"Starting {sleep_time} second sleep.")
 
     import time
+    import sys
     try:
         time.sleep(sleep_time)
         print(f"Finished {sleep_time} second sleep.")
+        sys.exit(1)
     except KeyboardInterrupt:
         print("Inline script got interrupted!")
+        sys.exit(0)
     """
 
     with tempfile.NamedTemporaryFile(
@@ -67,13 +70,17 @@ def task_runner() -> None:
         # main thread.
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        with suppress(TaskFailed):
+        try:
             run_handle_interrupt(task.dispatch(), loop)
+
+        # The task succeeds only if the command exited zero.
+        except TaskFailed:
+            sys.exit(1)
 
     finally:
         remove(name)
 
-    sys.exit(1)
+    sys.exit(0)
 
 
 if __name__ == "__main__":
