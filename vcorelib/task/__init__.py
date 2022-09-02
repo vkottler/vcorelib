@@ -16,6 +16,7 @@ from typing import Iterable as _Iterable
 from typing import List as _List
 from typing import Optional as _Optional
 from typing import Set as _Set
+from typing import Tuple as _Tuple
 
 # internal
 from vcorelib.dict import merge_dicts
@@ -251,14 +252,13 @@ class Task:  # pylint: disable=too-many-instance-attributes
         lines.append(_dumps(substitutions, indent=indent))
         return TaskFailed(_linesep.join(lines))
 
-    async def dispatch(
+    def dispatch_init(
         self,
         caller: "Task" = None,
-        init_only: bool = False,
         substitutions: Substitutions = None,
         **kwargs,
-    ) -> None:
-        """Dispatch this task and return whether or not it succeeded."""
+    ) -> _Tuple[dict, str]:
+        """Perform some dispatch initialization."""
 
         self.times_invoked += 1
 
@@ -276,58 +276,80 @@ class Task:  # pylint: disable=too-many-instance-attributes
         if caller is not None:
             caller.inbox[compiled] = self.outbox
 
+        return merged, compiled
+
+    async def dispatch(
+        self,
+        caller: "Task" = None,
+        init_only: bool = False,
+        substitutions: Substitutions = None,
+        **kwargs,
+    ) -> None:
+        """Dispatch this task and return whether or not it succeeded."""
+
+        merged, compiled = self.dispatch_init(
+            caller=caller, substitutions=substitutions, **kwargs
+        )
+
         # Return early if this task has already been executed.
         if self.resolved(compiled, merged):
             return
+
+        if self._sem is None:
+            self._sem = asyncio.Semaphore(0)
 
         log = getLogger(compiled)
         if merged and self.times_invoked == 1:
             log.debug("substitutions: '%s'", merged)
 
-        if self._sem is None:
-            self._sem = asyncio.Semaphore(0)
+        try:
+            # If this task is already running, wait for it to complete.
+            if compiled in self._running:
+                self._to_signal += 1
+                log.debug("Waiting for existing '%s' to resolve.", compiled)
+                await self._sem.acquire()
+                return
 
-        # If this task is already running, wait for it to complete.
-        if compiled in self._running:
-            self._to_signal += 1
-            log.debug("Waiting for existing '%s' to resolve.", compiled)
-            await self._sem.acquire()
-            return
+            # Signal to other task invocations that this instance is running.
+            self._running.add(compiled)
 
-        # Signal to other task invocations that this instance is running.
-        self._running.add(compiled)
+            # Reset the outbox for this execution. Don't re-assign it or it
+            # will lose its association with anything depending on it.
+            for key in list(self.outbox.keys()):
+                self.outbox.pop(key)
 
-        # Reset the outbox for this execution. Don't re-assign it or it will
-        # lose its association with anything depending on it.
-        for key in list(self.outbox.keys()):
-            self.outbox.pop(key)
+            # Wait for dependencies to finish processing.
+            with self.timer.measure_ns() as token:
+                await self.resolve_dependencies(**merged)
+            self.dependency_time = self.timer.result(token)
+            log.debug("dependencies: %ss", nano_str(self.dependency_time))
 
-        # Wait for dependencies to finish processing.
-        with self.timer.measure_ns() as token:
-            await self.resolve_dependencies(**merged)
-        self.dependency_time = self.timer.result(token)
-        log.debug("dependencies: %ss", nano_str(self.dependency_time))
+            # Allow a dry-run pass get only this far (before executing).
+            if init_only:
+                return
 
-        # Allow a dry-run pass get only this far (before executing).
-        if init_only:
-            return
+            with self.timer.measure_ns() as token:
+                # Execute this task and don't propagate to tasks if this task
+                # failed.
+                with _ExitStack() as stack:
+                    self._stack = stack
+                    result = await self.execute(
+                        self.inbox, self.outbox, **merged
+                    )
+            self.execute_time = self.timer.result(token)
 
-        with self.timer.measure_ns() as token:
-            # Execute this task and don't propagate to tasks if this task
-            # failed.
-            with _ExitStack() as stack:
-                self._stack = stack
-                result = await self.execute(self.inbox, self.outbox, **merged)
-        self.execute_time = self.timer.result(token)
+            # Raise an exception if this task failed.
+            if not result:
+                raise self.task_fail(compiled, merged, caller)
 
-        # Raise an exception if this task failed.
-        if not result:
-            raise self.task_fail(compiled, merged, caller)
+            log.debug("execute: %ss", nano_str(self.execute_time))
 
-        log.debug("execute: %ss", nano_str(self.execute_time))
+            # Track that this task was resolved.
+            self.resolve(log, compiled, merged)
 
-        # Track that this task was resolved.
-        self.resolve(log, compiled, merged)
+        # Handle cancellation to simplify cleaning up the event loop.
+        except asyncio.CancelledError:
+            log.warning("Task '%s' was cancelled!", self.name)
 
 
 class Phony(Task):

@@ -18,11 +18,12 @@ from typing import cast
 
 # internal
 from vcorelib.asyncio import run_handle_interrupt as _run_handle_interrupt
+from vcorelib.asyncio import shutdown_loop as _shutdown_loop
 from vcorelib.dict import merge
 from vcorelib.script import ScriptableMixin
 from vcorelib.target import TargetMatch
 from vcorelib.target.resolver import TargetResolver
-from vcorelib.task import Task
+from vcorelib.task import Task, TaskFailed
 
 BasicCoroutine = _Callable[[], _Coroutine[_Any, _Any, None]]
 
@@ -175,5 +176,12 @@ class TaskManager(ScriptableMixin):
         """
 
         unresolved, executor = self.prepare_execute(tasks, **kwargs)
-        _run_handle_interrupt(executor(), eloop=self.eloop)
+        try:
+            _run_handle_interrupt(executor(), eloop=self.eloop)
+
+        # Ensure that tasks are cancelled on failure.
+        except TaskFailed:
+            _shutdown_loop(self.eloop)
+            raise
+
         return unresolved

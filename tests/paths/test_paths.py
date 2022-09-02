@@ -22,6 +22,7 @@ from vcorelib.paths import (
     modified_after,
     modified_ns,
     normalize,
+    rel,
     stats,
     str_md5_hex,
 )
@@ -153,3 +154,9 @@ def test_paths_tempfile():
     with tempfile() as temp:
         path = temp
     assert not path.is_file()
+
+
+def test_paths_rel_basic():
+    """Test the behavior of the relative-pather."""
+
+    assert str(rel(Path("test.txt").resolve())) == "test.txt"

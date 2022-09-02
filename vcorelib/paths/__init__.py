@@ -3,6 +3,7 @@ Common path manipulation utilities.
 """
 
 # built-in
+from contextlib import suppress as _suppress
 from hashlib import md5 as _md5
 from logging import Logger as _Logger
 from os import stat_result as _stat_result
@@ -149,6 +150,18 @@ def _construct_search_path(
         )
 
     return to_check
+
+
+def rel(path: Pathlike, base: Pathlike = None) -> _Path:
+    """
+    Attempt to make 'path' relative to base (which is the current-working
+    directory, if not provided).
+    """
+
+    path = normalize(path)
+    with _suppress(ValueError):
+        path = path.relative_to(normalize(base).resolve())
+    return path
 
 
 def find_file(
