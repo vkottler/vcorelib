@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta:__legacy__"
 
 [project]
 name = "vcorelib"
-version = "0.11.2"
+version = "0.11.3"
 description = "A collection of core Python utilities."
 readme = "README.md"
 requires-python = ">=3.7"

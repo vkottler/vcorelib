@@ -11,12 +11,12 @@ import pkg_resources
 
 
 def resource(
-    resource_name: str, valid: bool = True, pkg: str = __name__
+    resource_name: str, *parts: str, valid: bool = True, pkg: str = __name__
 ) -> Path:
     """Locate the path to a test resource."""
 
     valid_str = "valid" if valid else "invalid"
-    resource_path = os.path.join("data", valid_str, resource_name)
+    resource_path = os.path.join("data", valid_str, resource_name, *parts)
     return Path(pkg_resources.resource_filename(pkg, resource_path))
 
 

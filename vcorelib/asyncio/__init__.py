@@ -5,19 +5,16 @@ A module for working with asyncio.
 # built-in
 from asyncio import AbstractEventLoop as _AbstractEventLoop
 from asyncio import all_tasks as _all_tasks
-from asyncio import get_running_loop as _get_running_loop
+from contextlib import suppress as _suppress
 from typing import Awaitable as _Awaitable
 
 
 def run_handle_interrupt(
-    to_run: _Awaitable, eloop: _AbstractEventLoop = None
+    to_run: _Awaitable, eloop: _AbstractEventLoop
 ) -> None:
     """
     Run a task in an event loop and gracefully handle keyboard interrupts.
     """
-
-    if eloop is None:
-        eloop = _get_running_loop()
 
     try:
         eloop.run_until_complete(to_run)
@@ -30,4 +27,5 @@ def run_handle_interrupt(
                 task.cancel()
 
                 # Wait for the task to complete.
-                eloop.run_until_complete(task)
+                with _suppress(KeyboardInterrupt):
+                    eloop.run_until_complete(task)
