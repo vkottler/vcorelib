@@ -2,8 +2,11 @@
 Test the 'task.manager' module.
 """
 
+# third-party
+from pytest import raises
+
 # module under test
-from vcorelib.task import Task
+from vcorelib.task import FailTask, Task, TaskFailed
 from vcorelib.task.manager import TaskManager
 from vcorelib.task.time.sleep import SleepTask
 
@@ -56,3 +59,18 @@ def test_task_manager_dynamic():
     # Verify that we can depend on tasks that aren't resolved yet.
     manager.register(Task("test"), ["a:5", "a:6", "a:7"])
     manager.execute(["test"])
+
+
+def test_task_manager_failure():
+    """Test the behavior of the task manager when tasks fail."""
+
+    manager = TaskManager()
+
+    manager.register(SleepTask("a", 2.0))
+    manager.register(SleepTask("b", 2.0))
+    manager.register(SleepTask("c", 2.0))
+    manager.register(FailTask("test"))
+
+    # Ensure this fails.
+    with raises(TaskFailed):
+        manager.execute(["a", "b", "c", "test"])

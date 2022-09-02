@@ -12,6 +12,20 @@ from typing import Awaitable as _Awaitable
 from typing import Optional as _Optional
 
 
+def shutdown_loop(eloop: _AbstractEventLoop) -> None:
+    """Attempt to shut down an event loop."""
+
+    tasks = [x for x in _all_tasks(loop=eloop) if not x.done()]
+    if tasks:
+        # Cancel all tasks running in the event loop.
+        for task in tasks:
+            task.cancel()
+
+        # Wait for the task to complete.
+        with _suppress(KeyboardInterrupt):
+            eloop.run_until_complete(_gather(*tasks))
+
+
 def run_handle_interrupt(
     to_run: _Awaitable, eloop: _AbstractEventLoop
 ) -> _Optional[_Any]:
@@ -25,14 +39,6 @@ def run_handle_interrupt(
     try:
         result = eloop.run_until_complete(to_run)
     except KeyboardInterrupt:
-        tasks = [x for x in _all_tasks(loop=eloop) if not x.done()]
-
-        # Cancel all tasks running in the event loop.
-        for task in tasks:
-            task.cancel()
-
-        # Wait for the task to complete.
-        with _suppress(KeyboardInterrupt):
-            eloop.run_until_complete(_gather(*tasks))
+        shutdown_loop(eloop)
 
     return result

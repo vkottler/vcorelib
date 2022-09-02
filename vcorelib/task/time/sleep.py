@@ -21,6 +21,5 @@ class SleepTask(Task):
         # Allow duration to be specified by keyword argument or positional.
         keyword = {**kwargs}
         duration = keyword.get("duration", args[0])
-
         await asyncio.sleep(duration)
         return True

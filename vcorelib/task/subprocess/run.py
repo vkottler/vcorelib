@@ -7,6 +7,7 @@ from asyncio import CancelledError as _CancelledError
 from asyncio import create_subprocess_exec, create_subprocess_shell
 from asyncio.subprocess import PIPE as _PIPE
 from asyncio.subprocess import Process as _Process
+from logging import Logger as _Logger
 from platform import system as _system
 import signal as _signal
 from sys import executable as _executable
@@ -14,6 +15,7 @@ from typing import List as _List
 from typing import Tuple as _Tuple
 
 # internal
+from vcorelib.paths import rel as _rel
 from vcorelib.task import Inbox as _Inbox
 from vcorelib.task import Outbox, Task
 
@@ -37,7 +39,11 @@ def reconcile_platform(
 
 
 async def handle_process_cancel(
-    proc: _Process, stdin: bytes = None, signal: int = None
+    proc: _Process,
+    name: str,
+    logger: _Logger,
+    stdin: bytes = None,
+    signal: int = None,
 ) -> None:
     """
     Communicate with a process and send a signal to it if this task gets
@@ -51,10 +57,16 @@ async def handle_process_cancel(
 
     try:
         await proc.communicate(input=stdin)
+
     except _CancelledError:
         # Send the process a signal and wait for it to terminate.
         proc.send_signal(signal)
+        logger.warning("Sending signal %d to process '%s'.", signal, name)
         await proc.wait()
+
+    finally:
+        if proc.returncode is not None:
+            logger.info("Process '%s' exited %d.", name, proc.returncode)
 
 
 class SubprocessLogMixin(Task):
@@ -76,7 +88,14 @@ class SubprocessLogMixin(Task):
         """
 
         exec_args = [x for x in args.split(separator) + [*caller_args] if x]
-        self.log.info("exec '%s': %s", program, " ".join(exec_args))
+
+        # Use relative paths when logging to reduce output.
+        self.log.info(
+            "exec '%s': %s",
+            str(_rel(program)),
+            " ".join(str(_rel(x)) for x in exec_args),
+        )
+
         program, exec_args = reconcile_platform(program, exec_args)
         proc = await create_subprocess_exec(
             program,
@@ -105,7 +124,7 @@ class SubprocessLogMixin(Task):
             stdout=stdout,
             stderr=stderr,
         )
-        await handle_process_cancel(proc)
+        await handle_process_cancel(proc, self.name, self.log)
         return proc.returncode == 0
 
     async def subprocess_shell(
@@ -152,7 +171,7 @@ class SubprocessLogMixin(Task):
             stdout=stdout,
             stderr=stderr,
         )
-        await handle_process_cancel(proc)
+        await handle_process_cancel(proc, self.name, self.log)
         return proc.returncode == 0
 
 
@@ -182,7 +201,7 @@ class SubprocessExec(SubprocessLogMixin):
             stdout=_PIPE,
             stderr=_PIPE,
         )
-        await handle_process_cancel(proc)
+        await handle_process_cancel(proc, self.name, self.log)
         outbox["stdout"] = proc.stdout
         outbox["stderr"] = proc.stderr
         outbox["code"] = proc.returncode
@@ -211,7 +230,7 @@ class SubprocessExecStreamed(SubprocessLogMixin):
         proc = await self.subprocess_exec(
             program, *caller_args, args=args, separator=separator
         )
-        await handle_process_cancel(proc)
+        await handle_process_cancel(proc, self.name, self.log)
         outbox["code"] = proc.returncode
 
         return True if not require_success else proc.returncode == 0
@@ -245,7 +264,7 @@ class SubprocessShell(SubprocessLogMixin):
             stdout=_PIPE,
             stderr=_PIPE,
         )
-        await handle_process_cancel(proc)
+        await handle_process_cancel(proc, self.name, self.log)
         outbox["stdout"] = proc.stdout
         outbox["stderr"] = proc.stderr
         outbox["code"] = proc.returncode
@@ -275,7 +294,7 @@ class SubprocessShellStreamed(SubprocessLogMixin):
         proc = await self.subprocess_shell(
             cmd, *caller_args, args=args, joiner=joiner, separator=separator
         )
-        await handle_process_cancel(proc)
+        await handle_process_cancel(proc, self.name, self.log)
         outbox["code"] = proc.returncode
 
         return True if not require_success else proc.returncode == 0
