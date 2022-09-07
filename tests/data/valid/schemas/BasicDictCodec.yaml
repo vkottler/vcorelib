@@ -1,0 +1,11 @@
+---
+type: object
+required: [b, c]
+properties:
+  a:
+    type: number
+    default: 42
+  b:
+    type: string
+  c:
+    type: boolean

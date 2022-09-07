@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta:__legacy__"
 
 [project]
 name = "vcorelib"
-version = "0.11.6"
+version = "0.12.0"
 description = "A collection of core Python utilities."
 readme = "README.md"
 requires-python = ">=3.7"
@@ -36,14 +36,14 @@ dependencies = [
 
 [project.optional-dependencies]
 test = [
-  "pytest-asyncio",
-  "setuptools-wrapper",
-  "types-setuptools",
   "pylint",
   "flake8",
   "pytest",
   "pytest-cov",
   "mypy",
   "black",
-  "isort"
+  "isort",
+  "pytest-asyncio",
+  "setuptools-wrapper",
+  "types-setuptools"
 ]
