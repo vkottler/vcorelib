@@ -1,12 +1,12 @@
 <!--
     =====================================
     generator=datazen
-    version=3.0.10
-    hash=4b2ba316631a880f7e633213d8ca5415
+    version=3.1.0
+    hash=bdd822c1850f00fbd34eae3abc6740ba
     =====================================
 -->
 
-# vcorelib ([0.11.6](https://pypi.org/project/vcorelib/))
+# vcorelib ([0.12.0](https://pypi.org/project/vcorelib/))
 
 [![python](https://img.shields.io/pypi/pyversions/vcorelib.svg)](https://pypi.org/project/vcorelib/)
 ![Build Status](https://github.com/vkottler/vcorelib/workflows/Python%20Package/badge.svg)
@@ -32,9 +32,9 @@ This package is tested with the following Python minor versions:
 
 This package is tested on the following platforms:
 
+* `ubuntu-latest`
 * `macos-latest`
 * `windows-latest`
-* `ubuntu-latest`
 
 # Introduction
 

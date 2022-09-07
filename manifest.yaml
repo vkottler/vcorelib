@@ -8,19 +8,17 @@ params:
 includes:
   - config/includes/python.yaml
   - config/includes/license.yaml
-
-configs:
-  - local/configs
-
-variables:
-  - local/variables
+  - config/includes/funding.yaml
 
 templates:
   - local/templates
-  - config/templates
 
 compiles:
   - name: local
+    configs:
+      - local/configs
+    variables:
+      - local/variables
 
 renders:
   - name: README.md

@@ -2,17 +2,16 @@
 Test the 'schemas' module.
 """
 
-# built-in
-from os.path import join
-
 # third-party
 from pytest import raises
+
+# internal
+from tests.resources import test_schemas
 
 # module under test
 from vcorelib.schemas import (
     CerberusSchema,
     CerberusSchemaMap,
-    JsonSchemaMap,
     SchemaValidationError,
 )
 from vcorelib.schemas.mixins import SchemaMixin
@@ -21,9 +20,7 @@ from vcorelib.schemas.mixins import SchemaMixin
 def test_json_schema_map_basic():
     """Test basic interactions iwth a JSON-schema map."""
 
-    schemas = JsonSchemaMap.from_package(
-        "tests", package_subdir=join("data", "valid")
-    )
+    schemas = test_schemas()
     assert "A" in schemas and "B" in schemas
 
     # Test that schema validation works.
@@ -38,9 +35,7 @@ def test_json_schema_map_basic():
 def test_json_schema_mixin_basic():
     """Test that the class mixin for JSON schemas works."""
 
-    schemas = JsonSchemaMap.from_package(
-        "tests", package_subdir=join("data", "valid")
-    )
+    schemas = test_schemas()
 
     class A(
         SchemaMixin
