@@ -19,98 +19,67 @@ from vcorelib.schemas.mixins import SchemaMixin
 T = _TypeVar("T", bound="DictCodec")
 
 
-class DictCodec(_abc.ABC):
+class DictCodec(_abc.ABC, SchemaMixin):
     """
     A class implementing an interface for objects that can be decoded from
     disk and encoded back to disk.
     """
 
-    @_abc.abstractmethod
-    def __init__(self, data: dict) -> None:
+    def __init__(
+        self,
+        data: dict,
+        schemas: _SchemaMap = None,
+        dest_attr: str = "data",
+    ) -> None:
         """Initialize this instance."""
 
+        setattr(self, dest_attr, data)
+
+        # Validate the instance's dictionary data based on a schema.
+        if schemas is not None:
+            super().__init__(schemas, valid_attr=dest_attr)
+
+        self.init(getattr(self, dest_attr))
+
     @_abc.abstractmethod
-    def to_dict(self) -> dict:
+    def init(self, data: dict) -> None:
+        """Perform implementation-specific initialization."""
+
+    @_abc.abstractmethod
+    def asdict(self) -> dict:
         """Obtain a dictionary representing this instance."""
 
     def encode(
         self, pathlike: _Pathlike, arbiter: _DataArbiter = _ARBITER, **kwargs
     ) -> _EncodeResult:
         """Encode this object instance to a file."""
-        return arbiter.encode(pathlike, self.to_dict(), **kwargs)
+        return arbiter.encode(pathlike, self.asdict(), **kwargs)
 
     @classmethod
     def decode(
         cls: _Type[T],
         pathlike: _Pathlike,
         arbiter: _DataArbiter = _ARBITER,
+        schemas: _SchemaMap = None,
+        dest_attr: str = "data",
         **kwargs
     ) -> T:
         """Decode an object instance from data loaded from a file."""
-        result = arbiter.decode(pathlike, require_success=True, **kwargs)
-        return cls(result.data)
 
-
-V = _TypeVar("V", bound="ValidatedDictCodec")
+        return cls(
+            arbiter.decode(pathlike, require_success=True, **kwargs).data,
+            schemas=schemas,
+            dest_attr=dest_attr,
+        )
 
 
 class BasicDictCodec(DictCodec):
     """The simplest possible dictionary codec implementation."""
 
-    def __init__(self, data: dict) -> None:
+    def init(self, data: dict) -> None:
         """Initialize this instance."""
         self.data = data
 
-    def to_dict(self) -> dict:
+    def asdict(self) -> dict:
         """Obtain a dictionary representing this instance."""
         return self.data
-
-
-class ValidatedDictCodec(SchemaMixin):
-    """
-    A class that integrates class-based schema validation with dict-codec
-    object instances.
-
-    In practice this should enable creating object instances from data loaded
-    from disk that's validated by a schema that also came from data loaded from
-    disk.
-    """
-
-    def __init__(
-        self,
-        inst: DictCodec,
-        schemas: _SchemaMap,
-        valid_attr: str = "data",
-    ) -> None:
-        """Initialize this instance."""
-
-        # Store the underlying instance.
-        self.inst = inst
-
-        # Validate the instance's dictionary data based on a schema.
-        setattr(self, valid_attr, self.to_dict())
-        super().__init__(schemas, valid_attr=valid_attr)
-
-    @property
-    def schema_name(self) -> str:
-        """A default name for this class's schema."""
-        return self.inst.__class__.__name__
-
-    def to_dict(self) -> dict:
-        """Get the underlying instance's dictionary."""
-        return self.inst.to_dict()
-
-    def encode(self, pathlike: _Pathlike, **kwargs) -> _EncodeResult:
-        """Encode this object instance to a file."""
-        return self.inst.encode(pathlike, **kwargs)
-
-    @classmethod
-    def decode(
-        cls: _Type[V],
-        codec: _Type[DictCodec],
-        pathlike: _Pathlike,
-        schemas: _SchemaMap,
-        **kwargs
-    ) -> V:
-        """Decode an object instance from data loaded from a file."""
-        return cls(codec.decode(pathlike, **kwargs), schemas)
