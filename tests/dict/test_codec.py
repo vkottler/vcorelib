@@ -21,10 +21,10 @@ def test_dict_codec_basic():
     """Test basic interactions and instantiations of dict-codec objects."""
 
     # Load valid data.
-    valid = codec.ValidatedDictCodec.decode(
-        codec.BasicDictCodec, resource("test.json"), test_schemas()
+    valid = codec.BasicDictCodec.decode(
+        resource("test.json"), schemas=test_schemas()
     )
-    assert valid.to_dict()["a"] == 42
+    assert valid.asdict()["a"] == 42
 
     # Write the object to a temporary file.
     with NamedTemporaryFile(suffix=".json", delete=False) as temp:
@@ -34,8 +34,7 @@ def test_dict_codec_basic():
 
     # Load invalid data that violates the schema.
     with raises(SchemaValidationError):
-        codec.ValidatedDictCodec.decode(
-            codec.BasicDictCodec,
+        codec.BasicDictCodec.decode(
             resource("test.json", valid=False),
-            test_schemas(),
+            schemas=test_schemas(),
         )
