@@ -26,6 +26,12 @@ def test_dict_codec_basic():
     )
     assert valid.asdict()["a"] == 42
 
+    assert str(valid)
+
+    assert valid == codec.BasicDictCodec.decode(
+        resource("test.json"), schemas=test_schemas()
+    )
+
     # Write the object to a temporary file.
     with NamedTemporaryFile(suffix=".json", delete=False) as temp:
         name = temp.name
