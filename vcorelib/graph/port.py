@@ -6,8 +6,11 @@ from enum import Enum as _Enum
 from enum import auto as _auto
 
 # built-in
-from itertools import zip_longest
-from typing import Dict, NamedTuple, Optional, Set
+from itertools import zip_longest as _zip_longest
+from typing import Dict as _Dict
+from typing import NamedTuple
+from typing import Optional as _Optional
+from typing import Set as _Set
 from typing import TextIO as _TextIO
 
 
@@ -38,7 +41,7 @@ class Port(NamedTuple):
 
     label: str
     kind: PortType = PortType.INOUT
-    alias: Optional[str] = None
+    alias: _Optional[str] = None
     allocated: bool = False
 
     def allocate(self) -> "Port":
@@ -76,14 +79,14 @@ class PortManager:
     def __init__(self) -> None:
         """Initialize this port manager."""
 
-        self.outputs: Dict[str, Port] = {}
-        self.inputs: Dict[str, Port] = {}
+        self.outputs: _Dict[str, Port] = {}
+        self.inputs: _Dict[str, Port] = {}
 
-    def inout_labels(self) -> Set[str]:
+    def inout_labels(self) -> _Set[str]:
         """Get inout port labels."""
         return set(self.inputs.keys()).intersection(self.outputs.keys())
 
-    def input_labels(self, exclude_inout: bool = True) -> Set[str]:
+    def input_labels(self, exclude_inout: bool = True) -> _Set[str]:
         """Get input port labels."""
 
         result = set(self.inputs.keys())
@@ -91,7 +94,7 @@ class PortManager:
             result -= self.inout_labels()
         return result
 
-    def output_labels(self, exclude_inout: bool = True) -> Set[str]:
+    def output_labels(self, exclude_inout: bool = True) -> _Set[str]:
         """Get output port labels."""
 
         result = set(self.outputs.keys())
@@ -111,7 +114,7 @@ class PortManager:
         columns.append(inouts if inouts else "no inout ports")
 
         # Put inputs above outputs and arrange in a table.
-        for in_label, out_label in zip_longest(
+        for in_label, out_label in _zip_longest(
             sorted(self.input_labels()), sorted(self.output_labels())
         ):
             in_data = (

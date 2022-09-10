@@ -3,8 +3,9 @@ Test the 'graph' module.
 """
 
 # module under test
-from vcorelib.graph import DiGraph, DiGraphNode
+from vcorelib.graph import DiGraph
 from vcorelib.graph.edge import GraphEdge
+from vcorelib.graph.node import DiGraphNode
 from vcorelib.graph.port import PortType
 from vcorelib.paths.context import tempfile
 
