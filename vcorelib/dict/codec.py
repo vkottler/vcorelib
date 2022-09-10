@@ -25,11 +25,31 @@ class DictCodec(_abc.ABC, SchemaMixin):
     disk and encoded back to disk.
     """
 
+    def __eq__(self, other) -> bool:
+        """Determine if this instance is equal to another."""
+
+        # Allow direct comparison with another dictionary, but not an arbitrary
+        # mapping.
+        if isinstance(other, dict):
+            to_cmp = other
+        else:
+            to_cmp = other.asdict()
+
+        return self.asdict() == to_cmp
+
+    def __str__(self) -> str:
+        """
+        Use the dictionary representation of this instance for string
+        representation.
+        """
+        return str(self.asdict())
+
     def __init__(
         self,
         data: dict,
         schemas: _SchemaMap = None,
         dest_attr: str = "data",
+        verify: bool = True,
     ) -> None:
         """Initialize this instance."""
 
@@ -40,6 +60,12 @@ class DictCodec(_abc.ABC, SchemaMixin):
             super().__init__(schemas, valid_attr=dest_attr)
 
         self.init(getattr(self, dest_attr))
+
+        # After initialization, creating a new dictionary from this object
+        # should be equivalent to the one provided to the constructor. This
+        # can be disabled for special cases.
+        if verify:
+            assert self == data, f"'{self}' != '{data}' after initialization!"
 
     @_abc.abstractmethod
     def init(self, data: dict) -> None:
@@ -62,7 +88,8 @@ class DictCodec(_abc.ABC, SchemaMixin):
         arbiter: _DataArbiter = _ARBITER,
         schemas: _SchemaMap = None,
         dest_attr: str = "data",
-        **kwargs
+        verify: bool = True,
+        **kwargs,
     ) -> T:
         """Decode an object instance from data loaded from a file."""
 
@@ -70,6 +97,7 @@ class DictCodec(_abc.ABC, SchemaMixin):
             arbiter.decode(pathlike, require_success=True, **kwargs).data,
             schemas=schemas,
             dest_attr=dest_attr,
+            verify=verify,
         )
 
 
