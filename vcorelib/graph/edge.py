@@ -3,13 +3,15 @@ A module for defining and working with graph edges.
 """
 
 # built-in
-from typing import Dict, NamedTuple, Optional
+from typing import Dict as _Dict
+from typing import NamedTuple
+from typing import Optional as _Optional
 from typing import TextIO as _TextIO
 
 # internal
-from vcorelib.graph.port import Port
+from vcorelib.graph.port import Port as _Port
 
-AttributeMap = Dict[str, str]
+AttributeMap = _Dict[str, str]
 
 
 def write_attributes(stream: _TextIO, data: AttributeMap = None) -> None:
@@ -22,7 +24,7 @@ def write_attributes(stream: _TextIO, data: AttributeMap = None) -> None:
         stream.write(" ]")
 
 
-def write_node_id(label: str, stream: _TextIO, port: Port = None) -> None:
+def write_node_id(label: str, stream: _TextIO, port: _Port = None) -> None:
     """Write a node identifier to a stream."""
 
     stream.write(label)
@@ -36,9 +38,9 @@ class GraphEdge(NamedTuple):
 
     src: str
     dst: str
-    src_port: Optional[Port] = None
-    dst_port: Optional[Port] = None
-    attrs: Optional[AttributeMap] = None
+    src_port: _Optional[_Port] = None
+    dst_port: _Optional[_Port] = None
+    attrs: _Optional[AttributeMap] = None
 
     def __eq__(self, other) -> bool:
         """Determine if this edge is equivalent to another."""
