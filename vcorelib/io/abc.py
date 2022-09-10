@@ -36,3 +36,16 @@ class Serializable(_abc.ABC):
         ).open("w", encoding=encoding) as stream:
             self.to_stream(stream, **kwargs)
             stream.flush()
+
+
+class FileEntity(Serializable):
+    """A class for working with objects that are backed by a disk location."""
+
+    def default_location(self) -> _Pathlike:
+        """Get a default serialization destination for this instance."""
+        return self.location
+
+    def __init__(self, location: _Pathlike) -> None:
+        """Initialize this file-backed entity."""
+        assert not hasattr(self, "location")
+        self.location = _normalize(location)
