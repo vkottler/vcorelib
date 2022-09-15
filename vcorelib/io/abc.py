@@ -41,6 +41,10 @@ class Serializable(_abc.ABC):
 class FileEntity(Serializable):
     """A class for working with objects that are backed by a disk location."""
 
+    def __hash__(self) -> int:
+        """Use this instance's disk location for hashing."""
+        return hash(self.location)
+
     def default_location(self) -> _Pathlike:
         """Get a default serialization destination for this instance."""
         return self.location

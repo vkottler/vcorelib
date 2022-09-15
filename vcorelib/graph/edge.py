@@ -17,7 +17,7 @@ AttributeMap = _Dict[str, str]
 def write_attributes(stream: _TextIO, data: AttributeMap = None) -> None:
     """A simple attribute writer for Graphviz's DOT language."""
 
-    if data is not None:
+    if data:
         stream.write(" [ ")
         attr_strs = [f'{k}="{v}"' for k, v in data.items()]
         stream.write(", ".join(attr_strs))
