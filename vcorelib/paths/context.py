@@ -9,6 +9,7 @@ from os import makedirs as _makedirs
 from pathlib import Path as _Path
 from tempfile import NamedTemporaryFile as _NamedTemporaryFile
 from typing import Iterator as _Iterator
+from typing import Union as _Union
 
 # internal
 from vcorelib.paths import Pathlike as _Pathlike
@@ -16,16 +17,18 @@ from vcorelib.paths import normalize as _normalize
 
 
 @contextmanager
-def in_dir(path: _Pathlike, makedirs: bool = False) -> _Iterator[None]:
+def in_dir(
+    path: _Pathlike, *parts: _Union[str, _Path], makedirs: bool = False
+) -> _Iterator[_Path]:
     """Change the current working directory as a context manager."""
 
     cwd = _Path.cwd()
     try:
-        path = _normalize(path)
+        path = _normalize(path, *parts)
         if makedirs:
             _makedirs(path, exist_ok=True)
         _chdir(path)
-        yield
+        yield path
     finally:
         _chdir(cwd)
 

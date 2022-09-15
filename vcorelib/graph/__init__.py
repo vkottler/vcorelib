@@ -41,18 +41,21 @@ class DiGraph(_AbstractDiGraph):
             write_indent(indent, stream, linesep=linesep)
             stream.write("graph")
             _write_attributes(stream, data=self.graph_attrs)
+            stream.write(";")
 
         # Add top-level node attributes.
         if self.node_attrs:
             write_indent(indent, stream, linesep=linesep)
             stream.write("node")
             _write_attributes(stream, data=self.node_attrs)
+            stream.write(";")
 
         # Add top-level edge attributes.
         if self.edge_attrs:
             write_indent(indent, stream, linesep=linesep)
             stream.write("edge")
             _write_attributes(stream, data=self.edge_attrs)
+            stream.write(";")
 
         # Write nodes.
         for node in self.data.values():
