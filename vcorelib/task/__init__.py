@@ -2,7 +2,6 @@
 A module for implementing tasks in a dependency tree.
 """
 
-# band-aids
 from __future__ import annotations
 
 # built-in
