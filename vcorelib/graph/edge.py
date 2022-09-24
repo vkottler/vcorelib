@@ -44,7 +44,7 @@ class GraphEdge(NamedTuple):
 
     def __eq__(self, other) -> bool:
         """Determine if this edge is equivalent to another."""
-        return self.src == other.src and self.dst == other.dst
+        return bool(self.src == other.src and self.dst == other.dst)
 
     def __hash__(self) -> int:
         """Use a string representation as a sane hashing method."""

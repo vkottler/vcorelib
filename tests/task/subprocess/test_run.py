@@ -47,6 +47,6 @@ async def test_task_subprocess_run_streamed_basic():
     await task.dispatch()
     assert task.outbox["code"] == 0
 
-    task = SubprocessShellStreamed("test")
-    await task.dispatch()
-    assert task.outbox["code"] == 0
+    new_task = SubprocessShellStreamed("test")
+    await new_task.dispatch()
+    assert new_task.outbox["code"] == 0

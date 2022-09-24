@@ -2,9 +2,9 @@
 A module implementing a file-info cache.
 """
 
-from contextlib import contextmanager as _contextmanager
-
 # built-in
+from collections.abc import Mapping as _Mapping
+from contextlib import contextmanager as _contextmanager
 from os import stat_result as _stat_result
 from pathlib import Path as _Path
 from typing import Callable as _Callable
@@ -88,15 +88,19 @@ class FileInfo(NamedTuple):
         return data
 
     @staticmethod
-    def from_json(data: dict) -> _Dict[_Path, "FileInfo"]:
+    def from_json(data: _JsonObject) -> _Dict[_Path, "FileInfo"]:
         """Create file info from JSON data."""
 
         result = {}
         for key, info in data.items():
+            assert isinstance(info, _Mapping)
             path = _Path(key)
             if path.is_file():
                 result[path] = FileInfo(
-                    path, info["size"], info["md5_hex"], info["modified_ns"]
+                    path,
+                    _cast(int, info["size"]),
+                    _cast(str, info["md5_hex"]),
+                    _cast(int, info["modified_ns"]),
                 )
         return result
 

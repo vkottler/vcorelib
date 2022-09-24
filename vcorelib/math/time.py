@@ -15,7 +15,6 @@ from typing import Iterator as _Iterator
 from typing import Tuple as _Tuple
 
 # internal
-from vcorelib.dict import consume as _consume
 from vcorelib.math import KIBI_UNITS as _KIBI_UNITS
 from vcorelib.math import SI_UNITS as _SI_UNITS
 from vcorelib.math import UnitSystem as _UnitSystem
@@ -118,7 +117,7 @@ class Timer:
 
     def result(self, token: int) -> int:
         """Get the timer result."""
-        return _consume(self.data, token, -1)
+        return self.data.pop(token, -1)
 
     @contextmanager
     def log(

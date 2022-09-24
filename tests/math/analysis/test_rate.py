@@ -28,7 +28,7 @@ def test_rate_tracker_basic():
     tracker.reset()
 
     for i in range(tracker.average.depth * 10):
-        tracker(i * 1e9)
+        tracker(int(i * 1e9))
         sleep(0.001)
 
     # Confirm that the rate tracking approaches a correct value.

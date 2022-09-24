@@ -38,12 +38,14 @@ def test_file_name_ext():
     assert FileExtension.from_path("json") is FileExtension.JSON
     assert FileExtension.from_path("a.json") is FileExtension.JSON
     assert FileExtension.from_path("a.b.json") is not FileExtension.JSON
-    assert FileExtension.from_path("a.json").is_data()
+    ext = FileExtension.from_path("a.json")
+    assert ext is not None and ext.is_data()
 
     assert FileExtension.from_path("a.tar") is FileExtension.TAR
     assert FileExtension.from_path("a.tar.gz") is FileExtension.TAR
     assert FileExtension.from_path("a.tar.bz2") is FileExtension.TAR
-    assert FileExtension.from_path("a.tar.gz").is_archive()
+    ext = FileExtension.from_path("a.tar.gz")
+    assert ext is not None and ext.is_archive()
 
 
 def test_file_name():
@@ -101,8 +103,8 @@ def test_file_stats_basic():
     assert stats(path) is not None
     assert modified_ns(path)
 
-    with TemporaryDirectory() as tmpdir:
-        tmpdir = Path(tmpdir)
+    with TemporaryDirectory() as _tmpdir:
+        tmpdir = Path(_tmpdir)
         first_file = tmpdir.joinpath("test1.txt")
         second_file = tmpdir.joinpath("test2.txt")
 
@@ -144,7 +146,7 @@ def test_paths_in_dir():
     """Test that we can change directories as a context manager."""
 
     with TemporaryDirectory() as tmpdir:
-        with in_dir(tmpdir, True):
+        with in_dir(tmpdir, makedirs=True):
             assert Path.cwd().samefile(Path(tmpdir))
 
 
