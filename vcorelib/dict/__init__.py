@@ -9,13 +9,16 @@ from enum import Enum as _Enum
 from enum import auto as _auto
 from logging import Logger, getLogger
 from typing import Any as _Any
+from typing import Dict as _Dict
 from typing import Iterator as _Iterator
 from typing import List as _List
 
 _LOG = getLogger(__name__)
+GenericDict = _Dict[_Any, _Any]
+GenericStrDict = _Dict[str, _Any]
 
 
-def consume(data: dict, key: _Any, default: _Any = None) -> _Any:
+def consume(data: GenericDict, key: _Any, default: _Any = None) -> _Any:
     """
     Attempt to obtain dictionary data via key, removing the data if it was
     present.
@@ -23,7 +26,7 @@ def consume(data: dict, key: _Any, default: _Any = None) -> _Any:
     return data.pop(key, default)
 
 
-def set_if_not(data: dict, key: _Any, value: _Any = None) -> _Any:
+def set_if_not(data: GenericDict, key: _Any, value: _Any = None) -> _Any:
     """
     Set a value in a dictionary if one wasn't already set and return the value
     that ends up at that key.
@@ -35,7 +38,9 @@ def set_if_not(data: dict, key: _Any, value: _Any = None) -> _Any:
 
 
 @_contextmanager
-def limited(data: dict, key: _Any, value: _Any = None) -> _Iterator[None]:
+def limited(
+    data: GenericDict, key: _Any, value: _Any = None
+) -> _Iterator[None]:
     """Ensure that dictionary data is only temporarily added."""
 
     had_key = False
@@ -72,12 +77,12 @@ class MergeStrategy(_Enum):
 
 
 def merge_recursive(
-    dict_a: dict,
-    dict_b: dict,
+    dict_a: GenericDict,
+    dict_b: GenericDict,
     path: _List[str] = None,
     expect_overwrite: bool = False,
     logger: Logger = None,
-) -> dict:
+) -> GenericDict:
     """
     Combine two dictionaries recursively, prefers dict_a in a conflict. For
     values of the same key that are lists, the lists are combined. Otherwise
@@ -129,13 +134,13 @@ def merge_recursive(
 
 
 def merge(
-    dict_a: dict,
-    dict_b: dict,
+    dict_a: GenericDict,
+    dict_b: GenericDict,
     path: _List[str] = None,
     expect_overwrite: bool = False,
     logger: Logger = None,
     strategy: MergeStrategy = MergeStrategy.RECURSIVE,
-) -> dict:
+) -> GenericDict:
     """Combine two dictionaries based on a provided merge strategy."""
 
     if strategy is MergeStrategy.UPDATE:
@@ -152,11 +157,11 @@ def merge(
 
 
 def merge_dicts(
-    dicts: _List[dict],
+    dicts: _List[GenericDict],
     expect_overwrite: bool = False,
     logger: Logger = None,
     strategy: MergeStrategy = MergeStrategy.RECURSIVE,
-) -> dict:
+) -> GenericDict:
     """
     Merge a list of dictionary data into a single set (mutates the first
     element).

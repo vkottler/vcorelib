@@ -5,7 +5,13 @@ data structures.
 
 # built-in
 from os import environ as _environ
+from typing import Any as _Any
 from typing import List as _List
+
+# internal
+from vcorelib.dict import GenericDict as _GenericDict
+
+GenericList = _List[_Any]
 
 
 def str_resolve_env_var(data: str) -> str:
@@ -24,8 +30,11 @@ def str_resolve_env_var(data: str) -> str:
 
 
 def list_resolve_env_vars(
-    data: list, keys: bool = True, values: bool = True, lists: bool = True
-) -> list:
+    data: GenericList,
+    keys: bool = True,
+    values: bool = True,
+    lists: bool = True,
+) -> GenericList:
     """
     Recursively resolve list data that may contain strings that should be
     treated as environment-variable substitutions. The data is updated
@@ -44,8 +53,11 @@ def list_resolve_env_vars(
 
 
 def dict_resolve_env_vars(
-    data: dict, keys: bool = True, values: bool = True, lists: bool = True
-) -> dict:
+    data: _GenericDict,
+    keys: bool = True,
+    values: bool = True,
+    lists: bool = True,
+) -> _GenericDict:
     """
     Recursively resolve dictionary data that may contain strings that should be
     treated as environment-variable substitutions. The data is updated
@@ -53,7 +65,7 @@ def dict_resolve_env_vars(
     """
 
     keys_to_remove: _List[str] = []
-    to_update: dict = {}
+    to_update: _GenericDict = {}
     for key, value in data.items():
 
         if isinstance(value, str) and values:

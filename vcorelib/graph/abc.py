@@ -93,7 +93,10 @@ class AbstractDiGraphNode(_Serializable):
         return outgoing.intersection(incoming)
 
 
-class AbstractDiGraph(_UserDict, _Serializable):
+class AbstractDiGraph(
+    _UserDict,  # type: ignore
+    _Serializable,
+):
     """A simple, directed-graph interface."""
 
     def __init__(

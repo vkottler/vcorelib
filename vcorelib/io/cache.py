@@ -9,7 +9,7 @@ from logging import DEBUG as _DEBUG
 from logging import Logger
 from pathlib import Path
 from shutil import rmtree
-from typing import Dict as _Dict
+from typing import MutableMapping as _MutableMapping
 
 # third-party
 from vcorelib.dict import merge
@@ -21,12 +21,17 @@ from vcorelib.io.archive import extractall, make_archive
 from vcorelib.io.types import DEFAULT_ARCHIVE_EXT as _DEFAULT_ARCHIVE_EXT
 from vcorelib.io.types import DEFAULT_DATA_EXT as _DEFAULT_DATA_EXT
 from vcorelib.io.types import FileExtension
+from vcorelib.io.types import JsonObject as _JsonObject
+from vcorelib.io.types import JsonValue as _JsonValue
 from vcorelib.math.time import TIMER as _TIMER
 from vcorelib.math.time import byte_count_str, nano_str
 from vcorelib.paths import Pathlike as _Pathlike
 
 
-class FlatDirectoryCache(UserDict):
+class FlatDirectoryCache(
+    UserDict,  # type: ignore
+    _MutableMapping[str, _JsonValue],
+):
     """
     A class implementing a dictionary that can be saved and loaded from disk,
     with a specified encoding scheme.
@@ -35,7 +40,7 @@ class FlatDirectoryCache(UserDict):
     def __init__(
         self,
         root: Path,
-        initialdata: dict = None,
+        initialdata: _JsonObject = None,
         archive_encoding: str = _DEFAULT_ARCHIVE_EXT,
         data_encoding: str = _DEFAULT_DATA_EXT,
         arbiter: DataArbiter = _ARBITER,
@@ -59,7 +64,7 @@ class FlatDirectoryCache(UserDict):
     def load_directory(
         self,
         path: _Pathlike,
-        data: _Dict[str, dict],
+        data: _JsonObject,
         **kwargs,
     ) -> int:
         """Load a directory and update data, return time taken to load."""
@@ -76,14 +81,14 @@ class FlatDirectoryCache(UserDict):
         logger: Logger = None,
         level: int = _DEBUG,
         **kwargs,
-    ) -> _Dict[str, dict]:
+    ) -> _JsonObject:
         """Load data from disk."""
 
         if path is None:
             path = self.root
 
         loaded = False
-        result: _Dict[str, dict] = {}
+        result: _JsonObject = {}
         if path.is_dir():
             self.load_time_ns = self.load_directory(path, result, **kwargs)
             loaded = True

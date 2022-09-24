@@ -34,4 +34,6 @@ def test_target_compile():
     """Verify we can compile a target from input data."""
 
     target = Target("a:{a},b:{b},c:{c}")
-    assert target.evaluator.compile({"a": 1, "b": 2, "c": 3}) == "a:1,b:2,c:3"
+    evaluator = target.evaluator
+    assert evaluator is not None
+    assert evaluator.compile({"a": 1, "b": 2, "c": 3}) == "a:1,b:2,c:3"

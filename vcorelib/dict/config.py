@@ -5,8 +5,10 @@ A module for implementing a configuration data manager with a dictionary.
 # built-in
 from collections import UserDict as _UserDict
 from typing import Any as _Any
+from typing import MutableMapping as _MutableMapping
 
 # internal
+from vcorelib.dict import GenericDict as _GenericDict
 from vcorelib.dict import consume as _consume
 from vcorelib.dict import merge as _merge
 from vcorelib.dict import set_if_not as _set_if_not
@@ -15,8 +17,13 @@ from vcorelib.io.types import FileExtension as _FileExtension
 from vcorelib.paths import Pathlike as _Pathlike
 from vcorelib.paths import normalize as _normalize
 
+ConfigData = _MutableMapping[str, _Any]
 
-class Config(_UserDict):
+
+class Config(
+    _UserDict,  # type: ignore
+    ConfigData,
+):
     """A dictionary that allows access to data only once via each key."""
 
     def __getitem__(self, key) -> _Any:
@@ -32,7 +39,7 @@ class Config(_UserDict):
         """Set this value if a value is not already set."""
         return _set_if_not(self.data, key, value)
 
-    def merge(self, other: dict, *args, **kwargs) -> None:
+    def merge(self, other: _GenericDict, *args, **kwargs) -> None:
         """Merge another dictionary into this one."""
         _merge(self.data, other, *args, **kwargs)
 

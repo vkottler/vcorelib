@@ -7,7 +7,7 @@ from configparser import ConfigParser, Error, ExtendedInterpolation
 from json import load
 from json.decoder import JSONDecodeError
 from logging import Logger, getLogger
-from typing import Dict as _Dict
+from typing import cast as _cast
 
 # third-party
 from ruamel.yaml.parser import ParserError
@@ -17,6 +17,7 @@ from tomli import TOMLDecodeError, loads
 # internal
 from vcorelib.dict import consume
 from vcorelib.io.types import DataStream as _DataStream
+from vcorelib.io.types import JsonObject as _JsonObject
 from vcorelib.io.types import LoadResult
 from vcorelib.io.types import YAML_INTERFACE as _YAML_INTERFACE
 from vcorelib.math.time import TIMER as _TIMER
@@ -44,17 +45,12 @@ def decode_ini(
         )
         try:
             cparser.read_file(data_file)
-
-            for sect_key, section in cparser.items():
-                sect_data: _Dict[str, str] = {}
-                data[sect_key] = sect_data
-                for key, value in section.items():
-                    sect_data[key] = value
+            data = dict(cparser.items())
         except Error as exc:
             loaded = False
             logger.error("config-load error: %s", exc)
 
-    return LoadResult(data, loaded, _TIMER.result(token))
+    return LoadResult(_cast(_JsonObject, data), loaded, _TIMER.result(token))
 
 
 def decode_json(

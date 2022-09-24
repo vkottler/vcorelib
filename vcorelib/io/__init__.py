@@ -12,9 +12,11 @@ from typing import Callable as _Callable
 from typing import Iterator as _Iterator
 from typing import NamedTuple
 from typing import Optional as _Optional
+from typing import cast as _cast
 
 # internal
 from vcorelib import DEFAULT_ENCODING as _DEFAULT_ENCODING
+from vcorelib.dict import GenericStrDict as _GenericStrDict
 from vcorelib.dict import consume, merge
 from vcorelib.io.decode import (
     decode_ini,
@@ -35,6 +37,7 @@ from vcorelib.io.types import DataStream as _DataStream
 from vcorelib.io.types import EncodeResult as _EncodeResult
 from vcorelib.io.types import FileExtension
 from vcorelib.io.types import JsonObject as _JsonObject
+from vcorelib.io.types import JsonValue as _JsonValue
 from vcorelib.io.types import LoadResult
 from vcorelib.io.types import StreamProcessor as _StreamProcessor
 from vcorelib.paths import Pathlike as _Pathlike
@@ -123,7 +126,7 @@ class DataArbiter:
         result = LoadResult({}, False)
         decoder = self._decoder(ext)
         if decoder is not None:
-            result = decoder(stream, logger, **kwargs)  # type: ignore
+            result = decoder(stream, logger, **kwargs)
         return result
 
     def decode(
@@ -194,7 +197,7 @@ class DataArbiter:
         and the cumulative time that each file-load took.
         """
 
-        data = {}
+        data: _JsonObject = {}
         path = normalize(pathlike)
         errors = 0
         load_time = 0
@@ -220,7 +223,7 @@ class DataArbiter:
                 if load.success:
                     key = get_file_name(child)
                     if key:
-                        data[key] = load.data
+                        data[key] = _cast(_JsonValue, load.data)
                     else:
                         data = merge(
                             data,
@@ -240,7 +243,7 @@ class DataArbiter:
         self,
         ext: str,
         stream: _DataStream,
-        data: dict,
+        data: _JsonObject,
         logger: logging.Logger = None,
         **kwargs,
     ) -> _EncodeResult:
@@ -253,14 +256,14 @@ class DataArbiter:
         encoder = self._encoder(ext)
         time_ns = -1
         if encoder is not None:
-            time_ns = encoder(data, stream, logger, **kwargs)  # type: ignore
+            time_ns = encoder(data, stream, logger, **kwargs)
             result = True
         return result, time_ns
 
     def encode(
         self,
         pathlike: _Pathlike,
-        data: dict,
+        data: _JsonObject,
         logger: logging.Logger = None,
         maxsplit: int = 1,
         **kwargs,
@@ -280,7 +283,7 @@ class DataArbiter:
     def encode_directory(
         self,
         pathlike: _Pathlike,
-        data: dict,
+        data: _JsonObject,
         ext: str = _DEFAULT_DATA_EXT,
         logger: logging.Logger = None,
         **kwargs,
@@ -296,7 +299,10 @@ class DataArbiter:
 
         for key, item in data.items():
             result = self.encode(
-                root.joinpath(f"{key}.{ext}"), item, logger, **kwargs
+                root.joinpath(f"{key}.{ext}"),
+                _cast(_JsonObject, item),
+                logger,
+                **kwargs,
             )
             success &= result[0]
             if result[1]:
@@ -319,8 +325,8 @@ class DataArbiter:
     def object_file_context(
         self,
         pathlike: _Pathlike,
-        decode_kwargs: dict = None,
-        encode_kwargs: dict = None,
+        decode_kwargs: _GenericStrDict = None,
+        encode_kwargs: _GenericStrDict = None,
     ) -> _Iterator[_JsonObject]:
         """
         Provide data loaded from a file as a context so that it's written back
@@ -338,8 +344,8 @@ class DataArbiter:
     def object_directory_context(
         self,
         pathlike: _Pathlike,
-        decode_kwargs: dict = None,
-        encode_kwargs: dict = None,
+        decode_kwargs: _GenericStrDict = None,
+        encode_kwargs: _GenericStrDict = None,
     ) -> _Iterator[_JsonObject]:
         """Provide a loaded directory as a context."""
 

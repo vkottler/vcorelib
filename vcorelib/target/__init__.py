@@ -2,6 +2,8 @@
 A module defining an interface for dynamic task targets.
 """
 
+from __future__ import annotations
+
 # built-in
 import re
 from typing import Dict as _Dict
@@ -9,8 +11,9 @@ from typing import List as _List
 from typing import NamedTuple
 from typing import Optional as _Optional
 from typing import Tuple as _Tuple
+from typing import Union as _union
 
-Substitutions = _Dict[str, str]
+Substitutions = _Dict[str, _union[str, int]]
 
 
 class DynamicTargetEvaluator(NamedTuple):
@@ -21,7 +24,7 @@ class DynamicTargetEvaluator(NamedTuple):
     """
 
     original: str
-    pattern: re.Pattern
+    pattern: re.Pattern[str]
     keys: _List[str]
     markers: _List[_Tuple[int, int]]
 
@@ -53,7 +56,7 @@ class TargetMatch(NamedTuple):
     def get(self, data: str) -> str:
         """Get data for keys that matched the target."""
         subs = self.substitutions if self.substitutions is not None else {}
-        return subs[data]
+        return str(subs[data])
 
 
 LITERAL_MATCH = TargetMatch(True)
