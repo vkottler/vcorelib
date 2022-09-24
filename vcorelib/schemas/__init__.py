@@ -12,6 +12,7 @@ from fastjsonschema import JsonSchemaException as _JsonSchemaException
 from fastjsonschema import compile as _compile
 
 # internal
+from vcorelib.io.types import JsonObject as _JsonObject
 from vcorelib.schemas.base import Schema as _Schema
 from vcorelib.schemas.base import SchemaMap as _SchemaMap
 
@@ -27,7 +28,7 @@ class JsonSchema(_Schema):
     See also: https://json-schema.org/.
     """
 
-    def __init__(self, data: dict, **kwargs) -> None:
+    def __init__(self, data: _JsonObject, **kwargs) -> None:
         """Initialize this schema."""
         super().__init__(data)
         self.validator = _compile(data)
@@ -44,7 +45,7 @@ class JsonSchemaMap(_SchemaMap):
     """A class for managing multiple schema objects."""
 
     @classmethod
-    def kind(cls) -> _Type[_Schema]:
+    def kind(cls) -> _Type[JsonSchema]:
         """Implement this to determine the concrete schema type."""
         return JsonSchema
 
@@ -52,7 +53,7 @@ class JsonSchemaMap(_SchemaMap):
 class CerberusSchema(_Schema):
     """An object wrapper for: https://docs.python-cerberus.org/en/stable/."""
 
-    def __init__(self, data: dict, **kwargs) -> None:
+    def __init__(self, data: _JsonObject, **kwargs) -> None:
         """Initialize this schema."""
         super().__init__(data)
         self.validator = _Validator(data, **kwargs)
@@ -75,6 +76,6 @@ class CerberusSchemaMap(_SchemaMap):
     """A class for managing multiple schema objects."""
 
     @classmethod
-    def kind(cls) -> _Type[_Schema]:
+    def kind(cls) -> _Type[CerberusSchema]:
         """Implement this to determine the concrete schema type."""
         return CerberusSchema

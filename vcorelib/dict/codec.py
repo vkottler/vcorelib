@@ -12,6 +12,7 @@ from typing import TypeVar as _TypeVar
 from vcorelib.io import ARBITER as _ARBITER
 from vcorelib.io import DataArbiter as _DataArbiter
 from vcorelib.io.types import EncodeResult as _EncodeResult
+from vcorelib.io.types import JsonObject as _JsonObject
 from vcorelib.paths import Pathlike as _Pathlike
 from vcorelib.schemas.base import SchemaMap as _SchemaMap
 from vcorelib.schemas.mixins import SchemaMixin
@@ -46,7 +47,7 @@ class DictCodec(_abc.ABC, SchemaMixin):
 
     def __init__(
         self,
-        data: dict,
+        data: _JsonObject,
         schemas: _SchemaMap = None,
         dest_attr: str = "data",
         verify: bool = True,
@@ -68,11 +69,11 @@ class DictCodec(_abc.ABC, SchemaMixin):
             assert self == data, f"'{self}' != '{data}' after initialization!"
 
     @_abc.abstractmethod
-    def init(self, data: dict) -> None:
+    def init(self, data: _JsonObject) -> None:
         """Perform implementation-specific initialization."""
 
     @_abc.abstractmethod
-    def asdict(self) -> dict:
+    def asdict(self) -> _JsonObject:
         """Obtain a dictionary representing this instance."""
 
     def encode(
@@ -104,10 +105,10 @@ class DictCodec(_abc.ABC, SchemaMixin):
 class BasicDictCodec(DictCodec):
     """The simplest possible dictionary codec implementation."""
 
-    def init(self, data: dict) -> None:
+    def init(self, data: _JsonObject) -> None:
         """Initialize this instance."""
         self.data = data
 
-    def asdict(self) -> dict:
+    def asdict(self) -> _JsonObject:
         """Obtain a dictionary representing this instance."""
         return self.data

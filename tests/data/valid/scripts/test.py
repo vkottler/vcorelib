@@ -7,7 +7,7 @@ from vcorelib.task import Task
 from vcorelib.task.manager import TaskManager
 
 
-def test(one, two, three, **kwargs) -> int:
+def test(one: int, two: int, three: int, **kwargs: int) -> int:
     """Return the sum of the arguments."""
 
     return one + two + three + kwargs["four"] + kwargs["five"] + kwargs["six"]

@@ -6,14 +6,15 @@ A module defining interfaces for schema enforcement.
 import abc as _abc
 from collections import UserDict
 from typing import Any as _Any
-from typing import Dict as _Dict
 from typing import Iterator as _Iterator
+from typing import MutableMapping as _MutableMapping
 from typing import Tuple as _Tuple
 from typing import Type as _Type
 from typing import TypeVar as _TypeVar
 
 # internal
 from vcorelib.io import ARBITER as _ARBITER
+from vcorelib.io.types import JsonObject as _JsonObject
 from vcorelib.paths import Pathlike as _Pathlike
 from vcorelib.paths import get_file_name as _get_file_name
 from vcorelib.paths import normalize as _normalize
@@ -26,7 +27,7 @@ class Schema(_abc.ABC):
     """A base class for schema enforcement."""
 
     @_abc.abstractmethod
-    def __init__(self, data: dict, **kwargs) -> None:
+    def __init__(self, data: _JsonObject, **kwargs) -> None:
         """Initialize this schema."""
 
     @_abc.abstractmethod
@@ -39,10 +40,11 @@ class Schema(_abc.ABC):
         return cls(_ARBITER.decode(path, require_success=True).data, **kwargs)
 
 
-class SchemaMap(_abc.ABC, UserDict):
+class SchemaMap(
+    UserDict,  # type: ignore
+    _MutableMapping[str, Schema],
+):
     """A class for managing multiple schema objects."""
-
-    data: _Dict[str, Schema]
 
     @classmethod
     @_abc.abstractmethod
@@ -51,16 +53,16 @@ class SchemaMap(_abc.ABC, UserDict):
 
     def __init__(self) -> None:
         """Initialize this schema map."""
-        UserDict.__init__(self)
+        super().__init__(self)
 
     def load_file(self, path: _Pathlike, **kwargs) -> _Tuple[str, Schema]:
         """Load a schema file into the map."""
 
         path = _normalize(path)
         name = _get_file_name(path)
-        assert name not in self.data, f"Duplicate schema '{name}'!"
-        self.data[name] = self.kind().from_path(path, **kwargs)
-        return name, self.data[name]
+        assert name not in self, f"Duplicate schema '{name}'!"
+        self[name] = self.kind().from_path(path, **kwargs)
+        return name, self[name]
 
     def load_directory(
         self, path: _Pathlike, **kwargs

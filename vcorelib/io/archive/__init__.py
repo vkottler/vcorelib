@@ -16,10 +16,12 @@ import zipfile
 from vcorelib.io.types import DEFAULT_ARCHIVE_EXT as _DEFAULT_ARCHIVE_EXT
 from vcorelib.io.types import FileExtension
 from vcorelib.math.time import TIMER as _TIMER
+from vcorelib.paths import Pathlike as _Pathlike
+from vcorelib.paths import normalize as _normalize
 
 
 def extractall(
-    src: Path, dst: Path = None, maxsplit: int = 1, **extract_kwargs
+    src: _Pathlike, dst: _Pathlike = None, maxsplit: int = 1, **extract_kwargs
 ) -> _Tuple[bool, int]:
     """
     Attempt to extract an arbitrary archive to a destination. Return whether or
@@ -28,14 +30,14 @@ def extractall(
 
     success = False
     time_ns = -1
+    src = _normalize(src)
     ext = FileExtension.from_path(src, maxsplit=maxsplit)
 
     # Ensure that the source directory is an archive.
     if ext is None or not ext.is_archive() or not src.is_file():
         return success, time_ns
 
-    if dst is None:
-        dst = Path()
+    dst = _normalize(dst)
 
     with _TIMER.measure_ns() as token:
 

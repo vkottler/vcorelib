@@ -29,7 +29,10 @@ DEFAULT_ARCHIVE_EXT = "tar.gz"
 DEFAULT_DATA_EXT = "json"
 
 # A simple type system for JSON.
-JsonValue = _Union[str, int, float, bool, None, dict, list]
+JsonPrimitive = _Union[str, int, float, bool, None]
+JsonValue = _Union[
+    JsonPrimitive, _Dict[str, JsonPrimitive], _List[JsonPrimitive]
+]
 JsonArray = _List[JsonValue]
 JsonObject = _Dict[str, JsonValue]
 
@@ -152,14 +155,14 @@ class LoadResult(NamedTuple):
     whether or not it succeeded.
     """
 
-    data: dict
+    data: JsonObject
     success: bool
     time_ns: int = -1
 
     def __eq__(self, other: object) -> bool:
         """Don't compare timing when checking equivalence."""
         assert isinstance(other, (LoadResult, tuple))
-        return self.data == other[0] and self.success == other[1]
+        return bool(self.data == other[0] and self.success == other[1])
 
     def require_success(self, path: _Union[Path, str]) -> None:
         """Raise a canonical exception if this result is a failure."""
