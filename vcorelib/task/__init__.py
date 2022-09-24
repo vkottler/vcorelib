@@ -2,8 +2,11 @@
 A module for implementing tasks in a dependency tree.
 """
 
+# band-aids
+from __future__ import annotations
+
 # built-in
-import asyncio
+import asyncio as _asyncio
 from contextlib import ExitStack as _ExitStack
 from json import dumps as _dumps
 from logging import Logger, getLogger
@@ -23,10 +26,10 @@ from vcorelib.dict import merge_dicts
 from vcorelib.math.time import Timer, nano_str
 from vcorelib.target import Substitutions, Target
 
-Outbox = dict
+Outbox = _Dict[str, _Any]
 Inbox = _Dict[str, Outbox]
 TaskExecute = _Callable[[Inbox, Outbox], _Coroutine[_Any, _Any, bool]]
-TaskGenerator = _Callable[..., asyncio.Task]
+TaskGenerator = _Callable[..., _asyncio.Task]
 
 
 class TaskFailed(Exception):
@@ -53,7 +56,7 @@ class Task:  # pylint: disable=too-many-instance-attributes
 
         self.name = name
         self.inbox: Inbox = {}
-        self.outbox: dict = {}
+        self.outbox: Outbox = {}
         self.dependencies: _List[TaskGenerator] = []
         self._stack: _Optional[_ExitStack] = None
 
@@ -65,7 +68,7 @@ class Task:  # pylint: disable=too-many-instance-attributes
         self._continue = True
         self._running: _Set[str] = set()
         self._to_signal: int = 0
-        self._sem: _Optional[asyncio.Semaphore] = None
+        self._sem: _Optional[_asyncio.Semaphore] = None
 
         # Metrics.
         self.times_invoked: int = 0
@@ -187,21 +190,21 @@ class Task:  # pylint: disable=too-many-instance-attributes
         return wrapper
 
     def depend_on(
-        self, task: "Task", eloop: asyncio.AbstractEventLoop = None, **kwargs
+        self, task: "Task", eloop: _asyncio.AbstractEventLoop = None, **kwargs
     ) -> bool:
         """
         Register other tasks' output data to your input box. Return true
         if a new dependency was added.
         """
 
-        def task_factory(**substitutions) -> asyncio.Task:
+        def task_factory(**substitutions) -> _asyncio.Task[_Any]:
             """
             Create a task while injecting additional keyword arguments.
             """
 
             nonlocal eloop
             if eloop is None:
-                eloop = asyncio.get_running_loop()
+                eloop = _asyncio.get_running_loop()
 
             return eloop.create_task(
                 task.dispatch(
@@ -233,7 +236,7 @@ class Task:  # pylint: disable=too-many-instance-attributes
         dependency resolver cannot propagate current-task substitutions to
         its dependencies as they've already been explicitly registered.
         """
-        await asyncio.gather(*[x(**substitutions) for x in self.dependencies])
+        await _asyncio.gather(*[x(**substitutions) for x in self.dependencies])
 
     def task_fail(
         self,
@@ -257,7 +260,7 @@ class Task:  # pylint: disable=too-many-instance-attributes
         caller: "Task" = None,
         substitutions: Substitutions = None,
         **kwargs,
-    ) -> _Tuple[dict, str]:
+    ) -> _Tuple[Substitutions, str]:
         """Perform some dispatch initialization."""
 
         self.times_invoked += 1
@@ -296,7 +299,7 @@ class Task:  # pylint: disable=too-many-instance-attributes
             return
 
         if self._sem is None:
-            self._sem = asyncio.Semaphore(0)
+            self._sem = _asyncio.Semaphore(0)
 
         log = getLogger(compiled)
         if merged and self.times_invoked == 1:
@@ -348,7 +351,7 @@ class Task:  # pylint: disable=too-many-instance-attributes
             self.resolve(log, compiled, merged)
 
         # Handle cancellation to simplify cleaning up the event loop.
-        except asyncio.CancelledError:
+        except _asyncio.CancelledError:
             log.warning("Task '%s' was cancelled!", self.name)
 
 

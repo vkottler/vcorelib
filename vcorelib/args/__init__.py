@@ -6,13 +6,13 @@ A module for working with application-specific argument parsers.
 from argparse import ArgumentParser, Namespace
 from typing import Callable as _Callable
 from typing import Dict as _Dict
-from typing import List as _List
+from typing import Sequence as _Sequence
 from typing import Tuple as _Tuple
 
 CommandFunction = _Callable[[Namespace], int]
 CommandRegister = _Callable[[ArgumentParser], CommandFunction]
 
-CommandLoader = _Callable[[], _List[_Tuple[str, str, CommandRegister]]]
+CommandLoader = _Callable[[], _Sequence[_Tuple[str, str, CommandRegister]]]
 
 CMDS: _Dict[str, CommandFunction] = {}
 

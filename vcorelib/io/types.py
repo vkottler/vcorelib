@@ -187,7 +187,7 @@ EncodeResult = _Tuple[bool, int]
 DataStream = _Union[TextIO, StringIO]
 StreamProcessor = _Callable[[DataStream], DataStream]
 DataDecoder = _Callable[[DataStream, Logger], LoadResult]
-DataEncoder = _Callable[[dict, DataStream, Logger], int]
+DataEncoder = _Callable[[JsonObject, DataStream, Logger], int]
 
 # Only create the interface one so it's not re-created on every read and write
 # attempt.

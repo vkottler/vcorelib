@@ -32,7 +32,7 @@ def shutdown_loop(eloop: _AbstractEventLoop) -> None:
 
 
 def run_handle_interrupt(
-    to_run: _Awaitable, eloop: _AbstractEventLoop
+    to_run: _Awaitable[_Any], eloop: _AbstractEventLoop
 ) -> _Optional[_Any]:
     """
     Run a task in an event loop and gracefully handle keyboard interrupts.

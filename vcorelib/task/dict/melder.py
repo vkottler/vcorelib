@@ -3,6 +3,8 @@ A task definition for melding inbox data into outbox data.
 """
 
 # built-in
+from typing import Any as _Any
+from typing import Dict as _Dict
 from typing import List as _List
 
 # internal
@@ -21,7 +23,7 @@ class DictMerger(Task):
 
         # Forward the foreign argument to the ouput box (provided by the
         # caller).
-        to_merge: _List[dict] = [outbox]
+        to_merge: _List[_Dict[_Any, _Any]] = [outbox]
         for arg in [*args]:
             if isinstance(arg, dict):
                 to_merge.append(arg)
