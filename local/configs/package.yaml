@@ -2,17 +2,26 @@
 name: "vcorelib"
 version: "{{major}}.{{minor}}.{{patch}}"
 description: "A collection of core Python utilities."
+
 requirements:
   - cerberus
   - fastjsonschema
   - ruamel.yaml
   - tomli
   - tomli-w
+
 dev_requirements:
   - pytest-asyncio
   - setuptools-wrapper
   - types-setuptools
-init_local: |
 
+init_local: |
   DEFAULT_INDENT = 2
   DEFAULT_ENCODING = "utf-8"
+
+mypy_local: |
+  [mypy-fastjsonschema.*]
+  ignore_missing_imports = True
+
+  [mypy-cerberus.*]
+  ignore_missing_imports = True

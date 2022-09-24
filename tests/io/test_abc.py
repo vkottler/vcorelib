@@ -21,4 +21,5 @@ def test_io_file_entity_basic():
             print(stream)
 
     test = Sample("test.txt")
+    assert hash(test)
     assert test.default_location() == Path("test.txt")
