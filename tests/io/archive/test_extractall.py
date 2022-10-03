@@ -3,7 +3,6 @@ Test the 'extractall' method from the archive module.
 """
 
 # built-in
-import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -13,32 +12,36 @@ from tests.resources import get_archives_root
 # module under test
 from vcorelib.io.archive import extractall
 from vcorelib.io.types import FileExtension
+from vcorelib.paths.context import in_dir
 
 
 def test_extractall():
     """Test archive-extracting scenarios."""
 
     root = get_archives_root()
-    curr = os.getcwd()
-    try:
+    curr = Path()
+
+    # Verify we can't extract an unknown file.
+    with TemporaryDirectory() as tmpdir:
+        assert not extractall(root.joinpath("sample.asdf"), dst=tmpdir)[0]
+
+    with in_dir(curr):
+        fail = None
         # Verify we can extract all of the expected archives.
         for archive in ["tar", "tar.bz2", "tar.gz", "tar.lzma", "zip"]:
             with TemporaryDirectory() as tmpdir:
-                assert extractall(Path(root, f"sample.{archive}"), tmpdir)[
-                    0
-                ], f"Couldn't extract a '{archive}' archive!"
+                if not extractall(
+                    root.joinpath(f"sample.{archive}"), dst=tmpdir
+                )[0]:
+                    fail = f"Couldn't extract a '{archive}' archive!"
+                    break
 
-        # Verify we can extract to the working directory.
-        with TemporaryDirectory() as tmpdir:
-            os.chdir(tmpdir)
-            assert extractall(Path(root, "sample.tar"))[0]
-            os.chdir(curr)
+        assert fail is None, fail
 
-        # Verify we can't extract an unknown file.
-        with TemporaryDirectory() as tmpdir:
-            assert not extractall(Path(root, "sample.asdf"), tmpdir)[0]
-    finally:
-        os.chdir(curr)
+    # Verify we can extract to the working directory.
+    with TemporaryDirectory() as tmpdir:
+        with in_dir(tmpdir):
+            assert extractall(root.joinpath("sample.tar"))[0]
 
 
 def test_has_archive():
