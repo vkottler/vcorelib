@@ -25,8 +25,10 @@ def is_within_directory(directory: _Pathlike, target: _Pathlike) -> bool:
     """Determine if a target path is within the provided directory."""
 
     directory = str(_normalize(directory).resolve())
-    target = str(_normalize(target).resolve())
-    return _path.commonprefix([directory, target]) == directory
+    return (
+        _path.commonprefix([directory, str(_normalize(target).resolve())])
+        == directory
+    )
 
 
 def safe_extract(
@@ -34,11 +36,17 @@ def safe_extract(
 ) -> None:
     """Sanity check that all members will fall within the destination path."""
 
-    path = _normalize(path)
+    path = _normalize(path).resolve()
+
     for member in tar.getmembers():
-        member_path = path.joinpath(member.name)
-        if not is_within_directory(path, member_path):
-            raise Exception("Attempted path traversal in tar file.")
+        dest = path.joinpath(member.name)
+        if not is_within_directory(path, dest):  # pragma: no cover
+            raise Exception(
+                (
+                    "Attempted path traversal in tar "
+                    f"file: '{dest}' not in '{path}'."
+                )
+            )
 
     # Perform the extraction.
     tar.extractall(path, **kwargs)
