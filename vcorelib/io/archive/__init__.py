@@ -5,6 +5,7 @@ A module for extracting and creating arbitrary archives.
 # built-in
 from os import chdir as _chdir
 from os import getcwd as _getcwd
+from os import path as _path
 from pathlib import Path
 import shutil
 import tarfile
@@ -18,6 +19,29 @@ from vcorelib.io.types import FileExtension
 from vcorelib.math.time import TIMER as _TIMER
 from vcorelib.paths import Pathlike as _Pathlike
 from vcorelib.paths import normalize as _normalize
+
+
+def is_within_directory(directory: _Pathlike, target: _Pathlike) -> bool:
+    """Determine if a target path is within the provided directory."""
+
+    directory = str(_normalize(directory).resolve())
+    target = str(_normalize(target).resolve())
+    return _path.commonprefix([directory, target]) == directory
+
+
+def safe_extract(
+    tar: tarfile.TarFile, path: _Pathlike = None, **kwargs
+) -> None:
+    """Sanity check that all members will fall within the destination path."""
+
+    path = _normalize(path)
+    for member in tar.getmembers():
+        member_path = path.joinpath(member.name)
+        if not is_within_directory(path, member_path):
+            raise Exception("Attempted path traversal in tar file.")
+
+    # Perform the extraction.
+    tar.extractall(path, **kwargs)
 
 
 def extractall(
@@ -44,29 +68,7 @@ def extractall(
         # Extract the tar archive.
         if ext is FileExtension.TAR:
             with tarfile.open(src) as tar:
-                
-                import os
-                
-                def is_within_directory(directory, target):
-                    
-                    abs_directory = os.path.abspath(directory)
-                    abs_target = os.path.abspath(target)
-                
-                    prefix = os.path.commonprefix([abs_directory, abs_target])
-                    
-                    return prefix == abs_directory
-                
-                def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
-                
-                    for member in tar.getmembers():
-                        member_path = os.path.join(path, member.name)
-                        if not is_within_directory(path, member_path):
-                            raise Exception("Attempted Path Traversal in Tar File")
-                
-                    tar.extractall(path, members, numeric_owner) 
-                    
-                
-                safe_extract(tar, dst, =extract_kwargs)
+                safe_extract(tar, dst, **extract_kwargs)
             success = True
 
         # Extract the ZIP archive.
