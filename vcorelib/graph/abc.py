@@ -7,6 +7,7 @@ from collections import UserDict as _UserDict
 from typing import Dict as _Dict
 from typing import Iterator as _Iterator
 from typing import Set as _Set
+from typing import Type as _Type
 from typing import TypeVar as _TypeVar
 
 # internal
@@ -42,9 +43,9 @@ class AbstractDiGraphNode(_Serializable):
         """Allocate a port on this node."""
         return self.ports.allocate(label)
 
-    @property
-    def graph(self) -> V:
+    def graph(self, kind: _Type[V] = None) -> V:
         """Get the graph that this node belongs to."""
+        del kind
         assert self._graph is not None, "Node hasn't joined a graph!"
         return self._graph
 
@@ -70,19 +71,23 @@ class AbstractDiGraphNode(_Serializable):
         self._graph = graph
         self._label = label
 
-    def outgoing(self) -> _Iterator[T]:
+    def outgoing(self, graph_kind: _Type[V] = None) -> _Iterator[T]:
         """Iterate over nodes that we have outgoing edges to."""
 
-        for edge in self.graph.edges[self.label]:
-            yield self.graph[edge.dst]
+        graph = self.graph(kind=graph_kind)
 
-    def incoming(self) -> _Iterator[T]:
+        for edge in graph.edges[self.label]:
+            yield graph[edge.dst]
+
+    def incoming(self, graph_kind: _Type[V] = None) -> _Iterator[T]:
         """Iterate over nodes that have incoming edges."""
 
-        for label, edges in self.graph.edges.items():
+        graph = self.graph(kind=graph_kind)
+
+        for label, edges in graph.edges.items():
             for edge in edges:
                 if self.label == edge.dst:
-                    yield self.graph[label]
+                    yield graph[label]
                     break
 
     def parallel(self) -> _Set[T]:
