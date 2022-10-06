@@ -5,7 +5,8 @@ Test the 'DataArbiter' class.
 # built-in
 from contextlib import suppress
 from pathlib import Path
-from tempfile import NamedTemporaryFile, TemporaryDirectory
+from tempfile import TemporaryDirectory
+from typing import Any
 
 # internal
 from tests.resources import resource
@@ -13,6 +14,15 @@ from tests.resources import resource
 # module under test
 from vcorelib.io import ARBITER, DataMapping
 from vcorelib.io.types import FileExtension
+from vcorelib.paths.context import tempfile
+
+
+def verify_can_encode(data: Any, ext: FileExtension) -> None:
+    """Test that we can encode data in multiple formats."""
+
+    for ext_str in set([str(ext), "json", "yaml", "ini", "toml"]):
+        with tempfile(suffix=f".{ext_str}") as tfile:
+            ARBITER.encode(tfile, data)
 
 
 def test_arbiter_encode_decode_basic():
@@ -26,7 +36,9 @@ def test_arbiter_encode_decode_basic():
 
         # Verify that we can decode the entire directory at once.
         data = ARBITER.decode_directory(ext_root, require_success=True).data
-        assert data
+
+        # Verify we can encode data.
+        verify_can_encode(data, ext)
 
         # Verify we can encode an entire directory at once.
         with TemporaryDirectory() as tmpdir:
@@ -47,10 +59,7 @@ def test_arbiter_encode_decode_basic():
             assert data == expected
 
             # Verify we can encode data.
-            with NamedTemporaryFile(suffix=f".{str(ext)}") as tfile:
-                name = tfile.name
-            ARBITER.encode(name, data)
-            Path(name).unlink()
+            verify_can_encode(data, ext)
 
 
 def test_arbiter_decode_empty():

@@ -45,7 +45,7 @@ def decode_ini(
         )
         try:
             cparser.read_file(data_file)
-            data = dict(cparser.items())
+            data = {key: dict(val.items()) for key, val in cparser.items()}
         except Error as exc:
             loaded = False
             logger.error("config-load error: %s", exc)
