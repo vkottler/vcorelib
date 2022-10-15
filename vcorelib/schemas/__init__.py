@@ -3,6 +3,7 @@ A module for working with various schema enforcement implementations.
 """
 
 # built-in
+from functools import lru_cache as _lru_cache
 from typing import Any as _Any
 from typing import Type as _Type
 
@@ -12,6 +13,7 @@ from fastjsonschema import JsonSchemaException as _JsonSchemaException
 from fastjsonschema import compile as _compile
 
 # internal
+from vcorelib import PKG_NAME
 from vcorelib.io.types import JsonObject as _JsonObject
 from vcorelib.schemas.base import Schema as _Schema
 from vcorelib.schemas.base import SchemaMap as _SchemaMap
@@ -48,6 +50,12 @@ class JsonSchemaMap(_SchemaMap):
     def kind(cls) -> _Type[JsonSchema]:
         """Implement this to determine the concrete schema type."""
         return JsonSchema
+
+
+@_lru_cache(1)
+def json_schemas(package: str = PKG_NAME) -> JsonSchemaMap:
+    """Load JSON schemas from this package."""
+    return JsonSchemaMap.from_package(package)
 
 
 class CerberusSchema(_Schema):
