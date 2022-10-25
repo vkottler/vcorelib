@@ -40,6 +40,9 @@ class Schema(_abc.ABC):
         return cls(_ARBITER.decode(path, require_success=True).data, **kwargs)
 
 
+V = _TypeVar("V", bound="SchemaMap")
+
+
 class SchemaMap(
     UserDict,  # type: ignore
     _MutableMapping[str, Schema],
@@ -48,14 +51,14 @@ class SchemaMap(
 
     @classmethod
     @_abc.abstractmethod
-    def kind(cls) -> _Type[Schema]:
+    def kind(cls: _Type[V]) -> _Type[Schema]:
         """Implement this to determine the concrete schema type."""
 
     def __init__(self) -> None:
         """Initialize this schema map."""
         super().__init__(self)
 
-    def load_file(self, path: _Pathlike, **kwargs) -> _Tuple[str, Schema]:
+    def load_file(self, path: _Pathlike, **kwargs) -> _Tuple[str, T]:
         """Load a schema file into the map."""
 
         path = _normalize(path)
@@ -92,10 +95,10 @@ class SchemaMap(
 
     @classmethod
     def from_package(
-        cls,
+        cls: _Type[V],
         package: str,
         **kwargs,
-    ) -> "SchemaMap":
+    ) -> V:
         """Create a new JSON-schema map from package data."""
 
         result = cls()

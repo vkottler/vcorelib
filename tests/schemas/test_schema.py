@@ -6,7 +6,7 @@ Test the 'schemas' module.
 from pytest import raises
 
 # internal
-from tests.resources import test_schemas
+from tests.resources import get_test_schemas
 
 # module under test
 from vcorelib.schemas import (
@@ -20,7 +20,7 @@ from vcorelib.schemas.mixins import SchemaMixin
 def test_json_schema_map_basic():
     """Test basic interactions iwth a JSON-schema map."""
 
-    schemas = test_schemas()
+    schemas = get_test_schemas()
     assert "A" in schemas and "B" in schemas
 
     # Test that schema validation works.
@@ -35,7 +35,7 @@ def test_json_schema_map_basic():
 def test_json_schema_mixin_basic():
     """Test that the class mixin for JSON schemas works."""
 
-    schemas = test_schemas()
+    schemas = get_test_schemas()
 
     class A(
         SchemaMixin
