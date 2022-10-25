@@ -10,7 +10,7 @@ from tempfile import NamedTemporaryFile
 from pytest import raises
 
 # internal
-from tests.resources import resource, test_schemas
+from tests.resources import get_test_schemas, resource
 
 # module under test
 from vcorelib.dict import codec
@@ -22,14 +22,14 @@ def test_dict_codec_basic():
 
     # Load valid data.
     valid = codec.BasicDictCodec.decode(
-        resource("test.json"), schemas=test_schemas()
+        resource("test.json"), schemas=get_test_schemas()
     )
     assert valid.asdict()["a"] == 42
 
     assert str(valid)
 
     assert valid == codec.BasicDictCodec.decode(
-        resource("test.json"), schemas=test_schemas()
+        resource("test.json"), schemas=get_test_schemas()
     )
 
     # Write the object to a temporary file.
@@ -38,9 +38,15 @@ def test_dict_codec_basic():
     valid.encode(name)
     Path(name).unlink()
 
+    assert codec.BasicDictCodec()
+
+
+def test_dict_codec_error():
+    """Confirm that data violating a schema raises an exception."""
+
     # Load invalid data that violates the schema.
     with raises(SchemaValidationError):
         codec.BasicDictCodec.decode(
             resource("test.json", valid=False),
-            schemas=test_schemas(),
+            schemas=get_test_schemas(),
         )

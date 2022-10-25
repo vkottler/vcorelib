@@ -34,7 +34,7 @@ def get_archives_root(pkg: str = __name__) -> Path:
     return Path(pkg_resources.resource_filename(pkg, join("data", "archives")))
 
 
-def test_schemas() -> SchemaMap:
+def get_test_schemas() -> SchemaMap:
     """Get schemas stored in test data."""
     return JsonSchemaMap.from_package(
         "tests", package_subdir=join("data", "valid")
