@@ -15,8 +15,17 @@ class Namespace:
 
     def __init__(self, *names: str, delim: str = DEFAULT_DELIM) -> None:
         """Initialize this namespace."""
+
         self.stack: _List[str] = [*names]
         self.delim = delim
+
+        # Use this attribute from preventing this namespace from colliding with
+        # its parent namespace.
+        self.root_size = len(self.stack)
+
+    def child(self, *names: str) -> "Namespace":
+        """Create a child namespace from this one."""
+        return Namespace(*self.stack, *names, delim=self.delim)
 
     def push(self, name: str) -> None:
         """Push a name onto the stack."""
@@ -25,7 +34,19 @@ class Namespace:
     def pop(self, name: str = None) -> str:
         """Pop the latest name off the stack."""
 
+        # Ensure that the namespace can't be traversed beyond its
+        # initialization path.
+        curr_size = len(self.stack)
+        if curr_size <= self.root_size:
+            raise IndexError(
+                (
+                    f"Root namespace has {self.root_size} and this "
+                    f"namespace currently has {curr_size}!"
+                )
+            )
+
         val = self.stack.pop()
+
         assert (
             val == name if name is not None else True
         ), f"'{val}' != '{name}'!"
@@ -45,7 +66,7 @@ class Namespace:
         yield
 
         for name in reversed(to_push):
-            self.pop(name)
+            self.pop(name=name)
 
     def namespace(self, name: str = None, delim: str = None) -> str:
         """
@@ -81,6 +102,10 @@ class NamespaceMixin:
     def namespace(self, name: str = None, delim: str = None) -> str:
         """Get a namespace string for this object."""
         return self._namespace.namespace(name=name, delim=delim)
+
+    def child_namespace(self, *names: str) -> Namespace:
+        """Obtain a child namespace."""
+        return self._namespace.child(*names)
 
     @_contextmanager
     def names_pushed(self, *names: str) -> _Iterator[None]:
