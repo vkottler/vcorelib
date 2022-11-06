@@ -1,7 +1,7 @@
 # =====================================
 # generator=datazen
 # version=3.1.0
-# hash=00c316cfc4cd4e3caf4dc10902fb6488
+# hash=81cdfc67c4b9f6db359fb090f7c4f81d
 # =====================================
 
 """
@@ -10,7 +10,7 @@ Useful defaults and other package metadata.
 
 DESCRIPTION = "A collection of core Python utilities."
 PKG_NAME = "vcorelib"
-VERSION = "1.1.2"
+VERSION = "1.1.3"
 
 # vcorelib-specific content.
 DEFAULT_INDENT = 2
