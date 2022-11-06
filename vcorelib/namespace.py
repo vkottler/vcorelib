@@ -6,6 +6,7 @@ A module for implementing namespaces.
 from contextlib import contextmanager as _contextmanager
 from typing import Iterator as _Iterator
 from typing import List as _List
+from typing import Set as _Set
 
 DEFAULT_DELIM = "."
 
@@ -17,6 +18,7 @@ class Namespace:
         """Initialize this namespace."""
 
         self.stack: _List[str] = [*names]
+        self.names: _Set[str] = set()
         self.delim = delim
 
         # Use this attribute from preventing this namespace from colliding with
@@ -83,6 +85,9 @@ class Namespace:
             if result:
                 result += delim
             result += name
+
+        # Keep track of all names added to this namespace.
+        self.names.add(result)
         return result
 
 
