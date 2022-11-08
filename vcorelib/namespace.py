@@ -4,6 +4,7 @@ A module for implementing namespaces.
 
 # built-in
 from contextlib import contextmanager as _contextmanager
+from re import compile as _compile
 from typing import Iterator as _Iterator
 from typing import List as _List
 from typing import Set as _Set
@@ -70,7 +71,9 @@ class Namespace:
         for name in reversed(to_push):
             self.pop(name=name)
 
-    def namespace(self, name: str = None, delim: str = None) -> str:
+    def namespace(
+        self, name: str = None, delim: str = None, track: bool = True
+    ) -> str:
         """
         Get the current namespace string with or without an additional name
         applied.
@@ -87,8 +90,31 @@ class Namespace:
             result += name
 
         # Keep track of all names added to this namespace.
-        self.names.add(result)
+        if track:
+            self.names.add(result)
         return result
+
+    def match(self, *names: str, pattern: str = ".*") -> _Iterator[str]:
+        """
+        Iterate over names in this namespace that match a given pattern.
+        """
+
+        # Push provided names onto the stack while yielding matches.
+        with self.pushed(*names):
+            start = self.namespace(track=False)
+
+            # Add a trailing delimeter if we land on a non-empty name.
+            if start:
+                start += self.delim
+
+            # Ensure that dots are escaped to match literally.
+            if self.delim == ".":
+                start = start.replace(".", "\\.")
+
+            full_pattern = _compile(f"^{start}{pattern}$")
+            for name in self.names:
+                if full_pattern.fullmatch(name) is not None:
+                    yield name
 
 
 class NamespaceMixin:
