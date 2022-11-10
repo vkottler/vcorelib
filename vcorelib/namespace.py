@@ -94,7 +94,7 @@ class Namespace:
             self.names.add(result)
         return result
 
-    def match(self, *names: str, pattern: str = ".*") -> _Iterator[str]:
+    def search(self, *names: str, pattern: str = ".*") -> _Iterator[str]:
         """
         Iterate over names in this namespace that match a given pattern.
         """
@@ -103,17 +103,22 @@ class Namespace:
         with self.pushed(*names):
             start = self.namespace(track=False)
 
-            # Add a trailing delimeter if we land on a non-empty name.
+            # Add a trailing delimeter if we land on a non-empty name. Also
+            # enforce that the namespaced portion is at the beginning.
             if start:
-                start += self.delim
+                start = "^" + start + self.delim
 
             # Ensure that dots are escaped to match literally.
-            if self.delim == ".":
+            if start and self.delim == ".":
                 start = start.replace(".", "\\.")
 
-            full_pattern = _compile(f"^{start}{pattern}$")
+            # Allow the provided search string to appear anywhere in the name.
+            if start:
+                start += ".*"
+
+            compiled = _compile(start + pattern)
             for name in self.names:
-                if full_pattern.fullmatch(name) is not None:
+                if compiled.search(name) is not None:
                     yield name
 
 
