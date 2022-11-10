@@ -28,6 +28,10 @@ def test_namespace_basic():
     inst.push_name("a")
     assert inst.pop_name("a") == "a"
 
+    assert list(inst.namespace_search("a", "b", "c", pattern="d")) == [
+        "a.b.c.d"
+    ]
+
 
 def test_namespace_search():
     """Test that we can search namespaces for names."""

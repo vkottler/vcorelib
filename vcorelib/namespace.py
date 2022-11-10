@@ -176,3 +176,12 @@ class NamespaceMixin:
         """Pop the latest name off the stack."""
 
         return self._normalize_namespace(namespace=namespace).pop(name=name)
+
+    def namespace_search(
+        self, *names: str, pattern: str = ".*", namespace: Namespace = None
+    ) -> _Iterator[str]:
+        """Perform a search on the namespace."""
+
+        yield from self._normalize_namespace(namespace=namespace).search(
+            *names, pattern=pattern
+        )
