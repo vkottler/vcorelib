@@ -6,7 +6,7 @@ Test the 'namespace' module.
 from pytest import raises
 
 # module under test
-from vcorelib.namespace import NamespaceMixin
+from vcorelib.namespace import Namespace, NamespaceMixin
 
 
 def test_namespace_basic():
@@ -27,3 +27,36 @@ def test_namespace_basic():
     assert inst.namespace("d") == "d"
     inst.push_name("a")
     assert inst.pop_name("a") == "a"
+
+
+def test_namespace_search():
+    """Test that we can search namespaces for names."""
+
+    names = Namespace()
+
+    sample = [f"name_{x}" for x in "abc"]
+    for item in sample:
+        names.namespace(name=item)
+
+    assert sorted(list(names.search())) == sample
+    assert sorted(list(names.search(pattern="name"))) == sample
+    assert list(names.search(pattern="_a")) == ["name_a"]
+
+    # Add names to a sepecific namespace.
+    with names.pushed("test"):
+        for item in sample:
+            names.namespace(name=item)
+
+    assert sorted(list(names.search(pattern="test"))) == [
+        "test.name_a",
+        "test.name_b",
+        "test.name_c",
+    ]
+
+    assert sorted(list(names.search("test", pattern="name"))) == [
+        "test.name_a",
+        "test.name_b",
+        "test.name_c",
+    ]
+
+    assert list(names.search("test", pattern="b")) == ["test.name_b"]
