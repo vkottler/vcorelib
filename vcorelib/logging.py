@@ -5,17 +5,21 @@ Utilities for logging information.
 # built-in
 from contextlib import contextmanager
 from logging import INFO as _INFO
-from logging import Logger
+from logging import Logger as _Logger
+from logging import LoggerAdapter as _LoggerAdapter
 from logging import getLogger as _GetLogger
 from typing import Iterator as _Iterator
+from typing import Union as _Union
 
 # internal
 from vcorelib.math.time import TIMER as _TIMER
 
+LoggerType = _Union[_Logger, _LoggerAdapter]
+
 
 @contextmanager
 def log_time(
-    log: Logger,
+    log: _Logger,
     message: str,
     *args,
     level: int = _INFO,
@@ -31,9 +35,9 @@ def log_time(
 class LoggerMixin:  # pylint: disable=too-few-public-methods
     """A class that provides an inheriting class a logger attribute."""
 
-    logger: Logger
+    logger: LoggerType
 
-    def __init__(self, logger: Logger = None) -> None:
+    def __init__(self, logger: LoggerType = None) -> None:
         """Initialize this object with logging capabilities."""
         if not hasattr(self, "logger"):
             # Set a logger for this class instance.
