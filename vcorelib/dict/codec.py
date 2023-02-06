@@ -35,6 +35,10 @@ class JsonCodec(_abc.ABC, SchemaMixin):
     ) -> T:
         """A factory method to create an instance."""
 
+    def __copy__(self: T) -> T:
+        """Create another instance based on this instance's data."""
+        return self.__class__.create(self.asdict())
+
     def __str__(self) -> str:
         """
         Use the dictionary representation of this instance for string
@@ -147,4 +151,4 @@ class BasicDictCodec(DictCodec):
 
     def asdict(self) -> _JsonObject:
         """Obtain a dictionary representing this instance."""
-        return self.data
+        return self.data.copy()

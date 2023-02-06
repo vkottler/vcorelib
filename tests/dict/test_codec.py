@@ -3,6 +3,7 @@ Test the 'dict.codec' module.
 """
 
 # built-in
+from copy import copy
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
@@ -39,6 +40,12 @@ def test_dict_codec_basic():
     Path(name).unlink()
 
     assert codec.BasicDictCodec()
+
+    # Test copying.
+    copied = copy(valid)
+    assert copied == valid
+    copied.data["c"] = False
+    assert copied != valid
 
 
 def test_dict_codec_error():
