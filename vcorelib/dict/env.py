@@ -67,7 +67,6 @@ def dict_resolve_env_vars(
     keys_to_remove: _List[str] = []
     to_update: _GenericDict = {}
     for key, value in data.items():
-
         if isinstance(value, str) and values:
             value = str_resolve_env_var(value)
 

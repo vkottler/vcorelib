@@ -36,7 +36,6 @@ def test_paths_file_info_cache():  # pylint: disable=too-many-locals
     with ExitStack() as stack:
         cache_locs.append(Path(stack.enter_context(TemporaryDirectory())))
         for cache_loc in cache_locs:
-
             tmpdir = Path(stack.enter_context(TemporaryDirectory()))
             subdir = tmpdir.joinpath("tmp")
             subdir.mkdir()
@@ -46,7 +45,6 @@ def test_paths_file_info_cache():  # pylint: disable=too-many-locals
             files += [subdir.joinpath(f"sub{idx}.txt") for idx in range(10)]
 
             with file_info_cache(cache_loc, fresh_callback) as manager:
-
                 for directory in tdirs:
                     manager.poll_directory(directory, True)
 

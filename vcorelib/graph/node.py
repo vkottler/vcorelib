@@ -39,7 +39,7 @@ class DiGraphNode(_AbstractDiGraphNode):
         label: str,
         node: _T = None,
         graph_kind: _Type[_V] = None,
-        **kwargs
+        **kwargs,
     ) -> _T:
         """
         Add an edge between this node (source) and the other node
@@ -58,7 +58,7 @@ class DiGraphNode(_AbstractDiGraphNode):
         label: str,
         node: _T = None,
         graph_kind: _Type[_V] = None,
-        **kwargs
+        **kwargs,
     ) -> _T:
         """
         Add an edge between this node (destination) and the other node
@@ -77,7 +77,7 @@ class DiGraphNode(_AbstractDiGraphNode):
         label: str,
         node: _T = None,
         graph_kind: _Type[_V] = None,
-        **kwargs
+        **kwargs,
     ) -> _T:
         """
         Add a parallel edge between two nodes. This instance is used as

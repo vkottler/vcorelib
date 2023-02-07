@@ -41,7 +41,7 @@ def safe_extract(
     for member in tar.getmembers():
         dest = path.joinpath(member.name)
         if not is_within_directory(path, dest):  # pragma: no cover
-            raise Exception(
+            raise OSError(
                 (
                     "Attempted path traversal in tar "
                     f"file: '{dest}' not in '{path}'."
@@ -72,7 +72,6 @@ def extractall(
     dst = _normalize(dst)
 
     with _TIMER.measure_ns() as token:
-
         # Extract the tar archive.
         if ext is FileExtension.TAR:
             with tarfile.open(src) as tar:

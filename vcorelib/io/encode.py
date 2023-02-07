@@ -35,7 +35,7 @@ def encode_json(
             ostream,
             indent=consume(kwargs, "indent", _DEFAULT_INDENT),
             sort_keys=consume(kwargs, "sort_keys", True),
-            **kwargs
+            **kwargs,
         )
     return _TIMER.result(token)
 

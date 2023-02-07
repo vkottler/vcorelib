@@ -37,7 +37,6 @@ def decode_ini(
     loaded = True
 
     with _TIMER.measure_ns() as token:
-
         # Allow interpolation when reading by default.
         cparser = ConfigParser(
             interpolation=consume(kwargs, "interpolation", _INI_INTERPOLATION),
