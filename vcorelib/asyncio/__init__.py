@@ -54,18 +54,23 @@ def run_handle_interrupt(
 T = _TypeVar("T")
 
 
-def run_handle_stop(stop_sig: _Event, task: _Coroutine[None, None, T]) -> T:
+def run_handle_stop(
+    stop_sig: _Event,
+    task: _Coroutine[None, None, T],
+    eloop: _AbstractEventLoop = None,
+) -> T:
     """
     Publish the stop signal on keyboard interrupt and wait for the task to
     complete.
     """
 
-    loop = _get_event_loop()
-    to_run = loop.create_task(task)
+    if eloop is None:
+        eloop = _get_event_loop()
+    to_run = eloop.create_task(task)
 
     while True:
         try:
-            return loop.run_until_complete(to_run)
+            return eloop.run_until_complete(to_run)
         except KeyboardInterrupt:  # pragma: nocover
             print("Keyboard interrupt.")
             stop_sig.set()
