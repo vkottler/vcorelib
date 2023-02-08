@@ -3,6 +3,7 @@ Test the 'asyncio' module.
 """
 
 # built-in
+import asyncio
 from contextlib import suppress
 from multiprocessing import Process
 from os import kill
@@ -15,6 +16,9 @@ from typing import Callable
 
 # internal
 from tests.asyncio.interrupt_tester import task_runner
+
+# module under test
+from vcorelib.asyncio import run_handle_stop
 
 TestIteration = Callable[[int], bool]
 
@@ -97,3 +101,13 @@ def test_run_handle_interrupt_subprocess():
     assert iterative_tester(
         handle_interrupt_subprocess_test, 10
     ), "Never caught interrupt!"
+
+
+def test_run_handle_stop_basic():
+    """Test basic scenarios for the run_handle_stop method."""
+
+    async def task() -> bool:
+        """A sample task."""
+        return True
+
+    assert run_handle_stop(asyncio.Event(), task()) is True
