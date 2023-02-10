@@ -28,7 +28,7 @@ class JsonCodec(_abc.ABC, SchemaMixin):
     @_abc.abstractmethod
     def create(
         cls: _Type[T],
-        data: _JsonObject,
+        data: _JsonObject = None,
         schemas: _SchemaMap = None,
         dest_attr: str = "data",
         verify: bool = True,
@@ -133,7 +133,7 @@ class DictCodec(JsonCodec):
     @classmethod
     def create(
         cls: _Type[V],
-        data: _JsonObject,
+        data: _JsonObject = None,
         schemas: _SchemaMap = None,
         dest_attr: str = "data",
         verify: bool = True,
