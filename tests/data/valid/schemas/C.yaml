@@ -1,0 +1,7 @@
+---
+type: object
+properties:
+  a:
+    $ref: package://tests/valid/schemas/A.json
+  b:
+    $ref: package://tests/valid/schemas/B.yaml

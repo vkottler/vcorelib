@@ -8,46 +8,12 @@ from typing import Type as _Type
 
 # third-party
 from cerberus import Validator as _Validator
-from fastjsonschema import JsonSchemaException as _JsonSchemaException
-from fastjsonschema import compile as _compile
 
 # internal
 from vcorelib.io.types import JsonObject as _JsonObject
 from vcorelib.schemas.base import Schema as _Schema
 from vcorelib.schemas.base import SchemaMap as _SchemaMap
-
-
-class SchemaValidationError(Exception):
-    """An exception type for schema errors."""
-
-
-class JsonSchema(_Schema):
-    """
-    An object wrapper for: https://horejsek.github.io/python-fastjsonschema/.
-
-    See also: https://json-schema.org/.
-    """
-
-    def __init__(self, data: _JsonObject, **kwargs) -> None:
-        """Initialize this schema."""
-        super().__init__(data)
-        self.validator = _compile(data)
-
-    def __call__(self, data: _Any) -> _Any:
-        """Validate input data and return the result."""
-        try:
-            return self.validator(data)
-        except _JsonSchemaException as exc:
-            raise SchemaValidationError(exc) from exc
-
-
-class JsonSchemaMap(_SchemaMap):
-    """A class for managing multiple schema objects."""
-
-    @classmethod
-    def kind(cls) -> _Type[JsonSchema]:
-        """Implement this to determine the concrete schema type."""
-        return JsonSchema
+from vcorelib.schemas.base import SchemaValidationError
 
 
 class CerberusSchema(_Schema):

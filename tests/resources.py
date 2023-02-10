@@ -10,8 +10,8 @@ from pathlib import Path
 import pkg_resources
 
 # internal
-from vcorelib.schemas import JsonSchemaMap
 from vcorelib.schemas.base import SchemaMap
+from vcorelib.schemas.json import JsonSchemaMap
 
 
 def resource(

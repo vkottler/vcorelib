@@ -9,12 +9,9 @@ from pytest import raises
 from tests.resources import get_test_schemas
 
 # module under test
-from vcorelib.schemas import (
-    CerberusSchema,
-    CerberusSchemaMap,
-    SchemaValidationError,
-)
-from vcorelib.schemas.mixins import SchemaMixin
+from vcorelib.dict.codec import BasicDictCodec
+from vcorelib.schemas import CerberusSchema, CerberusSchemaMap
+from vcorelib.schemas.base import SchemaValidationError
 
 
 def test_json_schema_map_basic():
@@ -32,31 +29,31 @@ def test_json_schema_map_basic():
         schemas["A"](5)
 
 
+class A(BasicDictCodec):  # pylint: disable=invalid-name
+    """A test class."""
+
+    default_schemas = get_test_schemas()
+
+
+class B(A):  # pylint: disable=invalid-name
+    """A test class."""
+
+
 def test_json_schema_mixin_basic():
     """Test that the class mixin for JSON schemas works."""
 
-    schemas = get_test_schemas()
+    assert B.create().data == {"a": 42}
 
-    class A(
-        SchemaMixin
-    ):  # pylint: disable=too-few-public-methods,invalid-name
-        """A test class."""
 
-        def __init__(self) -> None:
-            self.data = "hello"
-            super().__init__(schemas)
+def test_json_schema_references():
+    """Test that we can resolve schema references."""
 
-    class B(
-        SchemaMixin
-    ):  # pylint: disable=too-few-public-methods,invalid-name
-        """A test class."""
+    class C(B):  # pylint: disable=invalid-name
+        """A class with an underlying schema."""
 
-        def __init__(self) -> None:
-            self.data: dict = {}
-            super().__init__(schemas)
-
-    assert A().data == "hello"
-    assert B().data == {"a": 42}
+    result = C.create({"a": "hello", "b": {}})
+    assert result.data["a"] == "hello"
+    assert result.data["b"]["a"] == 42  # type: ignore
 
 
 def test_cerberus_schema_basic():

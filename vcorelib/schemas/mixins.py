@@ -21,17 +21,17 @@ class SchemaMixin:
         # Don't double initialize.
         if not hasattr(self, "schema"):
             # Allow the name of the schema to be overridden if necessary.
-            schema = self.schema_name
+            schema = self.schema_name()
             assert schema in schemas, f"No schema for '{schema}'!"
             self.schema = schemas[schema]
 
             # Perform validation.
             self.validate(valid_attr=valid_attr)
 
-    @property
-    def schema_name(self) -> str:
+    @classmethod
+    def schema_name(cls) -> str:
         """A default name for this class's schema."""
-        return self.__class__.__name__
+        return cls.__name__
 
     def validate(self, valid_attr: str = "data") -> None:
         """Validate an instance attribute based on this instance's schema."""
