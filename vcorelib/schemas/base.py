@@ -23,12 +23,16 @@ from vcorelib.paths import resource as _resource
 T = _TypeVar("T", bound="Schema")
 
 
+class SchemaValidationError(Exception):
+    """An exception type for schema errors."""
+
+
 class Schema(_abc.ABC):
     """A base class for schema enforcement."""
 
-    @_abc.abstractmethod
-    def __init__(self, data: _JsonObject, **kwargs) -> None:
+    def __init__(self, data: _JsonObject) -> None:
         """Initialize this schema."""
+        self.data = data
 
     @_abc.abstractmethod
     def __call__(self, data: _Any) -> _Any:

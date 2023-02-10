@@ -15,7 +15,7 @@ from tests.resources import get_test_schemas, resource
 
 # module under test
 from vcorelib.dict import codec
-from vcorelib.schemas import SchemaValidationError
+from vcorelib.schemas.base import SchemaValidationError
 
 
 def test_dict_codec_basic():
