@@ -14,11 +14,14 @@ import sys
 import time
 from typing import Callable
 
+# third-party
+from pytest import mark, raises
+
 # internal
 from tests.asyncio.interrupt_tester import task_runner
 
 # module under test
-from vcorelib.asyncio import run_handle_stop
+from vcorelib.asyncio import log_task_exception, run_handle_stop
 
 TestIteration = Callable[[int], bool]
 
@@ -62,7 +65,7 @@ def test_run_handle_interrupt_process():
     """
 
     assert iterative_tester(
-        handle_interrupt_process_test, 10
+        handle_interrupt_process_test, 20
     ), "Never caught interrupt!"
 
 
@@ -99,7 +102,7 @@ def test_run_handle_interrupt_subprocess():
     """Test graceful shutdown behavior in a real sub-process."""
 
     assert iterative_tester(
-        handle_interrupt_subprocess_test, 10
+        handle_interrupt_subprocess_test, 20
     ), "Never caught interrupt!"
 
 
@@ -111,3 +114,18 @@ def test_run_handle_stop_basic():
         return True
 
     assert run_handle_stop(asyncio.Event(), task()) is True
+
+
+@mark.asyncio
+async def test_log_task_exception():
+    """Test that we can log a task's exception."""
+
+    async def test_task() -> None:
+        """A sample task."""
+        raise ValueError("Expected.")
+
+    loop = asyncio.get_running_loop()
+    task = loop.create_task(test_task())
+    with raises(ValueError):
+        await task
+    log_task_exception(task)
