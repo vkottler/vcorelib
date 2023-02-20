@@ -30,7 +30,7 @@ class SchemaValidationError(Exception):
 class Schema(_abc.ABC):
     """A base class for schema enforcement."""
 
-    def __init__(self, data: _JsonObject) -> None:
+    def __init__(self, data: _JsonObject, **_) -> None:
         """Initialize this schema."""
         self.data = data
 

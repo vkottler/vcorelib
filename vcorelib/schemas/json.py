@@ -41,7 +41,7 @@ class JsonSchema(_Schema):
     See also: https://json-schema.org/.
     """
 
-    def __init__(self, data: _JsonObject) -> None:
+    def __init__(self, data: _JsonObject, **_) -> None:
         """Initialize this schema."""
         super().__init__(data)
         self.validator = _compile(data, handlers={"package": package_handler})
