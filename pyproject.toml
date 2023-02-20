@@ -26,13 +26,7 @@ classifiers = [
   "Development Status :: 5 - Production/Stable",
   "License :: OSI Approved :: MIT License"
 ]
-dependencies = [
-  "cerberus",
-  "fastjsonschema",
-  "ruamel.yaml",
-  "tomli",
-  "tomli-w"
-]
+dynamic = ["dependencies"]
 
 [project.optional-dependencies]
 test = [
