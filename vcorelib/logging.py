@@ -5,21 +5,18 @@ Utilities for logging information.
 # built-in
 from contextlib import contextmanager
 from logging import INFO as _INFO
-from logging import Logger as _Logger
-from logging import LoggerAdapter as _LoggerAdapter
 from logging import getLogger as _GetLogger
 from typing import Iterator as _Iterator
-from typing import Union as _Union
+
+from vcorelib.math.time import LoggerType
 
 # internal
 from vcorelib.math.time import TIMER as _TIMER
 
-LoggerType = _Union[_Logger, _LoggerAdapter]
-
 
 @contextmanager
 def log_time(
-    log: _Logger,
+    log: LoggerType,
     message: str,
     *args,
     level: int = _INFO,
@@ -44,3 +41,15 @@ class LoggerMixin:  # pylint: disable=too-few-public-methods
             if logger is None:
                 logger = _GetLogger(self.__class__.__module__)
             self.logger = logger
+
+    @contextmanager
+    def log_time(
+        self,
+        message: str,
+        *args,
+        level: int = _INFO,
+        **kwargs,
+    ) -> _Iterator[None]:
+        """A simple wrapper."""
+        with log_time(self.logger, message, *args, level=level, **kwargs):
+            yield

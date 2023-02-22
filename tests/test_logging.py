@@ -28,3 +28,7 @@ def test_logger_mixin_basic():
 
     inst = LoggerMixinTest()
     inst.logger.info("This is a test, %d %d %d.", 1, 2, 3)
+
+    with inst.log_time("Hello, %s! %d", "world", 5):
+        for _ in range(100):
+            pass

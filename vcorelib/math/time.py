@@ -6,13 +6,15 @@ Math utilities involving units of time and other conversions.
 from contextlib import contextmanager
 from io import StringIO
 from logging import INFO as _INFO
-from logging import Logger
+from logging import Logger as _Logger
+from logging import LoggerAdapter as _LoggerAdapter
 from math import floor as _floor
 from time import perf_counter_ns as _perf_counter_ns
 from time import time_ns as _time_ns
 from typing import Dict as _Dict
 from typing import Iterator as _Iterator
 from typing import Tuple as _Tuple
+from typing import Union as _Union
 
 # internal
 from vcorelib.math import KIBI_UNITS as _KIBI_UNITS
@@ -91,6 +93,9 @@ def byte_count_str(byte_count: int) -> str:
     return nano_str(byte_count, False, 99, _KIBI_UNITS, True) + "B"
 
 
+LoggerType = _Union[_Logger, _LoggerAdapter]
+
+
 class Timer:
     """A class for measuring and logging how long events take."""
 
@@ -122,7 +127,7 @@ class Timer:
     @contextmanager
     def log(
         self,
-        log: Logger,
+        log: LoggerType,
         message: str,
         *args,
         level: int = _INFO,
