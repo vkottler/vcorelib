@@ -34,6 +34,31 @@ def test_target_compile():
     """Verify we can compile a target from input data."""
 
     target = Target("a:{a},b:{b},c:{c}")
+
     evaluator = target.evaluator
     assert evaluator is not None
+
     assert evaluator.compile({"a": 1, "b": 2, "c": 3}) == "a:1,b:2,c:3"
+
+
+def test_target_with_dot():
+    """Test for bugs and other parsing/compiling scenarios."""
+
+    in_target = Target("asdf.{test}")
+    out_target = Target("1234.{test}")
+
+    match = in_target.evaluate("asdf.1234")
+    assert match.matched
+    assert match.substitutions is not None
+
+    assert out_target.compile(substitutions=match.substitutions) == "1234.1234"
+
+    in_target = Target("{test}.asdf")
+    out_target = Target("{test}.1234")
+
+    match = in_target.evaluate("1234.asdf")
+    assert match.matched
+    assert match.substitutions is not None
+
+    print(out_target.evaluator)
+    assert out_target.compile(substitutions=match.substitutions) == "1234.1234"
