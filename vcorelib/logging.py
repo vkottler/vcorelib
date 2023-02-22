@@ -13,6 +13,9 @@ from vcorelib.math.time import LoggerType
 # internal
 from vcorelib.math.time import TIMER as _TIMER
 
+# Re-export 'LoggerType'.
+__all__ = ["LoggerType", "log_time", "LoggerMixin"]
+
 
 @contextmanager
 def log_time(
