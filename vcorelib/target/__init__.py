@@ -36,11 +36,13 @@ class DynamicTargetEvaluator(NamedTuple):
 
         result = ""
         orig_idx = 0
+
         for key, marker in zip(self.keys, self.markers):
             result += self.original[orig_idx : marker[0]]
             result += str(values[key])
             orig_idx = marker[1] + 1
-        return result
+
+        return result + self.original[orig_idx:]
 
 
 class TargetMatch(NamedTuple):
@@ -61,6 +63,11 @@ class TargetMatch(NamedTuple):
 
 LITERAL_MATCH = TargetMatch(True)
 NO_MATCH = TargetMatch(False)
+
+
+def escape_regex_special(data: str) -> str:
+    """Escape special characters that have meaning in a regular expression."""
+    return data.replace(".", "\\.")
 
 
 class Target:
@@ -139,13 +146,14 @@ class Target:
             # characters appeared.
             markers.append((abs_idx + start, abs_idx + end))
 
-            pattern += live[:start]
+            pattern += escape_regex_special(live[:start])
             pattern += f"({cls.valid})"
 
             keys.append(live[start + 1 : end])
             live = live[end + 1 :]
             abs_idx += end + 1
-        pattern += live + "$"
+
+        pattern += escape_regex_special(live) + "$"
 
         assert len(keys) == open_len
         return DynamicTargetEvaluator(data, re.compile(pattern), keys, markers)
