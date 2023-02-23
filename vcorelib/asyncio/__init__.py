@@ -13,8 +13,11 @@ from asyncio import all_tasks as _all_tasks
 from asyncio import get_event_loop as _get_event_loop
 from contextlib import suppress as _suppress
 from logging import getLogger as _getLogger
+import signal as _signal
+from types import FrameType as _FrameType
 from typing import Any as _Any
 from typing import Awaitable as _Awaitable
+from typing import Callable as _Callable
 from typing import Coroutine as _Coroutine
 from typing import Iterable as _Iterable
 from typing import List as _List
@@ -88,10 +91,30 @@ def run_handle_interrupt(
     return result
 
 
+SignalHandler = _Callable[[int, _Optional[_FrameType]], None]
+
+
+def event_setter(
+    stop_sig: _Event, eloop: _AbstractEventLoop, logger: _LoggerType = None
+) -> SignalHandler:
+    """Create a function that sets an event."""
+
+    if logger is None:
+        logger = LOG
+
+    def setter(sig: int, _: _Optional[_FrameType]) -> None:
+        """Set the signal."""
+        LOG.info("Received signal %d (%s).", sig, _signal.Signals(sig).name)
+        eloop.call_soon_threadsafe(stop_sig.set)
+
+    return setter
+
+
 def run_handle_stop(
     stop_sig: _Event,
     task: _Coroutine[None, None, T],
     eloop: _AbstractEventLoop = None,
+    signals: _Iterable[int] = None,
 ) -> T:
     """
     Publish the stop signal on keyboard interrupt and wait for the task to
@@ -102,9 +125,15 @@ def run_handle_stop(
         eloop = _get_event_loop()
     to_run = eloop.create_task(task)
 
+    # Register signal handlers if signals were provided.
+    if signals is not None:
+        setter = event_setter(stop_sig, eloop)
+        for signal in signals:
+            _signal.signal(signal, setter)
+
     while True:
         try:
             return eloop.run_until_complete(to_run)
-        except KeyboardInterrupt:  # pragma: nocover
+        except KeyboardInterrupt:
             print("Keyboard interrupt.")
-            stop_sig.set()
+            eloop.call_soon_threadsafe(stop_sig.set)
