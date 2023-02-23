@@ -13,7 +13,7 @@ import tempfile
 from textwrap import dedent
 
 # module under test
-from vcorelib.asyncio import run_handle_interrupt
+from vcorelib.asyncio import all_stop_signals, run_handle_interrupt
 from vcorelib.task import TaskFailed
 from vcorelib.task.subprocess.run import SubprocessExecStreamed
 
@@ -27,15 +27,7 @@ def interrupt_raiser(*_) -> None:
 def task_runner() -> None:
     """Run an event-loop task that will spawn a process that sleeps."""
 
-    for sig in list(
-        {
-            signal.SIGINT,
-            getattr(signal, "SIGBREAK", signal.SIGINT),
-            getattr(signal, "CTRL_C_EVENT", signal.SIGINT),
-            getattr(signal, "CTRL_BREAK_EVENT", signal.SIGINT),
-            signal.SIGTERM,
-        }
-    ):
+    for sig in list(all_stop_signals()):
         # Install signal handlers to translate terminations to
         # KeyboardInterrupt.
         with suppress(ValueError):

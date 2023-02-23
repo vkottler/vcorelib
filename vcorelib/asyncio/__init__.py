@@ -22,6 +22,7 @@ from typing import Coroutine as _Coroutine
 from typing import Iterable as _Iterable
 from typing import List as _List
 from typing import Optional as _Optional
+from typing import Set as _Set
 from typing import TypeVar as _TypeVar
 
 # internal
@@ -108,6 +109,18 @@ def event_setter(
         eloop.call_soon_threadsafe(stop_sig.set)
 
     return setter
+
+
+def all_stop_signals() -> _Set[int]:
+    """Get a set of all stop signals on this platform."""
+
+    return {
+        _signal.SIGINT,
+        getattr(_signal, "SIGBREAK", _signal.SIGINT),
+        getattr(_signal, "CTRL_C_EVENT", _signal.SIGINT),
+        getattr(_signal, "CTRL_BREAK_EVENT", _signal.SIGINT),
+        _signal.SIGTERM,
+    }
 
 
 def run_handle_stop(
