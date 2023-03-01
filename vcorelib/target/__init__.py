@@ -6,43 +6,25 @@ from __future__ import annotations
 
 # built-in
 import re
-from typing import Dict as _Dict
 from typing import List as _List
 from typing import NamedTuple
 from typing import Optional as _Optional
 from typing import Tuple as _Tuple
-from typing import Union as _union
 
-Substitutions = _Dict[str, _union[str, int]]
+# internal
+from vcorelib.target.evaluation import (
+    DynamicTargetEvaluator,
+    Substitutions,
+    TargetInterface,
+)
 
-
-class DynamicTargetEvaluator(NamedTuple):
-    """
-    A regular expression configured to match as many groups as in the provided
-    keys. When the pattern matches some data, the names of the keys can become
-    associated with the data that was matched inside each group.
-    """
-
-    original: str
-    pattern: re.Pattern[str]
-    keys: _List[str]
-    markers: _List[_Tuple[int, int]]
-
-    def compile(self, values: Substitutions) -> str:
-        """
-        Build a string from this target with values replaced for keys that
-        appeared in the original string.
-        """
-
-        result = ""
-        orig_idx = 0
-
-        for key, marker in zip(self.keys, self.markers):
-            result += self.original[orig_idx : marker[0]]
-            result += str(values[key])
-            orig_idx = marker[1] + 1
-
-        return result + self.original[orig_idx:]
+__all__ = [
+    "Substitutions",
+    "TargetMatch",
+    "LITERAL_MATCH",
+    "NO_MATCH",
+    "Target",
+]
 
 
 class TargetMatch(NamedTuple):
@@ -70,53 +52,13 @@ def escape_regex_special(data: str) -> str:
     return data.replace(".", "\\.")
 
 
-class Target:
+class Target(TargetInterface[DynamicTargetEvaluator]):
     """
     An interface for string targets that may encode data substitutions or
     otherwise be matched to only a single, literal string.
     """
 
-    dynamic_start = "{"
-    dynamic_end = "}"
     valid = "[a-zA-Z0-9-_.]+"
-
-    def __init__(self, data: str) -> None:
-        """Initialize this target."""
-
-        self.data = data
-        self.evaluator = self.parse(self.data)
-        self.literal = self.evaluator is None
-
-    def __str__(self) -> str:
-        """Get this target as a string."""
-        return self.data
-
-    def __eq__(self, other: object) -> bool:
-        """Check if two targets are equal."""
-        return str(self) == str(other)
-
-    def __hash__(self) -> int:
-        """Get the hash for this target."""
-        return hash(str(self))
-
-    @classmethod
-    def is_literal(cls, data: str) -> bool:
-        """Determine if a target is guaranteed to be literal or not."""
-        return (
-            data.count(cls.dynamic_start) == data.count(cls.dynamic_end) == 0
-        )
-
-    def compile(self, substitutions: Substitutions = None) -> str:
-        """
-        Attempt to get a target literal from this target and optional
-        substitutions.
-        """
-
-        result = self.data
-        if self.evaluator is not None:
-            assert substitutions is not None, f"Can't compile '{self.data}'!"
-            result = self.evaluator.compile(substitutions)
-        return result
 
     @classmethod
     def parse(cls, data: str) -> _Optional[DynamicTargetEvaluator]:
@@ -125,13 +67,11 @@ class Target:
         None.
         """
 
-        # The short-circuit case where this is not a dynamic target.
-        if cls.is_literal(data):
-            return None
+        open_len = cls.segment_count(data)
 
-        # A preliminary syntax check.
-        open_len = data.count(cls.dynamic_start)
-        assert open_len == data.count(cls.dynamic_end)
+        # The short-circuit case where this is not a dynamic target.
+        if not open_len:
+            return None
 
         pattern = "^"
         keys = []
