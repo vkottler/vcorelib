@@ -60,5 +60,4 @@ def test_target_with_dot():
     assert match.matched
     assert match.substitutions is not None
 
-    print(out_target.evaluator)
     assert out_target.compile(substitutions=match.substitutions) == "1234.1234"
