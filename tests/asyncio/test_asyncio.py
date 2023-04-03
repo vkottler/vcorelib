@@ -21,7 +21,9 @@ from pytest import mark, raises
 from tests.asyncio.interrupt_tester import task_runner
 
 # module under test
+from vcorelib import PKG_NAME
 from vcorelib.asyncio import log_task_exception, run_handle_stop
+from vcorelib.paths.context import linked_to
 
 TestIteration = Callable[[int], bool]
 
@@ -75,26 +77,30 @@ def handle_interrupt_subprocess_test(idx: int) -> bool:
     in a sub-process.
     """
 
-    with subprocess.Popen(
-        [
-            sys.executable,
-            "-m",
-            "coverage",
-            "run",
-            "-a",
-            str(Path(__file__).with_name("interrupt_tester.py")),
-        ],
-    ) as proc:
-        time.sleep(0.2 * idx)
+    script = Path(__file__).with_name("interrupt_tester.py")
 
-        # Send a platform-specific signal.
-        kill(proc.pid, getattr(signal, "CTRL_C_EVENT", signal.SIGINT))
+    # Ensure that the test script can import this package.
+    with linked_to(
+        script.with_name(PKG_NAME),
+        "..",
+        "..",
+        PKG_NAME,
+        target_is_directory=True,
+    ):
+        with subprocess.Popen(
+            [sys.executable, "-m", "coverage", "run", "-a", str(script)],
+        ) as proc:
+            time.sleep(0.2 * idx)
 
-        # This will raise an exception if reached.
-        with suppress(subprocess.TimeoutExpired):
-            proc.wait(timeout=1.0)
+            # Send a platform-specific signal.
+            kill(proc.pid, getattr(signal, "CTRL_C_EVENT", signal.SIGINT))
 
-        result = proc.returncode == 0
+            # This will raise an exception if reached.
+            with suppress(subprocess.TimeoutExpired):
+                proc.wait(timeout=1.0)
+
+            result = proc.returncode == 0
+
     return result
 
 

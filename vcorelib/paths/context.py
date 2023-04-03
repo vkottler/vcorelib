@@ -34,6 +34,26 @@ def in_dir(
 
 
 @contextmanager
+def linked_to(
+    link: _Pathlike,
+    target: _Pathlike,
+    *parts: _Union[str, _Path],
+    target_is_directory: bool = False,
+) -> _Iterator[_Path]:
+    """Provide a symbolic link as a managed context."""
+
+    link = _normalize(link)
+    link.symlink_to(
+        _normalize(target, *parts), target_is_directory=target_is_directory
+    )
+
+    try:
+        yield link
+    finally:
+        link.unlink()
+
+
+@contextmanager
 def tempfile(*args, **kwargs) -> _Iterator[_Path]:
     """
     Get a valid path to a temporary file and guarantee that its cleaned up
