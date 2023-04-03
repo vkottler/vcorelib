@@ -7,10 +7,11 @@ from contextlib import ExitStack
 # built-in
 from os import linesep
 from pathlib import Path
-from tempfile import NamedTemporaryFile, TemporaryDirectory
+from tempfile import TemporaryDirectory
 from typing import Optional
 
 # module under test
+from vcorelib.paths.context import tempfile
 from vcorelib.paths.info_cache import (
     FileInfo,
     FileInfoManager,
@@ -21,22 +22,29 @@ from vcorelib.paths.info_cache import (
 def test_paths_file_info_cache():  # pylint: disable=too-many-locals
     """Test that file info caching works."""
 
+    last_result = False
+
     def fresh_callback(
         new: Optional[FileInfo], curr: Optional[FileInfo]
-    ) -> None:
+    ) -> bool:
         """Sample callback."""
+
         del new
         del curr
 
-    with NamedTemporaryFile(suffix=".json") as tfile:
-        name = tfile.name
-
-    cache_locs = [Path(name)]
+        nonlocal last_result
+        last_result = not last_result
+        return last_result
 
     with ExitStack() as stack:
-        cache_locs.append(Path(stack.enter_context(TemporaryDirectory())))
+        cache_locs = [
+            stack.enter_context(tempfile(suffix=".json")),
+            stack.enter_context(tempfile(suffix=".json")),
+        ]
+
         for cache_loc in cache_locs:
             tmpdir = Path(stack.enter_context(TemporaryDirectory()))
+
             subdir = tmpdir.joinpath("tmp")
             subdir.mkdir()
             tdirs = [tmpdir, subdir]
@@ -92,4 +100,4 @@ def test_paths_file_info_cache():  # pylint: disable=too-many-locals
                     path_fd.flush()
 
             with file_info_cache(cache_loc, fresh_callback) as manager:
-                pass
+                assert manager.infos
