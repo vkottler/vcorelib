@@ -5,6 +5,8 @@ in a file-system.
 
 # built-in
 from collections.abc import Mapping as _Mapping
+from enum import Enum as _Enum
+from enum import auto as _auto
 from os import stat_result as _stat_result
 from pathlib import Path as _Path
 from typing import Dict as _Dict
@@ -19,6 +21,14 @@ from vcorelib.paths import Pathlike as _Pathlike
 from vcorelib.paths import file_md5_hex as _file_md5_hex
 from vcorelib.paths import normalize as _normalize
 from vcorelib.paths import stats as _stats
+
+
+class FileChangeEvent(_Enum):
+    """An enumeration describing possible file-change events."""
+
+    CREATED = _auto()
+    REMOVED = _auto()
+    UPDATED = _auto()
 
 
 class FileInfo(NamedTuple):
@@ -53,20 +63,25 @@ class FileInfo(NamedTuple):
         md5_hex = _file_md5_hex(path)
         return FileInfo(path, stats.st_size, md5_hex, stats.st_mtime_ns)
 
-    def poll(self) -> _Tuple[bool, _Optional["FileInfo"]]:
+    def poll(
+        self,
+    ) -> _Tuple[_Optional[FileChangeEvent], _Optional["FileInfo"]]:
         """Determine if this file is in a new state or not."""
 
         if not self.path.is_file():
-            return True, None
+            return FileChangeEvent.REMOVED, None
 
         # If the file hasn't been modified, skip re-reading it for a new
         # checksum.
         stats = _stats(self.path)
         if stats is not None and stats.st_mtime_ns == self.modified_ns:
-            return False, self
+            return None, self
 
         new_info = FileInfo.from_file(self.path, stats)
-        return self.same(new_info), new_info
+        return (
+            FileChangeEvent.UPDATED if not self.same(new_info) else None,
+            new_info,
+        )
 
     def to_json(self, data: _JsonObject = None) -> _JsonObject:
         """Get JSON data for this instance."""
