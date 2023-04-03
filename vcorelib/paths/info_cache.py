@@ -3,112 +3,41 @@ A module implementing a file-info cache.
 """
 
 # built-in
-from collections.abc import Mapping as _Mapping
 from contextlib import contextmanager as _contextmanager
-from os import stat_result as _stat_result
 from pathlib import Path as _Path
 from typing import Callable as _Callable
 from typing import Dict as _Dict
 from typing import Iterator as _Iterator
-from typing import NamedTuple
 from typing import Optional as _Optional
-from typing import Tuple as _Tuple
-from typing import cast as _cast
 
 # internal
-from vcorelib.dict.cache import DirectoryCache, FileCache
-from vcorelib.io.types import JsonObject as _JsonObject
+from vcorelib.dict.cache import FileCache
 from vcorelib.paths import Pathlike as _Pathlike
-from vcorelib.paths import file_md5_hex as _file_md5_hex
 from vcorelib.paths import normalize as _normalize
-from vcorelib.paths import stats as _stats
-
-
-class FileInfo(NamedTuple):
-    """A collection of data to describe an identity of a file."""
-
-    path: _Path
-    size: int
-    md5_hex: str
-    modified_ns: int
-
-    def __eq__(self, other: object) -> bool:
-        """Determine if two file info's are equivalent."""
-        return self.path.samefile(_cast(FileInfo, other).path)
-
-    def __hash__(self) -> int:
-        """Get a hash for this file info based on the file name."""
-        return hash(str(self.path.resolve()))
-
-    def same(self, other: "FileInfo") -> bool:
-        """Check if two file info contents match."""
-        return other.size == self.size and other.md5_hex == self.md5_hex
-
-    @staticmethod
-    def from_file(path: _Pathlike, stats: _stat_result = None) -> "FileInfo":
-        """Create file info from a file."""
-
-        path = _normalize(path).resolve()
-        assert path.is_file()
-        if stats is None:
-            stats = _stats(path)
-        assert stats is not None
-        md5_hex = _file_md5_hex(path)
-        return FileInfo(path, stats.st_size, md5_hex, stats.st_mtime_ns)
-
-    def poll(self) -> _Tuple[bool, _Optional["FileInfo"]]:
-        """Determine if this file is in a new state or not."""
-
-        if not self.path.is_file():
-            return True, None
-
-        # If the file hasn't been modified, skip re-reading it for a new
-        # checksum.
-        stats = _stats(self.path)
-        if stats is not None and stats.st_mtime_ns == self.modified_ns:
-            return False, self
-
-        new_info = FileInfo.from_file(self.path, stats)
-        return self.same(new_info), new_info
-
-    def to_json(self, data: _JsonObject = None) -> _JsonObject:
-        """Get JSON data for this instance."""
-        if data is None:
-            data = {}
-
-        path_str = str(self.path.resolve())
-        if path_str not in data:
-            data[path_str] = {}
-
-        to_update = _cast(_JsonObject, data[path_str])
-        to_update["size"] = self.size
-        to_update["md5_hex"] = self.md5_hex
-        to_update["modified_ns"] = self.modified_ns
-
-        return data
-
-    @staticmethod
-    def from_json(data: _JsonObject) -> _Dict[_Path, "FileInfo"]:
-        """Create file info from JSON data."""
-
-        result = {}
-        for key, info in data.items():
-            assert isinstance(info, _Mapping)
-            path = _Path(key)
-            if path.is_file():
-                result[path] = FileInfo(
-                    path,
-                    _cast(int, info["size"]),
-                    _cast(str, info["md5_hex"]),
-                    _cast(int, info["modified_ns"]),
-                )
-        return result
-
+from vcorelib.paths.info import FileInfo
 
 #
 # new file (if still present), old file (if it was previously present)
 #
-FileFreshCallback = _Callable[[_Optional[FileInfo], _Optional[FileInfo]], None]
+# return True if the callback succeeded, in this case an implementation using
+# this callback should consider the new file info valid
+#
+# if False was returned, do not promote the new file info into any cache or
+# runtime state
+#
+# this return-value signal is useful because software that acts on file changes
+# can fail, and eventually retry later (such as in a completely new invocation
+# of the program), without the file-change event being lost
+#
+FileFreshCallback = _Callable[[_Optional[FileInfo], _Optional[FileInfo]], bool]
+
+# Adds 'FileInfo' from the .info module.
+__all__ = [
+    "FileFreshCallback",
+    "FileInfoManager",
+    "file_info_cache",
+    "FileInfo",
+]
 
 
 class FileInfoManager:
@@ -160,7 +89,9 @@ class FileInfoManager:
             new, info = self.infos[norm].poll()
 
         if new:
-            self.poll(info, old_info)
+            # Don't update internal state if the callback signals us not to.
+            if not self.poll(info, old_info):
+                return
 
         if info is not None:
             self.infos[info.path] = info
@@ -175,8 +106,8 @@ def file_info_cache(
     """Obtain a file-info manager as a cached context."""
 
     path = _normalize(cache_path)
-    cache = DirectoryCache if path.is_dir() else FileCache
-    with cache(path).loaded() as data:
+    assert not path.is_dir(), f"'{path}' is a directory!"
+    with FileCache(path).loaded() as data:
         manager = FileInfoManager(poll_cb, FileInfo.from_json(data))
         yield manager
 

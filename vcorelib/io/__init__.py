@@ -336,9 +336,14 @@ class DataArbiter:
             decode_kwargs = {}
         if encode_kwargs is None:
             encode_kwargs = {}
-        data = self.decode(pathlike, **decode_kwargs).data
+
+        path = normalize(pathlike)
+
+        data = self.decode(path, **decode_kwargs).data
         yield data
-        self.encode(pathlike, data, **encode_kwargs)
+        assert self.encode(path, data, **encode_kwargs)[
+            0
+        ], f"Encoding '{path}' as a file failed!"
 
     @_contextmanager
     def object_directory_context(
@@ -360,11 +365,11 @@ class DataArbiter:
 
         data = self.decode_directory(path, **decode_kwargs).data
         yield data
-        self.encode_directory(
-            pathlike,
+        assert self.encode_directory(
+            path,
             data,
             **encode_kwargs,
-        )
+        )[0], f"Encoding '{path}' as a directory failed!"
 
 
 ARBITER = DataArbiter()
