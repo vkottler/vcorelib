@@ -2,9 +2,8 @@
 Tests for the 'paths' module.
 """
 
-from logging import getLogger
-
 # built-in
+from logging import getLogger
 from os import linesep, sep
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -27,7 +26,7 @@ from vcorelib.paths import (
     str_md5_hex,
 )
 from vcorelib.paths.context import in_dir, tempfile
-from vcorelib.task.subprocess.run import is_windows
+from vcorelib.platform import is_windows
 
 
 def test_file_name_ext():

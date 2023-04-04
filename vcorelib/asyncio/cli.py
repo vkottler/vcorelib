@@ -1,0 +1,133 @@
+"""
+A module implementing utilities to work with asyncio processes.
+"""
+
+# built-in
+from asyncio import CancelledError as _CancelledError
+from asyncio import create_subprocess_shell
+from asyncio.subprocess import Process as _Process
+import signal as _signal
+
+# internal
+from vcorelib.asyncio.subprocess import (
+    create_subprocess_exec_log,
+    log_process_info,
+)
+from vcorelib.logging import LoggerType, log_time
+
+
+async def handle_process_cancel(
+    proc: _Process,
+    name: str,
+    logger: LoggerType,
+    stdin: bytes = None,
+    signal: int = None,
+) -> _Process:
+    """
+    Communicate with a process and send a signal to it if this task gets
+    cancelled.
+    """
+
+    # Default to a valid interrupt signal.
+    if signal is None:
+        signal = getattr(_signal, "CTRL_C_EVENT", _signal.SIGINT)
+    assert signal is not None
+
+    try:
+        await proc.communicate(input=stdin)
+
+    except _CancelledError:
+        # Send the process a signal and wait for it to terminate.
+        proc.send_signal(signal)
+        logger.warning(
+            "Sending signal %d to process '%s' (%d).", signal, name, proc.pid
+        )
+        await proc.wait()
+        raise
+
+    finally:
+        if proc.returncode is not None:
+            logger.info(
+                "Process '%s' (%d) exited %d.", name, proc.pid, proc.returncode
+            )
+
+    return proc
+
+
+async def run_command(
+    logger: LoggerType,
+    *args: str,
+    stdin: bytes = None,
+    stdout: int = None,
+    stderr: int = None,
+    signal: int = None,
+    **kwargs,
+) -> _Process:
+    """Run a subprocess and return the completed process."""
+
+    rel = log_process_info(*args)
+
+    with log_time(logger, "Command '%s'", rel[0]):
+        proc = await handle_process_cancel(
+            await create_subprocess_exec_log(
+                logger,
+                *args,
+                stdout=stdout,
+                stderr=stderr,
+                **kwargs,
+            ),
+            rel[0],
+            logger,
+            stdin=stdin,
+            signal=signal,
+        )
+
+    return proc
+
+
+async def create_subprocess_shell_log(
+    logger: LoggerType,
+    command: str,
+    stdout: int = None,
+    stderr: int = None,
+    **kwargs,
+) -> _Process:
+    """
+    Create a shell process and log information about the created process.
+    """
+
+    logger.info("shell: '%s'", command)
+    return await create_subprocess_shell(
+        command, stdout=stdout, stderr=stderr, **kwargs
+    )
+
+
+async def run_shell(
+    logger: LoggerType,
+    *args: str,
+    stdin: bytes = None,
+    stdout: int = None,
+    stderr: int = None,
+    signal: int = None,
+    **kwargs,
+) -> _Process:
+    """Run a shell command and return the completed process."""
+
+    rel = log_process_info(*args)
+
+    with log_time(logger, "Shell '%s'", rel[0]):
+        proc = await handle_process_cancel(
+            await create_subprocess_shell_log(
+                logger,
+                " ".join(args),
+                stdout=stdout,
+                stderr=stderr,
+                **kwargs,
+            ),
+            rel[0],
+            logger,
+            stdin=stdin,
+            signal=signal,
+        )
+
+    return proc
