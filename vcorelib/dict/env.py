@@ -7,6 +7,7 @@ data structures.
 from os import environ as _environ
 from typing import Any as _Any
 from typing import List as _List
+from typing import Mapping as _Mapping
 
 # internal
 from vcorelib.dict import GenericDict as _GenericDict
@@ -14,17 +15,20 @@ from vcorelib.dict import GenericDict as _GenericDict
 GenericList = _List[_Any]
 
 
-def str_resolve_env_var(data: str) -> str:
+def str_resolve_env_var(data: str, env: _Mapping[str, str] = None) -> str:
     """
     Convert string data to a resolved environment variable if the string begins
     with '$' and is a key in the environment with a non-empty value.
     """
 
+    if env is None:
+        env = _environ
+
     temp = data.strip()
     if temp.startswith("$"):
         key = temp[1:]
-        if key in _environ and _environ[key]:
-            data = _environ[key]
+        if key in env and env[key]:
+            data = env[key]
 
     return data
 
@@ -34,6 +38,7 @@ def list_resolve_env_vars(
     keys: bool = True,
     values: bool = True,
     lists: bool = True,
+    env: _Mapping[str, str] = None,
 ) -> GenericList:
     """
     Recursively resolve list data that may contain strings that should be
@@ -43,11 +48,15 @@ def list_resolve_env_vars(
 
     for idx, item in enumerate(data):
         if isinstance(item, dict) and (keys or values):
-            data[idx] = dict_resolve_env_vars(item, keys, values, lists)
+            data[idx] = dict_resolve_env_vars(
+                item, keys, values, lists, env=env
+            )
         if isinstance(item, list) and lists:
-            data[idx] = list_resolve_env_vars(item, keys, values, lists)
+            data[idx] = list_resolve_env_vars(
+                item, keys, values, lists, env=env
+            )
         if isinstance(item, str):
-            data[idx] = str_resolve_env_var(item)
+            data[idx] = str_resolve_env_var(item, env=env)
 
     return data
 
@@ -57,6 +66,7 @@ def dict_resolve_env_vars(
     keys: bool = True,
     values: bool = True,
     lists: bool = True,
+    env: _Mapping[str, str] = None,
 ) -> _GenericDict:
     """
     Recursively resolve dictionary data that may contain strings that should be
@@ -66,20 +76,25 @@ def dict_resolve_env_vars(
 
     keys_to_remove: _List[str] = []
     to_update: _GenericDict = {}
+
     for key, value in data.items():
         if isinstance(value, str) and values:
-            value = str_resolve_env_var(value)
+            value = str_resolve_env_var(value, env=env)
 
         if isinstance(key, str) and keys:
-            to_update[str_resolve_env_var(key)] = value
+            to_update[str_resolve_env_var(key, env=env)] = value
             keys_to_remove.append(key)
 
         data[key] = value
 
         if isinstance(value, dict):
-            data[key] = dict_resolve_env_vars(value, keys, values, lists)
+            data[key] = dict_resolve_env_vars(
+                value, keys, values, lists, env=env
+            )
         if isinstance(value, list) and lists:
-            data[key] = list_resolve_env_vars(value, keys, values, lists)
+            data[key] = list_resolve_env_vars(
+                value, keys, values, lists, env=env
+            )
 
     # Don't change the size of data while iterating.
     for key in keys_to_remove:
