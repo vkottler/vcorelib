@@ -29,3 +29,8 @@ def test_resolve_env_vars():
     assert dict_resolve_env_vars({"a": {"b": ["$TEST"]}}) == {
         "a": {"b": ["test"]}
     }
+
+    # Test that we can directly provide the substitution data.
+    assert list_resolve_env_vars(
+        ["$a", "$b", "$c"], env={"a": "1", "b": "2", "c": "3"}
+    ) == ["1", "2", "3"]

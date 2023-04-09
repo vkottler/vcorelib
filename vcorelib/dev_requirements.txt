@@ -1,10 +1,10 @@
 pylint
 flake8
-pytest
-pytest-cov
-mypy
 black
+ruff
+mypy
 isort
+yamllint
 pytest-asyncio
 setuptools-wrapper
 types-setuptools
