@@ -9,11 +9,17 @@ from pathlib import Path as _Path
 from typing import Any as _Any
 from typing import Set as _Set
 
+# internal
+from vcorelib.paths import Pathlike as _Pathlike
+from vcorelib.paths import normalize as _normalize
 
-def invoke_script(script: _Path, method: str, *args, **kwargs) -> _Any:
+
+def invoke_script(script: _Pathlike, method: str, *args, **kwargs) -> _Any:
     """Invoke a method from an external script."""
 
-    loader = importlib.machinery.SourceFileLoader("script", str(script))
+    loader = importlib.machinery.SourceFileLoader(
+        "script", str(_normalize(script))
+    )
     spec = importlib.util.spec_from_loader("script", loader)
     assert spec is not None
     script_module = importlib.util.module_from_spec(spec)

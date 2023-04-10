@@ -15,7 +15,7 @@ from vcorelib.dict import GenericDict as _GenericDict
 GenericList = _List[_Any]
 
 
-def str_resolve_env_var(data: str, env: _Mapping[str, str] = None) -> str:
+def str_resolve_env_var(data: str, env: _Mapping[str, _Any] = None) -> str:
     """
     Convert string data to a resolved environment variable if the string begins
     with '$' and is a key in the environment with a non-empty value.

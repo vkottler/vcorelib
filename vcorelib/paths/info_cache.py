@@ -157,9 +157,16 @@ class FileInfoManager:
     ) -> _Tuple[_Optional[FileChangeEvent], _Optional[FileInfo]]:
         """Get information about a file-system path."""
 
+        change = None
+        file_info = None
+
         # If the path isn't in the mapping, it's a new file.
         if path not in self.infos:
-            return FileChangeEvent.CREATED, FileInfo.from_file(path)
+            if path.is_file():
+                change = FileChangeEvent.CREATED
+                file_info = FileInfo.from_file(path)
+
+            return change, file_info
 
         # Determine if the existing file has changed.
         return self.infos[path].poll()
@@ -191,10 +198,11 @@ def file_info_cache(
     assert not path.is_dir(), f"'{path}' is a directory!"
     with FileCache(path).loaded() as data:
         manager = FileInfoManager(
-            poll_cb, FileInfo.from_json(data), logger=logger
+            poll_cb, FileInfo.from_json(data, force=True), logger=logger
         )
         yield manager
 
         # Update dictionary data with the current cache contents.
+        data.clear()
         for info in manager.infos.values():
             info.to_json(data)
