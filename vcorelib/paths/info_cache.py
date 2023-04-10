@@ -4,6 +4,7 @@ A module implementing a file-info cache.
 
 # built-in
 from contextlib import contextmanager as _contextmanager
+import logging as _logging
 from pathlib import Path as _Path
 from typing import Callable as _Callable
 from typing import Dict as _Dict
@@ -57,23 +58,28 @@ __all__ = [
 
 
 def log_file_change_event(
-    logger: LoggerType, change: FileChanged, base: _Pathlike = None
+    level: int, logger: LoggerType, change: FileChanged, base: _Pathlike = None
 ) -> None:
     """Log information based on a file-change event."""
 
     if change.event is FileChangeEvent.CREATED:
         assert change.new is not None
-        logger.info(
-            "File '%s' is newly created.", _rel(change.new.path, base=base)
+        logger.log(
+            level,
+            "File '%s' is newly created.",
+            _rel(change.new.path, base=base),
         )
     elif change.event is FileChangeEvent.REMOVED:
         assert change.old is not None
-        logger.info("File '%s' was removed.", _rel(change.old.path, base=base))
+        logger.log(
+            level, "File '%s' was removed.", _rel(change.old.path, base=base)
+        )
     else:
         assert change.new is not None
         assert change.old is not None
 
-        logger.info(
+        logger.log(
+            level,
             "File '%s' changed (%d bytes added/removed).",
             change.new.path,
             change.new.size - change.old.size,
@@ -88,6 +94,7 @@ class FileInfoManager:
         poll_cb: FileChangedCallback,
         initial: _Dict[_Path, FileInfo] = None,
         logger: LoggerType = None,
+        level: int = _logging.DEBUG,
     ) -> None:
         """Initialize this file-info manager."""
 
@@ -96,7 +103,9 @@ class FileInfoManager:
         if initial is None:
             initial = {}
         self.infos = initial
+
         self.logger = logger
+        self.level = level
 
         # If we have initial files, poll them all.
         self.poll_existing()
@@ -148,7 +157,7 @@ class FileInfoManager:
 
         # Log the event, if a logger was provided.
         if self.logger is not None:
-            log_file_change_event(self.logger, change, base=base)
+            log_file_change_event(self.level, self.logger, change, base=base)
 
         return self.poll(change)
 
@@ -191,6 +200,7 @@ def file_info_cache(
     cache_path: _Pathlike,
     poll_cb: FileChangedCallback,
     logger: LoggerType = None,
+    level: int = _logging.DEBUG,
 ) -> _Iterator[FileInfoManager]:
     """Obtain a file-info manager as a cached context."""
 
@@ -198,7 +208,10 @@ def file_info_cache(
     assert not path.is_dir(), f"'{path}' is a directory!"
     with FileCache(path).loaded() as data:
         manager = FileInfoManager(
-            poll_cb, FileInfo.from_json(data, force=True), logger=logger
+            poll_cb,
+            FileInfo.from_json(data, force=True),
+            logger=logger,
+            level=level,
         )
         yield manager
 
