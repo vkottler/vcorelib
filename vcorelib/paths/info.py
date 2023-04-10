@@ -104,14 +104,16 @@ class FileInfo(NamedTuple):
         return data
 
     @staticmethod
-    def from_json(data: _JsonObject) -> _Dict[_Path, "FileInfo"]:
+    def from_json(
+        data: _JsonObject, force: bool = False
+    ) -> _Dict[_Path, "FileInfo"]:
         """Create file info from JSON data."""
 
         result = {}
         for key, info in data.items():
             assert isinstance(info, _Mapping)
             path = _Path(key)
-            if path.is_file():
+            if path.is_file() or force:
                 result[path] = FileInfo(
                     path,
                     _cast(int, info["size"]),
