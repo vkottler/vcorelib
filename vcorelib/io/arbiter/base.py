@@ -9,7 +9,7 @@ from typing import Optional as _Optional
 
 # internal
 from vcorelib import DEFAULT_ENCODING as _DEFAULT_ENCODING
-from vcorelib.dict import consume
+from vcorelib.dict import MergeStrategy, consume
 from vcorelib.io.mapping import DataMapping
 from vcorelib.io.types import DataDecoder as _DataDecoder
 from vcorelib.io.types import DataEncoder as _DataEncoder
@@ -74,6 +74,8 @@ class DataArbiterBase:
         includes_key: _Any = None,
         preprocessor: _StreamProcessor = None,
         maxsplit: int = 1,
+        expect_overwrite: bool = False,
+        strategy: MergeStrategy = MergeStrategy.RECURSIVE,
         **kwargs,
     ) -> LoadResult:
         """Attempt to load data from a file."""
@@ -107,7 +109,10 @@ class DataArbiterBase:
                                 require_success,
                                 includes_key,
                                 **kwargs,
-                            )
+                            ),
+                            expect_overwrite=expect_overwrite,
+                            logger=logger,
+                            strategy=strategy,
                         )
 
         if not result.success:

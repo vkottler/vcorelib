@@ -1,5 +1,5 @@
 [DESIGN]
-max-args=7
+max-args=9
 
 [SIMILARITIES]
 ignore-imports=yes

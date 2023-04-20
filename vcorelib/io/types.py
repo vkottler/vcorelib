@@ -168,7 +168,7 @@ class LoadResult(NamedTuple):
         """Raise a canonical exception if this result is a failure."""
         assert self.success, f"Couldn't load '{path}'!"
 
-    def merge(self, other: "LoadResult") -> "LoadResult":
+    def merge(self, other: "LoadResult", **kwargs) -> "LoadResult":
         """Merge two load results."""
 
         # Add the time fields up if they're both positive.
@@ -177,7 +177,7 @@ class LoadResult(NamedTuple):
             time_ns += other.time_ns
 
         return LoadResult(
-            merge(self.data, other.data),
+            merge(self.data, other.data, **kwargs),
             self.success and other.success,
             time_ns,
         )

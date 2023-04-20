@@ -84,6 +84,7 @@ def merge_recursive(
     path: _List[str] = None,
     expect_overwrite: bool = False,
     logger: LoggerType = None,
+    strategy: MergeStrategy = MergeStrategy.RECURSIVE,
 ) -> GenericDict:
     """
     Combine two dictionaries recursively, prefers dict_a in a conflict. For
@@ -118,6 +119,7 @@ def merge_recursive(
                 path + [str(key)],
                 expect_overwrite,
                 logger,
+                strategy=strategy,
             )
         elif isinstance(dict_a[key], list) and isinstance(right_val, list):
             dict_a[key].extend(right_val)
@@ -155,6 +157,7 @@ def merge(
         path=path,
         expect_overwrite=expect_overwrite,
         logger=logger,
+        strategy=strategy,
     )
 
 
