@@ -12,8 +12,8 @@ from typing import Any
 from tests.resources import resource
 
 # module under test
-from vcorelib.io import ARBITER, DataMapping
-from vcorelib.io.types import FileExtension
+from vcorelib.io import ARBITER, FileExtension
+from vcorelib.io.mapping import DataMapping
 from vcorelib.paths.context import tempfile
 
 

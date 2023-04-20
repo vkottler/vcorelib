@@ -5,7 +5,7 @@ A module implementing various data-file encoders.
 # built-in
 from configparser import ConfigParser
 from json import dump
-from logging import Logger, getLogger
+from logging import getLogger
 from typing import cast as _cast
 
 # third-party
@@ -18,13 +18,14 @@ from vcorelib.dict import consume
 from vcorelib.io.types import DataStream as _DataStream
 from vcorelib.io.types import JsonObject as _JsonObject
 from vcorelib.io.types import YAML_INTERFACE as _YAML_INTERFACE
+from vcorelib.logging import LoggerType
 from vcorelib.math.time import TIMER as _TIMER
 
 _LOG = getLogger(__name__)
 
 
 def encode_json(
-    configs: _JsonObject, ostream: _DataStream, _: Logger = _LOG, **kwargs
+    configs: _JsonObject, ostream: _DataStream, _: LoggerType = _LOG, **kwargs
 ) -> int:
     """Write config data as JSON to the output stream."""
 
@@ -41,7 +42,7 @@ def encode_json(
 
 
 def encode_yaml(
-    configs: _JsonObject, ostream: _DataStream, _: Logger = _LOG, **kwargs
+    configs: _JsonObject, ostream: _DataStream, _: LoggerType = _LOG, **kwargs
 ) -> int:
     """Write config data as YAML to the output stream."""
 
@@ -51,7 +52,7 @@ def encode_yaml(
 
 
 def encode_ini(
-    configs: _JsonObject, ostream: _DataStream, _: Logger = _LOG, **kwargs
+    configs: _JsonObject, ostream: _DataStream, _: LoggerType = _LOG, **kwargs
 ) -> int:
     """Write config data as INI to the output stream."""
 
@@ -65,7 +66,7 @@ def encode_ini(
 
 
 def encode_toml(
-    configs: _JsonObject, ostream: _DataStream, _: Logger = _LOG, **kwargs
+    configs: _JsonObject, ostream: _DataStream, _: LoggerType = _LOG, **kwargs
 ) -> int:
     """Write config data as TOML to the output stream."""
 
