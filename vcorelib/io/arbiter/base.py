@@ -106,8 +106,8 @@ class DataArbiterBase:
                             self.decode(
                                 find_file(include, relative_to=path),
                                 logger,
-                                require_success,
-                                includes_key,
+                                require_success=require_success,
+                                includes_key=includes_key,
                                 **kwargs,
                             ),
                             expect_overwrite=expect_overwrite,

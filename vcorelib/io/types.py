@@ -23,7 +23,7 @@ from ruamel.yaml import YAML
 from vcorelib.dict import merge
 from vcorelib.logging import LoggerType
 from vcorelib.paths import Pathlike as _Pathlike
-from vcorelib.paths import get_file_ext
+from vcorelib.paths import get_file_ext, normalize
 
 DEFAULT_ARCHIVE_EXT = "tar.gz"
 DEFAULT_DATA_EXT = "json"
@@ -71,12 +71,12 @@ class FileExtension(Enum):
         return self in {FileExtension.ZIP, FileExtension.TAR}
 
     @staticmethod
-    def has_archive(path: Path) -> _Optional[Path]:
+    def has_archive(path: _Pathlike) -> _Optional[Path]:
         """Determine if a path has an associated archive file."""
 
         for ext in [FileExtension.ZIP, FileExtension.TAR]:
             for ext_str in ext.value:  # pylint: disable=not-an-iterable
-                check_path = Path(f"{path}.{ext_str}")
+                check_path = Path(f"{normalize(path)}.{ext_str}")
                 if check_path.is_file():
                     return check_path
 
@@ -113,20 +113,20 @@ class FileExtension(Enum):
         return path.with_suffix("." + str(self))
 
     def candidates(
-        self, path: Path, exists_only: bool = False
+        self, path: _Pathlike, exists_only: bool = False
     ) -> _Iterator[Path]:
         """
         For a given path, iterate over candidate paths that have the suffixes
         for this kind of file extension.
         """
         for ext in self.value:
-            path = path.with_suffix(f".{ext}")
+            path = normalize(path).with_suffix(f".{ext}")
             if not exists_only or path.exists():
                 yield path
 
     @staticmethod
     def archive_candidates(
-        path: Path, exists_only: bool = False
+        path: _Pathlike, exists_only: bool = False
     ) -> _Iterator[Path]:
         """
         Iterate over all file extensions that could point to an archive file.
@@ -138,7 +138,7 @@ class FileExtension(Enum):
 
     @staticmethod
     def data_candidates(
-        path: Path, exists_only: bool = False
+        path: _Pathlike, exists_only: bool = False
     ) -> _Iterator[Path]:
         """
         Iterate over all file extensions that could point to a data file.
