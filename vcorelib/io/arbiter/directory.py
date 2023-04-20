@@ -8,7 +8,7 @@ from typing import Callable as _Callable
 from typing import cast as _cast
 
 # internal
-from vcorelib.dict import merge
+from vcorelib.dict import MergeStrategy, merge
 from vcorelib.io.arbiter.base import DataArbiterBase
 from vcorelib.io.types import DEFAULT_DATA_EXT as _DEFAULT_DATA_EXT
 from vcorelib.io.types import EncodeResult as _EncodeResult
@@ -79,14 +79,19 @@ class DataArbiterDirectories(DataArbiterBase):
         ):
             load = None
             if child.is_file():
-                load = self.decode(child, logger, require_success, **kwargs)
+                load = self.decode(
+                    child,
+                    logger=logger,
+                    require_success=require_success,
+                    **kwargs,
+                )
             elif recurse and child.is_dir():
                 load = self.decode_directory(
                     child,
-                    logger,
-                    require_success,
-                    path_filter,
-                    recurse,
+                    logger=logger,
+                    require_success=require_success,
+                    path_filter=path_filter,
+                    recurse=recurse,
                     **kwargs,
                 )
 
@@ -101,6 +106,9 @@ class DataArbiterDirectories(DataArbiterBase):
                             load.data,
                             expect_overwrite=kwargs.get(
                                 "expect_overwrite", False
+                            ),
+                            strategy=kwargs.get(
+                                "strategy", MergeStrategy.RECURSIVE
                             ),
                             logger=logger,
                         )
