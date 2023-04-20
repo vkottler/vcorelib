@@ -5,7 +5,6 @@ Common type definitions for data encoding and decoding interfaces.
 # built-in
 from enum import Enum
 from io import StringIO
-from logging import Logger
 from pathlib import Path
 from typing import Callable as _Callable
 from typing import Dict as _Dict
@@ -22,6 +21,7 @@ from ruamel.yaml import YAML
 
 # internal
 from vcorelib.dict import merge
+from vcorelib.logging import LoggerType
 from vcorelib.paths import Pathlike as _Pathlike
 from vcorelib.paths import get_file_ext
 
@@ -186,8 +186,8 @@ class LoadResult(NamedTuple):
 EncodeResult = _Tuple[bool, int]
 DataStream = _Union[TextIO, StringIO]
 StreamProcessor = _Callable[[DataStream], DataStream]
-DataDecoder = _Callable[[DataStream, Logger], LoadResult]
-DataEncoder = _Callable[[JsonObject, DataStream, Logger], int]
+DataDecoder = _Callable[[DataStream, LoggerType], LoadResult]
+DataEncoder = _Callable[[JsonObject, DataStream, LoggerType], int]
 
 # Only create the interface one so it's not re-created on every read and write
 # attempt.

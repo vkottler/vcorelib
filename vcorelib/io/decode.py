@@ -6,7 +6,7 @@ A module implementing various data-file decoders.
 from configparser import ConfigParser, Error, ExtendedInterpolation
 from json import load
 from json.decoder import JSONDecodeError
-from logging import Logger, getLogger
+from logging import getLogger
 from typing import cast as _cast
 
 # third-party
@@ -20,6 +20,7 @@ from vcorelib.io.types import DataStream as _DataStream
 from vcorelib.io.types import JsonObject as _JsonObject
 from vcorelib.io.types import LoadResult
 from vcorelib.io.types import YAML_INTERFACE as _YAML_INTERFACE
+from vcorelib.logging import LoggerType
 from vcorelib.math.time import TIMER as _TIMER
 
 _LOG = getLogger(__name__)
@@ -28,7 +29,7 @@ _INI_INTERPOLATION = ExtendedInterpolation()
 
 def decode_ini(
     data_file: _DataStream,
-    logger: Logger = _LOG,
+    logger: LoggerType = _LOG,
     **kwargs,
 ) -> LoadResult:
     """Load INI data from a text stream."""
@@ -54,7 +55,7 @@ def decode_ini(
 
 def decode_json(
     data_file: _DataStream,
-    logger: Logger = _LOG,
+    logger: LoggerType = _LOG,
     **kwargs,
 ) -> LoadResult:
     """Load JSON data from a text stream."""
@@ -76,7 +77,7 @@ def decode_json(
 
 def decode_yaml(
     data_file: _DataStream,
-    logger: Logger = _LOG,
+    logger: LoggerType = _LOG,
     **kwargs,
 ) -> LoadResult:
     """Load YAML data from a text stream."""
@@ -98,7 +99,7 @@ def decode_yaml(
 
 def decode_toml(
     data_file: _DataStream,
-    logger: Logger = _LOG,
+    logger: LoggerType = _LOG,
     **kwargs,
 ) -> LoadResult:
     """Load TOML data from a text stream."""

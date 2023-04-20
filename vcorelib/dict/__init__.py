@@ -2,16 +2,18 @@
 Dictionary manipulation utilities.
 """
 
-from contextlib import contextmanager as _contextmanager
-
 # built-in
+from contextlib import contextmanager as _contextmanager
 from enum import Enum as _Enum
 from enum import auto as _auto
-from logging import Logger, getLogger
+from logging import getLogger
 from typing import Any as _Any
 from typing import Dict as _Dict
 from typing import Iterator as _Iterator
 from typing import List as _List
+
+# internal
+from vcorelib.logging import LoggerType
 
 _LOG = getLogger(__name__)
 GenericDict = _Dict[_Any, _Any]
@@ -81,7 +83,7 @@ def merge_recursive(
     dict_b: GenericDict,
     path: _List[str] = None,
     expect_overwrite: bool = False,
-    logger: Logger = None,
+    logger: LoggerType = None,
 ) -> GenericDict:
     """
     Combine two dictionaries recursively, prefers dict_a in a conflict. For
@@ -138,7 +140,7 @@ def merge(
     dict_b: GenericDict,
     path: _List[str] = None,
     expect_overwrite: bool = False,
-    logger: Logger = None,
+    logger: LoggerType = None,
     strategy: MergeStrategy = MergeStrategy.RECURSIVE,
 ) -> GenericDict:
     """Combine two dictionaries based on a provided merge strategy."""
@@ -159,7 +161,7 @@ def merge(
 def merge_dicts(
     dicts: _List[GenericDict],
     expect_overwrite: bool = False,
-    logger: Logger = None,
+    logger: LoggerType = None,
     strategy: MergeStrategy = MergeStrategy.RECURSIVE,
 ) -> GenericDict:
     """
