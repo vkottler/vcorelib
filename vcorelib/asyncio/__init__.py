@@ -55,11 +55,20 @@ def log_exceptions(
     return [x for x in tasks if not x.done()]
 
 
+def normalize_eloop(eloop: _AbstractEventLoop = None) -> _AbstractEventLoop:
+    """Get the active event loop if one isn't provided explicitly."""
+
+    if eloop is None:
+        eloop = _get_event_loop()
+    return eloop
+
+
 def shutdown_loop(
-    eloop: _AbstractEventLoop, logger: _LoggerType = None
+    eloop: _AbstractEventLoop = None, logger: _LoggerType = None
 ) -> None:
     """Attempt to shut down an event loop."""
 
+    eloop = normalize_eloop(eloop)
     eloop.run_until_complete(eloop.shutdown_asyncgens())
 
     tasks = log_exceptions(_all_tasks(loop=eloop), logger=logger)
@@ -75,7 +84,7 @@ def shutdown_loop(
 
 
 def run_handle_interrupt(
-    to_run: _Awaitable[_Any], eloop: _AbstractEventLoop
+    to_run: _Awaitable[_Any], eloop: _AbstractEventLoop = None
 ) -> _Optional[_Any]:
     """
     Run a task in an event loop and gracefully handle keyboard interrupts.
@@ -84,6 +93,7 @@ def run_handle_interrupt(
     """
 
     result = None
+    eloop = normalize_eloop(eloop)
     try:
         result = eloop.run_until_complete(to_run)
     except KeyboardInterrupt:
@@ -96,7 +106,9 @@ SignalHandler = _Callable[[int, _Optional[_FrameType]], None]
 
 
 def event_setter(
-    stop_sig: _Event, eloop: _AbstractEventLoop, logger: _LoggerType = None
+    stop_sig: _Event,
+    eloop: _AbstractEventLoop = None,
+    logger: _LoggerType = None,
 ) -> SignalHandler:
     """Create a function that sets an event."""
 
@@ -106,7 +118,7 @@ def event_setter(
     def setter(sig: int, _: _Optional[_FrameType]) -> None:
         """Set the signal."""
         LOG.info("Received signal %d (%s).", sig, _signal.Signals(sig).name)
-        eloop.call_soon_threadsafe(stop_sig.set)
+        normalize_eloop(eloop).call_soon_threadsafe(stop_sig.set)
 
     return setter
 
@@ -134,8 +146,7 @@ def run_handle_stop(
     complete.
     """
 
-    if eloop is None:
-        eloop = _get_event_loop()
+    eloop = normalize_eloop(eloop)
     to_run = eloop.create_task(task)
 
     # Register signal handlers if signals were provided.
