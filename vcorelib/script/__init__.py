@@ -6,6 +6,7 @@ A module for working with external scripts.
 import importlib.machinery
 import importlib.util
 from pathlib import Path as _Path
+from sys import path as _path
 from typing import Any as _Any
 from typing import Set as _Set
 
@@ -17,9 +18,15 @@ from vcorelib.paths import normalize as _normalize
 def invoke_script(script: _Pathlike, method: str, *args, **kwargs) -> _Any:
     """Invoke a method from an external script."""
 
-    loader = importlib.machinery.SourceFileLoader(
-        "script", str(_normalize(script))
-    )
+    path = _normalize(script)
+
+    # Add the parent directory to the system path so that the external script
+    # can load adjacent modules.
+    parent = str(path.parent.resolve())
+    if parent not in _path:
+        _path.append(parent)
+
+    loader = importlib.machinery.SourceFileLoader("script", str(path))
     spec = importlib.util.spec_from_loader("script", loader)
     assert spec is not None
     script_module = importlib.util.module_from_spec(spec)
