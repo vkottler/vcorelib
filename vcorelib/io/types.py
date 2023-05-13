@@ -50,6 +50,7 @@ class FileExtension(Enum):
     ZIP: _List[str] = ["zip"]
     TAR: _List[str] = [
         DEFAULT_ARCHIVE_EXT,
+        "tgz",
         "tar",
         "tar.bz2",
         "tar.lzma",
