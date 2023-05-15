@@ -95,6 +95,7 @@ class FileInfoManager:
         initial: _Dict[_Path, FileInfo] = None,
         logger: LoggerType = None,
         level: int = _logging.DEBUG,
+        check_contents: bool = True,
     ) -> None:
         """Initialize this file-info manager."""
 
@@ -106,6 +107,7 @@ class FileInfoManager:
 
         self.logger = logger
         self.level = level
+        self.check_contents = check_contents
 
         # If we have initial files, poll them all.
         self.poll_existing()
@@ -178,9 +180,13 @@ class FileInfoManager:
             return change, file_info
 
         # Determine if the existing file has changed.
-        return self.infos[path].poll()
+        return self.infos[path].poll(check_contents=self.check_contents)
 
-    def poll_file(self, path: _Pathlike, base: _Pathlike = None) -> None:
+    def poll_file(
+        self,
+        path: _Pathlike,
+        base: _Pathlike = None,
+    ) -> None:
         """Check if a file has changed and invoke the callback if so."""
 
         norm = _normalize(path).resolve()
@@ -201,6 +207,7 @@ def file_info_cache(
     poll_cb: FileChangedCallback,
     logger: LoggerType = None,
     level: int = _logging.DEBUG,
+    check_contents: bool = True,
 ) -> _Iterator[FileInfoManager]:
     """Obtain a file-info manager as a cached context."""
 
@@ -212,6 +219,7 @@ def file_info_cache(
             FileInfo.from_json(data, force=True),
             logger=logger,
             level=level,
+            check_contents=check_contents,
         )
         yield manager
 

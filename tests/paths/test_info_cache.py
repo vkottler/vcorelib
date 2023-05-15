@@ -69,6 +69,7 @@ def test_paths_file_info_cache():  # pylint: disable=too-many-locals
                 assert hash(finfo)
                 assert finfo.to_json()
                 finfo.poll()
+                finfo.poll(check_contents=False)
 
                 for directory in tdirs:
                     manager.poll_directory(
@@ -98,6 +99,7 @@ def test_paths_file_info_cache():  # pylint: disable=too-many-locals
                 for file in files:
                     file.unlink()
                 finfo.poll()
+                finfo.poll(check_contents=False)
 
                 for directory in tdirs:
                     manager.poll_directory(directory, True, base=tmpdir)

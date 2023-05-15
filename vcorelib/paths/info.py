@@ -64,12 +64,16 @@ class FileInfo(NamedTuple):
         return FileInfo(path, stats.st_size, md5_hex, stats.st_mtime_ns)
 
     def poll(
-        self,
+        self, check_contents: bool = True
     ) -> _Tuple[_Optional[FileChangeEvent], _Optional["FileInfo"]]:
         """Determine if this file is in a new state or not."""
 
         if not self.path.is_file():
             return FileChangeEvent.REMOVED, None
+
+        # Skip checking file contents if specified.
+        if not check_contents:
+            return None, self
 
         # If the file hasn't been modified, skip re-reading it for a new
         # checksum.
