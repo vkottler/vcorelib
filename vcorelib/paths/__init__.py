@@ -152,6 +152,14 @@ def _construct_search_path(
     return to_check
 
 
+def set_exec_flags(path: Pathlike) -> None:
+    """Set the executable bits, but respect the 'read' bits."""
+
+    path = normalize(path)
+    mode = path.stat().st_mode
+    path.chmod(mode | ((mode & 0o444) >> 2))
+
+
 def rel(path: Pathlike, base: Pathlike = None) -> _Path:
     """
     Attempt to make 'path' relative to base (which is the current-working

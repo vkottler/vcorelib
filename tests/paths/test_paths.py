@@ -22,6 +22,7 @@ from vcorelib.paths import (
     modified_ns,
     normalize,
     rel,
+    set_exec_flags,
     stats,
     str_md5_hex,
 )
@@ -153,6 +154,7 @@ def test_paths_tempfile():
     """Test that we can create a temporary file."""
 
     with tempfile() as temp:
+        set_exec_flags(temp)
         path = temp
     assert not path.is_file()
 
