@@ -114,6 +114,8 @@ def test_file_stats_basic():
             path_fd.write(linesep)
             path_fd.flush()
 
+        set_exec_flags(first_file)
+
         # Wait some amount so that the second file is modified after the first.
         sleep(0.01)
 
@@ -154,7 +156,6 @@ def test_paths_tempfile():
     """Test that we can create a temporary file."""
 
     with tempfile() as temp:
-        set_exec_flags(temp)
         path = temp
     assert not path.is_file()
 
