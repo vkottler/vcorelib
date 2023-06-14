@@ -39,9 +39,16 @@ class Schema(_abc.ABC):
         """Validate input data and return the result."""
 
     @classmethod
-    def from_path(cls: _Type[T], path: _Pathlike, **kwargs) -> T:
+    def from_path(
+        cls: _Type[T], path: _Pathlike, includes_key: str = None, **kwargs
+    ) -> T:
         """Load a schema from a data file on disk."""
-        return cls(_ARBITER.decode(path, require_success=True).data, **kwargs)
+        return cls(
+            _ARBITER.decode(
+                path, includes_key=includes_key, require_success=True
+            ).data,
+            **kwargs,
+        )
 
 
 V = _TypeVar("V", bound="SchemaMap")

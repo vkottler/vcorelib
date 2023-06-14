@@ -4,7 +4,6 @@ A module exposing data-file encoders and decoders.
 
 # built-in
 import logging
-from typing import Any as _Any
 from typing import Optional as _Optional
 
 # internal
@@ -71,7 +70,7 @@ class DataArbiterBase:
         pathlike: _Pathlike,
         logger: LoggerType = None,
         require_success: bool = False,
-        includes_key: _Any = None,
+        includes_key: str = None,
         preprocessor: _StreamProcessor = None,
         maxsplit: int = 1,
         expect_overwrite: bool = False,
