@@ -69,30 +69,35 @@ class SchemaMap(
         """Initialize this schema map."""
         super().__init__(self)
 
-    def load_file(self, path: _Pathlike, **kwargs) -> _Tuple[str, T]:
+    def load_file(
+        self, path: _Pathlike, includes_key: str = None, **kwargs
+    ) -> _Tuple[str, T]:
         """Load a schema file into the map."""
 
         path = _normalize(path)
         name = _get_file_name(path)
         assert name not in self, f"Duplicate schema '{name}'!"
-        self[name] = self.kind().from_path(path, **kwargs)
+        self[name] = self.kind().from_path(
+            path, includes_key=includes_key, **kwargs
+        )
         return name, self[name]
 
     def load_directory(
-        self, path: _Pathlike, **kwargs
+        self, path: _Pathlike, includes_key: str = None, **kwargs
     ) -> _Iterator[_Tuple[str, Schema]]:
         """Load a directory of schema files into the map."""
 
         path = _normalize(path)
         assert path.is_dir(), f"'{path}' isn't a directory!"
         for item in path.iterdir():
-            yield self.load_file(item, **kwargs)
+            yield self.load_file(item, includes_key=includes_key, **kwargs)
 
     def load_package(
         self,
         package: str,
         path: _Pathlike = "schemas",
         package_subdir: str = "data",
+        includes_key: str = None,
         **kwargs,
     ) -> _Iterator[_Tuple[str, Schema]]:
         """Load schemas from package data."""
@@ -102,16 +107,19 @@ class SchemaMap(
             path is not None and path.is_dir()
         ), f"Can't find schema directory for package '{package}'!"
 
-        yield from self.load_directory(path, **kwargs)
+        yield from self.load_directory(
+            path, includes_key=includes_key, **kwargs
+        )
 
     @classmethod
     def from_package(
         cls: _Type[V],
         package: str,
+        includes_key: str = None,
         **kwargs,
     ) -> V:
         """Create a new JSON-schema map from package data."""
 
         result = cls()
-        list(result.load_package(package, **kwargs))
+        list(result.load_package(package, includes_key=includes_key, **kwargs))
         return result
