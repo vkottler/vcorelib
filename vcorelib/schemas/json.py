@@ -14,6 +14,7 @@ from fastjsonschema import compile as _compile
 
 # internal
 from vcorelib.io import ARBITER as _ARBITER
+from vcorelib.io import DEFAULT_INCLUDES_KEY as _DEFAULT_INCLUDES_KEY
 from vcorelib.io.types import JsonObject as _JsonObject
 from vcorelib.paths import find_file
 from vcorelib.schemas.base import Schema as _Schema
@@ -31,7 +32,9 @@ def package_handler(uri: str) -> _JsonObject:
 
     path = find_file(parsed.path[1:], package=parsed.hostname, logger=LOG)
     assert path is not None, path
-    return _ARBITER.decode(path, require_success=True).data
+    return _ARBITER.decode(
+        path, includes_key=_DEFAULT_INCLUDES_KEY, require_success=True
+    ).data
 
 
 class JsonSchema(_Schema):

@@ -19,6 +19,8 @@ from vcorelib.io.types import (
     StreamProcessor,
 )
 
+DEFAULT_INCLUDES_KEY = "includes"
+
 __all__ = [
     "DataArbiter",
     "ARBITER",
@@ -35,4 +37,5 @@ __all__ = [
     "DataEncoder",
     "Serializable",
     "FileEntity",
+    "DEFAULT_INCLUDES_KEY",
 ]
