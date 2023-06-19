@@ -75,9 +75,11 @@ class FileExtension(Enum):
     def has_archive(path: _Pathlike) -> _Optional[Path]:
         """Determine if a path has an associated archive file."""
 
+        path = normalize(path)
+
         for ext in [FileExtension.ZIP, FileExtension.TAR]:
             for ext_str in ext.value:  # pylint: disable=not-an-iterable
-                check_path = Path(f"{normalize(path)}.{ext_str}")
+                check_path = path.with_suffix(f".{ext_str}")
                 if check_path.is_file():
                     return check_path
 
@@ -120,8 +122,9 @@ class FileExtension(Enum):
         For a given path, iterate over candidate paths that have the suffixes
         for this kind of file extension.
         """
+        orig = normalize(path)
         for ext in self.value:
-            path = normalize(path).with_suffix(f".{ext}")
+            path = orig.with_suffix(f".{ext}")
             if not exists_only or path.exists():
                 yield path
 
