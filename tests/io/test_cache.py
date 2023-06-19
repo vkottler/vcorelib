@@ -9,7 +9,7 @@ import shutil
 from tempfile import TemporaryDirectory
 
 # internal
-from tests.resources import get_archives_root, resource
+from tests.resources import get_archives_root, resource, skip_archive
 
 # module under test
 from vcorelib.io.cache import FlatDirectoryCache
@@ -51,11 +51,15 @@ def test_directory_cache_archive_load():
     root = get_archives_root()
     for archive in ["tar", "tar.bz2", "tar.gz", "tar.lzma", "zip"]:
         archive_name = f"sample.{archive}"
-        path = Path(root, archive_name)
+
+        if skip_archive(archive):
+            continue
 
         with TemporaryDirectory() as tmp:
+            tmp_archive = Path(tmp, archive_name)
+
             # Copy the archive to the expected location.
-            shutil.copy(path, Path(tmp, archive_name))
+            shutil.copy(Path(root, archive_name), tmp_archive)
 
             # Load the cache.
             cache = FlatDirectoryCache(Path(tmp, "sample"), logger=logger)
@@ -65,6 +69,7 @@ def test_directory_cache_archive_load():
             # Verify that we can clean the cache.
             cache.save(archive=True)
             cache.clean()
+            assert not tmp_archive.is_file()
 
 
 def test_directory_cache_save_archive():

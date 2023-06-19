@@ -9,7 +9,7 @@ import shutil
 from tempfile import TemporaryDirectory
 
 # internal
-from tests.resources import get_archives_root
+from tests.resources import get_archives_root, skip_archive
 
 # module under test
 from vcorelib.io.archive import make_archive
@@ -32,11 +32,11 @@ def test_make_archive():
 
             # Test expected successes.
             assert make_archive(src)[0] is not None
-            assert make_archive(src, "tar")[0] is not None
-            assert make_archive(src, "tar.bz2")[0] is not None
-            assert make_archive(src, "tar.lzma")[0] is not None
-            assert make_archive(src, "tar.xz")[0] is not None
-            assert make_archive(src, "zip")[0] is not None
+            for archive in ["tar", "tar.bz2", "tar.lzma", "tar.xz", "zip"]:
+                if skip_archive(archive):
+                    continue
+                assert make_archive(src, archive)[0] is not None
+
             with TemporaryDirectory() as tmpdir_new:
                 assert (
                     make_archive(src, dst_dir=Path(tmpdir_new))[0] is not None

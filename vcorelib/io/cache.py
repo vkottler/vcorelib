@@ -107,6 +107,9 @@ class FlatDirectoryCache(
                             archive,
                             nano_str(time_ns, True),
                         )
+
+                    assert path.is_dir(), path
+
                     return self.load(path, logger, level, **kwargs)
 
         if loaded and logger is not None:
