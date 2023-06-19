@@ -22,6 +22,7 @@ from typing import Tuple as _Tuple
 
 # internal
 from vcorelib.dict import merge_dicts
+from vcorelib.logging import LoggerMixin
 from vcorelib.math.time import Timer, nano_str
 from vcorelib.target import Substitutions, Target
 
@@ -35,7 +36,7 @@ class TaskFailed(Exception):
     """A custom exception to indicate that a task failed."""
 
 
-class Task:  # pylint: disable=too-many-instance-attributes
+class Task(LoggerMixin):  # pylint: disable=too-many-instance-attributes
     """A basic task interface definition."""
 
     stages = ["run_enter", "run", "run_exit"]
@@ -77,10 +78,9 @@ class Task:  # pylint: disable=too-many-instance-attributes
             timer = Timer()
         self.timer = timer
 
-        # Get a logger if needed.
-        if log is None:
-            log = getLogger(name)
-        self.log = log
+        # Initialize logging.
+        super().__init__(logger=log if log is not None else getLogger(name))
+        self.log = self.logger
 
         # Create an execute function if none was provided.
         if execute is None:
