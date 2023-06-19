@@ -34,7 +34,8 @@ async def handle_process_cancel(
     assert signal is not None
 
     try:
-        await proc.communicate(input=stdin)
+        with log_time(logger, "Process '%s' (%d)", name, proc.pid):
+            await proc.communicate(input=stdin)
 
     except _CancelledError:
         # Send the process a signal and wait for it to terminate.
