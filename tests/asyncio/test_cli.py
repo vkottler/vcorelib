@@ -19,9 +19,9 @@ async def test_asyncio_cli_basic():
 
     log = getLogger(__name__)
 
-    assert (
-        await run_command(log, executable, "--version")
-    ).returncode is not None
-    assert (
-        await run_shell(log, executable, "--version")
-    ).returncode is not None
+    assert (await run_command(log, executable, "--version"))[
+        0
+    ].returncode is not None
+    assert (await run_shell(log, executable, "--version"))[
+        0
+    ].returncode is not None
