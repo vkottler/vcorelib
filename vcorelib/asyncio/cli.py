@@ -7,6 +7,7 @@ from asyncio import CancelledError as _CancelledError
 from asyncio import create_subprocess_shell
 from asyncio.subprocess import Process as _Process
 import signal as _signal
+from typing import NamedTuple, Optional
 
 # internal
 from vcorelib.asyncio.subprocess import (
@@ -16,17 +17,28 @@ from vcorelib.asyncio.subprocess import (
 from vcorelib.logging import LoggerType, log_time
 
 
+class ProcessResult(NamedTuple):
+    """A process result (after calling 'communicate')."""
+
+    proc: _Process
+    stdout: Optional[bytes] = None
+    stderr: Optional[bytes] = None
+
+
 async def handle_process_cancel(
     proc: _Process,
     name: str,
     logger: LoggerType,
     stdin: bytes = None,
     signal: int = None,
-) -> _Process:
+) -> ProcessResult:
     """
     Communicate with a process and send a signal to it if this task gets
     cancelled.
     """
+
+    stdout_data = None
+    stderr_data = None
 
     # Default to a valid interrupt signal.
     if signal is None:
@@ -35,7 +47,7 @@ async def handle_process_cancel(
 
     try:
         with log_time(logger, "Process '%s' (%d)", name, proc.pid):
-            await proc.communicate(input=stdin)
+            stdout_data, stderr_data = await proc.communicate(input=stdin)
 
     except _CancelledError:
         # Send the process a signal and wait for it to terminate.
@@ -52,7 +64,7 @@ async def handle_process_cancel(
                 "Process '%s' (%d) exited %d.", name, proc.pid, proc.returncode
             )
 
-    return proc
+    return ProcessResult(proc, stdout_data, stderr_data)
 
 
 async def run_command(
@@ -63,7 +75,7 @@ async def run_command(
     stderr: int = None,
     signal: int = None,
     **kwargs,
-) -> _Process:
+) -> ProcessResult:
     """Run a subprocess and return the completed process."""
 
     rel = log_process_info(*args)
@@ -111,7 +123,7 @@ async def run_shell(
     stderr: int = None,
     signal: int = None,
     **kwargs,
-) -> _Process:
+) -> ProcessResult:
     """Run a shell command and return the completed process."""
 
     rel = log_process_info(*args)

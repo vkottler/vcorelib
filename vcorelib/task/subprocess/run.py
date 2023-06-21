@@ -68,7 +68,7 @@ class SubprocessLogMixin(Task):
     ) -> bool:
         """Execute a command and return whether or not it succeeded."""
 
-        proc = await handle_process_cancel(
+        proc, _, __ = await handle_process_cancel(
             await self.subprocess_exec(
                 program,
                 *caller_args,
@@ -122,7 +122,7 @@ class SubprocessLogMixin(Task):
     ) -> bool:
         """Execute a shell command and return whether or not it succeeded."""
 
-        proc = await handle_process_cancel(
+        proc, _, __ = await handle_process_cancel(
             await self.subprocess_shell(
                 cmd,
                 *caller_args,
@@ -157,7 +157,7 @@ class SubprocessExec(SubprocessLogMixin):
         Create a subprocess, wait for it to exit and add results to the outbox.
         """
 
-        proc = await handle_process_cancel(
+        proc, stdout, stderr = await handle_process_cancel(
             await self.subprocess_exec(
                 program,
                 *caller_args,
@@ -169,8 +169,8 @@ class SubprocessExec(SubprocessLogMixin):
             self.name,
             self.log,
         )
-        outbox["stdout"] = proc.stdout
-        outbox["stderr"] = proc.stderr
+        outbox["stdout"] = stdout
+        outbox["stderr"] = stderr
         outbox["code"] = proc.returncode
 
         return True if not require_success else proc.returncode == 0
@@ -194,13 +194,15 @@ class SubprocessExecStreamed(SubprocessLogMixin):
         Create a subprocess, wait for it to exit and add results to the outbox.
         """
 
-        proc = await handle_process_cancel(
+        proc, stdout, stderr = await handle_process_cancel(
             await self.subprocess_exec(
                 program, *caller_args, args=args, separator=separator
             ),
             self.name,
             self.log,
         )
+        outbox["stdout"] = stdout
+        outbox["stderr"] = stderr
         outbox["code"] = proc.returncode
 
         return True if not require_success else proc.returncode == 0
@@ -225,7 +227,7 @@ class SubprocessShell(SubprocessLogMixin):
         Run a shell command, wait for it to exit and add results to the outbox.
         """
 
-        proc = await handle_process_cancel(
+        proc, stdout, stderr = await handle_process_cancel(
             await self.subprocess_shell(
                 cmd,
                 *caller_args,
@@ -238,8 +240,8 @@ class SubprocessShell(SubprocessLogMixin):
             self.name,
             self.log,
         )
-        outbox["stdout"] = proc.stdout
-        outbox["stderr"] = proc.stderr
+        outbox["stdout"] = stdout
+        outbox["stderr"] = stderr
         outbox["code"] = proc.returncode
 
         return True if not require_success else proc.returncode == 0
@@ -264,7 +266,7 @@ class SubprocessShellStreamed(SubprocessLogMixin):
         Run a shell command, wait for it to exit and add results to the outbox.
         """
 
-        proc = await handle_process_cancel(
+        proc, stdout, stderr = await handle_process_cancel(
             await self.subprocess_shell(
                 cmd,
                 *caller_args,
@@ -275,6 +277,8 @@ class SubprocessShellStreamed(SubprocessLogMixin):
             self.name,
             self.log,
         )
+        outbox["stdout"] = stdout
+        outbox["stderr"] = stderr
         outbox["code"] = proc.returncode
 
         return True if not require_success else proc.returncode == 0
