@@ -64,6 +64,7 @@ class SubprocessLogMixin(Task):
         separator: str = "::",
         stdout: int = None,
         stderr: int = None,
+        **kwargs,
     ) -> bool:
         """Execute a command and return whether or not it succeeded."""
 
@@ -75,6 +76,7 @@ class SubprocessLogMixin(Task):
                 separator=separator,
                 stdout=stdout,
                 stderr=stderr,
+                **kwargs,
             ),
             self.name,
             self.log,
@@ -90,6 +92,7 @@ class SubprocessLogMixin(Task):
         separator: str = "::",
         stdout: int = None,
         stderr: int = None,
+        **kwargs,
     ) -> _Process:
         """
         Create a process using subprocess shell and log what the command is.
@@ -103,6 +106,7 @@ class SubprocessLogMixin(Task):
             ),
             stdout=stdout,
             stderr=stderr,
+            **kwargs,
         )
 
     async def shell(
@@ -114,6 +118,7 @@ class SubprocessLogMixin(Task):
         separator: str = "::",
         stdout: int = None,
         stderr: int = None,
+        **kwargs,
     ) -> bool:
         """Execute a shell command and return whether or not it succeeded."""
 
@@ -126,6 +131,7 @@ class SubprocessLogMixin(Task):
                 separator=separator,
                 stdout=stdout,
                 stderr=stderr,
+                **kwargs,
             ),
             self.name,
             self.log,
