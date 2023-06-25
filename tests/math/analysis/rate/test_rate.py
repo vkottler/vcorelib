@@ -9,7 +9,7 @@ from time import sleep
 from pytest import approx
 
 # module under test
-from vcorelib.math.analysis.rate import RateTracker
+from vcorelib.math import RateTracker
 
 
 def test_rate_tracker_basic():

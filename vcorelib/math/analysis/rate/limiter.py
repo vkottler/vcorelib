@@ -6,7 +6,7 @@ A module for simplifying limiting the rate of a function call or hot loop.
 from typing import Callable as _Callable
 
 # internal
-from vcorelib.math.analysis.rate import RateTracker
+from vcorelib.math.analysis.rate import RateTracker as _RateTracker
 from vcorelib.math.time import default_time_ns as _default_time_ns
 
 
@@ -19,7 +19,7 @@ class RateLimiter:
         assert period_ns >= 0
         self.period_ns = period_ns
         self.prev_time_ns: int = 0
-        self.rate = RateTracker(**kwargs)
+        self.rate = _RateTracker(**kwargs)
 
     @property
     def rate_hz(self) -> float:

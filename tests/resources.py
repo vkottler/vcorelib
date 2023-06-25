@@ -5,7 +5,6 @@ A module for working with test data.
 # built-in
 from os.path import join
 from pathlib import Path
-from sys import platform, version
 
 # internal
 from vcorelib.schemas.base import SchemaMap
@@ -30,11 +29,3 @@ def get_test_schemas() -> SchemaMap:
     return JsonSchemaMap.from_package(
         "tests", package_subdir=join("data", "valid")
     )
-
-
-def skip_archive(kind: str) -> bool:
-    """
-    Whether or not to skip a particular kind of archive when testing.
-    Currently, bz2 extraction on Python 3.7 on macos is not working.
-    """
-    return "bz2" in kind and platform == "darwin" and version.startswith("3.7")

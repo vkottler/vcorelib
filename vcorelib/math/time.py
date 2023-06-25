@@ -17,10 +17,10 @@ from typing import Tuple as _Tuple
 from typing import Union as _Union
 
 # internal
-from vcorelib.math import KIBI_UNITS as _KIBI_UNITS
-from vcorelib.math import SI_UNITS as _SI_UNITS
-from vcorelib.math import UnitSystem as _UnitSystem
-from vcorelib.math import unit_traverse as _unit_traverse
+from vcorelib.math.unit import KIBI_UNITS as _KIBI_UNITS
+from vcorelib.math.unit import SI_UNITS as _SI_UNITS
+from vcorelib.math.unit import UnitSystem as _UnitSystem
+from vcorelib.math.unit import unit_traverse as _unit_traverse
 
 
 def default_time_ns() -> int:
