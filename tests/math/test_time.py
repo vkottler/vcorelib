@@ -3,7 +3,7 @@ vcorelib - Test the 'math.time' module.
 """
 
 # module under test
-from vcorelib.math.time import byte_count_str, nano_str, seconds_str
+from vcorelib.math import byte_count_str, nano_str, seconds_str
 
 
 def test_nano_str_basic():

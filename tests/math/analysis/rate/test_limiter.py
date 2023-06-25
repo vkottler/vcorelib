@@ -6,7 +6,7 @@ Test the 'math.analysis.rate.limiter' module.
 from pytest import approx
 
 # module under test
-from vcorelib.math.analysis.rate.limiter import RateLimiter
+from vcorelib.math import RateLimiter
 
 
 def test_rate_limiter_basic():

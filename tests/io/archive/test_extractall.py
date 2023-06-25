@@ -7,7 +7,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 # internal
-from tests.resources import get_archives_root, skip_archive
+from tests.resources import get_archives_root
 
 # module under test
 from vcorelib.io.archive import extractall
@@ -29,9 +29,6 @@ def test_extractall():
         fail = None
         # Verify we can extract all of the expected archives.
         for archive in ["tar", "tar.bz2", "tar.gz", "tar.lzma", "zip"]:
-            if skip_archive(archive):
-                continue
-
             with TemporaryDirectory() as tmpdir:
                 if not extractall(
                     root.joinpath(f"sample.{archive}"), dst=tmpdir

@@ -5,11 +5,15 @@ A module for working with averages.
 # built-in
 from typing import List as _List
 
+DEFAULT_DEPTH = 10
+
 
 class MovingAverage:  # pylint: disable=too-many-instance-attributes
     """A class for managing a moving average of floats."""
 
-    def __init__(self, depth: int = 10, initial: float = 0.0) -> None:
+    def __init__(
+        self, depth: int = DEFAULT_DEPTH, initial: float = 0.0
+    ) -> None:
         """Initialize this moving average."""
 
         self._index: int = 0

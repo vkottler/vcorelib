@@ -6,7 +6,7 @@ Test the 'math.analysis.average' module.
 from pytest import approx
 
 # module under test
-from vcorelib.math.analysis.average import MovingAverage
+from vcorelib.math import MovingAverage
 
 
 def test_moving_average_basic():
