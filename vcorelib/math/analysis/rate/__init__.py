@@ -26,6 +26,7 @@ class RateTracker:
 
         self.average = _MovingAverage(**kwargs)
         self.prev_time_ns: int = 0
+        self.accumulated: float = 0.0
 
     @property
     def value(self) -> float:
@@ -49,24 +50,23 @@ class RateTracker:
         method is being called in hertz.
         """
 
-        result = 0.0
-
         # Use a default time if one wasn't provided.
         if time_ns is None:
             time_ns = _default_time_ns()
 
-        # Only start tracking when a second data point is encountered.
-        if self.prev_time_ns != 0:
-            assert time_ns > self.prev_time_ns
+        self.accumulated += value
 
+        # Only start tracking when a second data point is encountered.
+        if self.prev_time_ns != 0 and time_ns > self.prev_time_ns:
             # Consider 'value' as the amount of change since the last data
             # entry, so divide value by the change in time to get a rate.
-            result = self.with_dt(
-                ns_to_s(time_ns - self.prev_time_ns), value=value
+            self.with_dt(
+                ns_to_s(time_ns - self.prev_time_ns), value=self.accumulated
             )
+            self.accumulated = 0
 
         self.prev_time_ns = time_ns
-        return result
+        return self.average.value
 
     def with_dt(self, delta_s: float, value: float = 1.0) -> float:
         """Update this rate by directly providing the delta-time value."""
