@@ -88,6 +88,14 @@ def nano_str(
         return stream.getvalue()
 
 
+def rate_str(period_s: float) -> str:
+    """Get a string representing a rate in Hz."""
+
+    period_str = nano_str(int(period_s * 1e9))
+    freq_str = nano_str(int((1.0 / period_s) * 1e9), prefix_space=True)
+    return f"{freq_str}Hz ({period_str}s)"
+
+
 def byte_count_str(byte_count: int) -> str:
     """Get a string representing a number of bytes."""
     return nano_str(byte_count, False, 99, _KIBI_UNITS, True) + "B"
