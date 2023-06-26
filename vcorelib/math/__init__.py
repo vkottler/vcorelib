@@ -17,6 +17,7 @@ from vcorelib.math.time import (
     byte_count_str,
     default_time_ns,
     nano_str,
+    rate_str,
     seconds_str,
 )
 from vcorelib.math.unit import KIBI_UNITS, SI_UNITS, UnitSystem, unit_traverse
@@ -30,6 +31,7 @@ __all__ = [
     "default_time_ns",
     "nano_str",
     "seconds_str",
+    "rate_str",
     "LoggerType",
     "Timer",
     "TIMER",

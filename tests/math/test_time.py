@@ -3,7 +3,7 @@ vcorelib - Test the 'math.time' module.
 """
 
 # module under test
-from vcorelib.math import byte_count_str, nano_str, seconds_str
+from vcorelib.math import byte_count_str, nano_str, rate_str, seconds_str
 
 
 def test_nano_str_basic():
@@ -42,3 +42,9 @@ def test_byte_count_str():
     assert byte_count_str(0) == "0 B"
     assert byte_count_str(1024) == "1 KiB"
     assert byte_count_str(1536) == "1.500 KiB"
+
+
+def test_rate_str_basic():
+    """Test the 'rate_str' method."""
+
+    assert rate_str(1.0) == "1 Hz (1s)"
