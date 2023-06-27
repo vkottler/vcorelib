@@ -43,18 +43,12 @@ class RateTracker:
         """An accessor for the underlying max."""
         return self.average.max
 
-    def __call__(self, time_ns: int = None, value: float = 1.0) -> float:
-        """
-        Submit new data to the rate tracker. If this function is called with
-        default arguments, the returned value will reflect the rate that this
-        method is being called in hertz.
-        """
+    def poll(self, time_ns: int = None) -> float:
+        """Siphon accumulated time and update rate tracking."""
 
         # Use a default time if one wasn't provided.
         if time_ns is None:
             time_ns = _default_time_ns()
-
-        self.accumulated += value
 
         # Only start tracking when a second data point is encountered.
         if self.prev_time_ns != 0 and time_ns > self.prev_time_ns:
@@ -66,7 +60,18 @@ class RateTracker:
             self.accumulated = 0
 
         self.prev_time_ns = time_ns
+
         return self.average.value
+
+    def __call__(self, time_ns: int = None, value: float = 1.0) -> float:
+        """
+        Submit new data to the rate tracker. If this function is called with
+        default arguments, the returned value will reflect the rate that this
+        method is being called in hertz.
+        """
+
+        self.accumulated += value
+        return self.poll(time_ns=time_ns)
 
     def with_dt(self, delta_s: float, value: float = 1.0) -> float:
         """Update this rate by directly providing the delta-time value."""
