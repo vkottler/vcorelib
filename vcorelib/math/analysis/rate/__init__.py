@@ -7,7 +7,7 @@ from contextlib import contextmanager
 from typing import Iterator as _Iterator
 
 # internal
-from vcorelib.math.analysis.average import MovingAverage as _MovingAverage
+from vcorelib.math.analysis.weighted import WeightedAverage as _WeightedAverage
 from vcorelib.math.time import TIMER as _TIMER
 from vcorelib.math.time import Timer as _Timer
 from vcorelib.math.time import default_time_ns as _default_time_ns
@@ -24,24 +24,14 @@ class RateTracker:
     def __init__(self, **kwargs) -> None:
         """Initialize this rate tracker."""
 
-        self.average = _MovingAverage(**kwargs)
+        self.average = _WeightedAverage(**kwargs)
         self.prev_time_ns: int = 0
         self.accumulated: float = 0.0
 
     @property
     def value(self) -> float:
         """An accessor for the underlying value."""
-        return self.average.value
-
-    @property
-    def min(self) -> float:
-        """An accessor for the underlying min."""
-        return self.average.min
-
-    @property
-    def max(self) -> float:
-        """An accessor for the underlying max."""
-        return self.average.max
+        return self.average.average()
 
     def poll(self, time_ns: int = None) -> float:
         """Siphon accumulated time and update rate tracking."""
@@ -61,7 +51,7 @@ class RateTracker:
 
         self.prev_time_ns = time_ns
 
-        return self.average.value
+        return self.value
 
     def __call__(self, time_ns: int = None, value: float = 1.0) -> float:
         """
@@ -73,9 +63,9 @@ class RateTracker:
         self.accumulated += value
         return self.poll(time_ns=time_ns)
 
-    def with_dt(self, delta_s: float, value: float = 1.0) -> float:
+    def with_dt(self, delta_s: float, value: float = 1.0) -> None:
         """Update this rate by directly providing the delta-time value."""
-        return self.average(value / delta_s)
+        self.average(value / delta_s, weight=delta_s)
 
     @contextmanager
     def measure(
@@ -87,7 +77,7 @@ class RateTracker:
             yield
         self.with_dt(ns_to_s(timer.result(token)), value=value)
 
-    def reset(self, initial: float = 0.0) -> None:
+    def reset(self) -> None:
         """Reset this rate tracker."""
-        self.average.reset(initial=initial)
+        self.average.reset()
         self.prev_time_ns = 0

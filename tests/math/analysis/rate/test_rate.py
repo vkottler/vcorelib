@@ -22,8 +22,6 @@ def test_rate_tracker_basic():
         sleep(0.001)
 
     assert tracker.value > 0.0
-    assert tracker.min > 0.0
-    assert tracker.max > 0.0
 
     tracker.reset()
 
@@ -34,8 +32,6 @@ def test_rate_tracker_basic():
 
     # Confirm that the rate tracking approaches a correct value.
     assert tracker.value == approx(1.0)
-    assert tracker.min == approx(1.0)
-    assert tracker.max == approx(1.0)
 
     tracker.reset()
     for _ in range(tracker.average.depth):

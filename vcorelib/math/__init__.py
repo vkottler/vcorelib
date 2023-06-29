@@ -5,9 +5,12 @@ Math utilities.
 # internal
 from vcorelib.math.analysis import (
     DEFAULT_DEPTH,
+    FloatBuffer,
     MovingAverage,
+    MovingSum,
     RateLimiter,
     RateTracker,
+    WeightedAverage,
     ns_to_s,
 )
 from vcorelib.math.time import (
@@ -40,4 +43,7 @@ __all__ = [
     "RateLimiter",
     "RateTracker",
     "ns_to_s",
+    "FloatBuffer",
+    "MovingSum",
+    "WeightedAverage",
 ]
