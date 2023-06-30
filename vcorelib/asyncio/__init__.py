@@ -41,7 +41,11 @@ def log_task_exception(task: _Task[_Any], logger: _LoggerType = None) -> None:
     if task.done():
         with _suppress(_CancelledError):
             exc = task.exception()
-            if exc is not None and not isinstance(exc, _CancelledError):
+            if (
+                exc is not None
+                and not isinstance(exc, _CancelledError)
+                and not isinstance(exc, KeyboardInterrupt)
+            ):
                 logger.exception("Task raised exception:", exc_info=exc)
 
 
