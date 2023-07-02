@@ -10,11 +10,12 @@ from tempfile import TemporaryDirectory
 from time import sleep
 
 # internal
-from tests.resources import resource
+from tests.resources import get_archives_root, resource
 
 # module under test
 from vcorelib.io.types import FileExtension
 from vcorelib.paths import (
+    file_hash_hex,
     file_md5_hex,
     find_file,
     get_file_name,
@@ -24,6 +25,7 @@ from vcorelib.paths import (
     rel,
     set_exec_flags,
     stats,
+    str_hash_hex,
     str_md5_hex,
 )
 from vcorelib.paths.context import in_dir, tempfile
@@ -59,6 +61,10 @@ def test_md5_hex():
     """Test that various md5 functions provide the correct results."""
 
     assert str_md5_hex("test") == "098f6bcd4621d373cade4e832627b4f6"
+
+    # This difference is caused by the newline translation done by git
+    # (by default on Windows). It would be better to check the sum of a
+    # file that's not text.
     expect = (
         "9f06243abcb89c70e0c331c61d871fa7"
         if is_windows()
@@ -68,6 +74,19 @@ def test_md5_hex():
 
     # Verify we can assert that files exist.
     assert normalize(resource("scripts"), "test.py", require=True)
+
+
+def test_hash_hex():
+    """Test various hashing wrapper methods."""
+
+    assert (
+        str_hash_hex("test")
+        == "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+    )
+    assert (
+        file_hash_hex(get_archives_root().joinpath("sample.tar.gz"))
+        == "e160107656e11b3fcf26bb7db9cccfcba7ab3ba20ceb7c7aeadaee2ca6c077b7"
+    )
 
 
 def test_find_file():
