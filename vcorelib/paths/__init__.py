@@ -5,6 +5,7 @@ Common path manipulation utilities.
 # built-in
 from contextlib import suppress as _suppress
 from hashlib import md5 as _md5
+from hashlib import new as _new
 from logging import Logger as _Logger
 from os import stat_result as _stat_result
 from pathlib import Path as _Path
@@ -102,15 +103,45 @@ def get_file_ext(path: Pathlike, maxsplit: int = -1) -> str:
     return normalize(path).name.split(".", maxsplit=maxsplit)[-1]
 
 
+DEFAULT_HASH = "sha256"
+
+
+def bytes_hash_hex(data: bytes, algorithm: str = DEFAULT_HASH) -> str:
+    """
+    Get the hex digest from some bytes for some provided hashing algorithm.
+    """
+    inst = _new(algorithm)
+    inst.update(data)
+    return inst.hexdigest()
+
+
+def str_hash_hex(
+    data: str, encoding: str = _DEFAULT_ENCODING, algorithm: str = DEFAULT_HASH
+) -> str:
+    """Get the hex digest for string data."""
+    return bytes_hash_hex(bytes(data, encoding), algorithm=algorithm)
+
+
+def file_hash_hex(path: Pathlike, algorithm: str = DEFAULT_HASH) -> str:
+    """Get the hex digest from file data."""
+    with normalize(path).open("rb") as stream:
+        return bytes_hash_hex(stream.read(), algorithm=algorithm)
+
+
+def bytes_md5_hex(data: bytes) -> str:
+    """Get the MD5 sum for some bytes."""
+    return _md5(data).hexdigest()
+
+
 def str_md5_hex(data: str, encoding: str = _DEFAULT_ENCODING) -> str:
     """Get an md5 hex string from string data."""
-    return _md5(bytes(data, encoding)).hexdigest()
+    return bytes_md5_hex(bytes(data, encoding))
 
 
 def file_md5_hex(path: Pathlike) -> str:
     """Get an md5 hex string for a file by path."""
     with normalize(path).open("rb") as stream:
-        return _md5(stream.read()).hexdigest()
+        return bytes_md5_hex(stream.read())
 
 
 def _construct_search_path(

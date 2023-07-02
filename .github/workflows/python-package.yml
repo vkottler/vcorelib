@@ -57,7 +57,7 @@ jobs:
         env:
           TWINE_USERNAME: __token__
         if: |
-          matrix.python-version == '3.8'
+          matrix.python-version == '3.11'
           && matrix.system == 'ubuntu-latest'
           && env.TWINE_PASSWORD != ''
           && github.ref_name == 'master'
