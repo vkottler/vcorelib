@@ -3,3 +3,4 @@ fastjsonschema
 ruamel.yaml
 tomli
 tomli-w
+importlib-resources
