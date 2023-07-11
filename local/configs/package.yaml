@@ -9,6 +9,7 @@ requirements:
   - ruamel.yaml
   - tomli
   - tomli-w
+  - importlib-resources
 
 dev_requirements:
   - pytest-asyncio

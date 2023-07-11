@@ -15,7 +15,7 @@ from typing import Optional as _Optional
 from typing import Union as _Union
 
 # third-party
-from pkg_resources import resource_filename as _resource_filename
+import importlib_resources as _importlib_resources
 
 # internal
 from vcorelib import DEFAULT_ENCODING as _DEFAULT_ENCODING
@@ -159,7 +159,9 @@ def _construct_search_path(
     # Add a package resource to the search path if a package name was provided.
     if package is not None:
         try:
-            to_check.append(_resource_filename(package, package_subdir))
+            to_check.append(
+                _importlib_resources.files(package).joinpath(package_subdir)
+            )
         except ModuleNotFoundError:
             if logger is not None:
                 logger.warning(
