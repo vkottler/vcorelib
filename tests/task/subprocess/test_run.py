@@ -24,6 +24,7 @@ async def test_task_subprocess_run_exec_basic():
     # Test that the default task works.
     task = SubprocessExec("test")
     assert await task.exec("python", "--version")
+    assert not await task.exec("asdf", "asdf")
     assert await task.shell("python --version")
     await task.shell_cmd_in_dir(Path(), ["python", "--version"])
 

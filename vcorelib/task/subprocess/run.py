@@ -70,20 +70,24 @@ class SubprocessLogMixin(Task):
     ) -> bool:
         """Execute a command and return whether or not it succeeded."""
 
-        proc, _, __ = await handle_process_cancel(
-            await self.subprocess_exec(
-                program,
-                *caller_args,
-                args=args,
-                separator=separator,
-                stdout=stdout,
-                stderr=stderr,
-                **kwargs,
-            ),
-            self.name,
-            self.log,
-        )
-        return proc.returncode == 0
+        try:
+            proc, _, __ = await handle_process_cancel(
+                await self.subprocess_exec(
+                    program,
+                    *caller_args,
+                    args=args,
+                    separator=separator,
+                    stdout=stdout,
+                    stderr=stderr,
+                    **kwargs,
+                ),
+                self.name,
+                self.log,
+            )
+            return proc.returncode == 0
+        except FileNotFoundError as exc:
+            self.log.exception("Couldn't run command:", exc_info=exc)
+            return False
 
     async def subprocess_shell(
         self,
