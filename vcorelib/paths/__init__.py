@@ -27,6 +27,7 @@ from vcorelib.paths.hashing import (
     DEFAULT_HASH,
     bytes_hash_hex,
     bytes_md5_hex,
+    create_hex_digest,
     file_hash_hex,
     file_md5_hex,
     str_hash_hex,
@@ -52,6 +53,7 @@ __all__ = [
     "rel",
     "find_file",
     "resource",
+    "create_hex_digest",
 ]
 
 
