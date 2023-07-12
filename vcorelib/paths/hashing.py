@@ -5,12 +5,43 @@ A module for hashing file data.
 # built-in
 from hashlib import md5 as _md5
 from hashlib import new as _new
+from os import linesep as _linesep
+from pathlib import Path as _Path
 
 # internal
 from vcorelib import DEFAULT_ENCODING as _DEFAULT_ENCODING
 from vcorelib.paths.base import Pathlike, normalize
 
 DEFAULT_HASH = "sha256"
+
+
+def create_hex_digest(
+    output: Pathlike,
+    name: str,
+    sources: Pathlike = None,
+    algorithm: str = DEFAULT_HASH,
+) -> _Path:
+    """Create a hex digest file based on file hashes in some directory."""
+
+    output = normalize(output)
+
+    # Use the output directory as the directory to iterate over sources if
+    # one wasn't provided.
+    if sources is None:
+        sources = output
+    sources = normalize(output)
+    assert sources.is_dir(), f"'{sources}' is not a directory!"
+
+    hex_digest = output.joinpath(f"{name}.{algorithm}sum")
+    with hex_digest.open("w", encoding=_DEFAULT_ENCODING) as sha_fd:
+        for item in sources.iterdir():
+            if item.is_file():
+                sha_fd.write(file_hash_hex(item, algorithm=algorithm))
+                sha_fd.write(" *")
+                sha_fd.write(item.name)
+                sha_fd.write(_linesep)
+
+    return hex_digest
 
 
 def bytes_hash_hex(data: bytes, algorithm: str = DEFAULT_HASH) -> str:
