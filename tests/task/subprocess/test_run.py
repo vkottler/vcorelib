@@ -2,6 +2,9 @@
 Test the 'task.subprocess.run' module.
 """
 
+# built-in
+from pathlib import Path
+
 # third-party
 import pytest
 
@@ -22,6 +25,7 @@ async def test_task_subprocess_run_exec_basic():
     task = SubprocessExec("test")
     assert await task.exec("python", "--version")
     assert await task.shell("python --version")
+    await task.shell_cmd_in_dir(Path(), ["python", "--version"])
 
     task.outbox["a"] = 1
     task.outbox["b"] = 2

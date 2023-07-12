@@ -5,7 +5,9 @@ A task definition for wrapping subprocess's 'run' method.
 # built-in
 from asyncio.subprocess import PIPE as _PIPE
 from asyncio.subprocess import Process as _Process
+from pathlib import Path as _Path
 from sys import executable as _executable
+from typing import List as _List
 
 # internal
 from vcorelib.asyncio.cli import (
@@ -36,7 +38,7 @@ class SubprocessLogMixin(Task):
     async def subprocess_exec(
         self,
         program: str,
-        *caller_args,
+        *caller_args: str,
         args: str = "",
         separator: str = "::",
         stdout: int = None,
@@ -59,7 +61,7 @@ class SubprocessLogMixin(Task):
     async def exec(
         self,
         program: str,
-        *caller_args,
+        *caller_args: str,
         args: str = "",
         separator: str = "::",
         stdout: int = None,
@@ -86,7 +88,7 @@ class SubprocessLogMixin(Task):
     async def subprocess_shell(
         self,
         cmd: str,
-        *caller_args,
+        *caller_args: str,
         args: str = "",
         joiner: str = " ",
         separator: str = "::",
@@ -112,7 +114,7 @@ class SubprocessLogMixin(Task):
     async def shell(
         self,
         cmd: str,
-        *caller_args,
+        *caller_args: str,
         args: str = "",
         joiner: str = " ",
         separator: str = "::",
@@ -137,6 +139,21 @@ class SubprocessLogMixin(Task):
             self.log,
         )
         return proc.returncode == 0
+
+    async def shell_cmd_in_dir(
+        self,
+        path: _Path,
+        cmd: _List[str],
+        joiner: str = " ",
+        cd: str = "cd",
+        **kwargs,
+    ) -> bool:
+        """Run a shell command in a specific directory."""
+
+        path.mkdir(exist_ok=True)
+        return await self.shell(
+            f'( {cd} "{path}"; {joiner.join(cmd)} )', **kwargs
+        )
 
 
 class SubprocessExec(SubprocessLogMixin):
