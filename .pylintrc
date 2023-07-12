@@ -4,3 +4,6 @@ max-args=9
 [SIMILARITIES]
 ignore-imports=yes
 ignore-signatures=yes
+
+[FORMAT]
+good-names=cd,i
