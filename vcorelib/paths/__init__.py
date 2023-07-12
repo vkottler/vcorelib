@@ -3,11 +3,7 @@ Common path manipulation utilities.
 """
 
 # built-in
-from contextlib import suppress as _suppress
-from hashlib import md5 as _md5
-from hashlib import new as _new
 from logging import Logger as _Logger
-from os import stat_result as _stat_result
 from pathlib import Path as _Path
 from typing import Iterable as _Iterable
 from typing import List as _List
@@ -18,36 +14,45 @@ from typing import Union as _Union
 import importlib_resources as _importlib_resources
 
 # internal
-from vcorelib import DEFAULT_ENCODING as _DEFAULT_ENCODING
+from vcorelib.paths.base import (
+    Pathlike,
+    get_file_ext,
+    get_file_name,
+    normalize,
+    rel,
+    set_exec_flags,
+    stats,
+)
+from vcorelib.paths.hashing import (
+    DEFAULT_HASH,
+    bytes_hash_hex,
+    bytes_md5_hex,
+    file_hash_hex,
+    file_md5_hex,
+    str_hash_hex,
+    str_md5_hex,
+)
 
-Pathlike = _Union[_Path, str, None]
-
-
-def normalize(
-    path: Pathlike, *parts: _Union[str, _Path], require: bool = False
-) -> _Path:
-    """Normalize an input that could be a path into a path."""
-    path = (
-        _Path("." if path is None else path)
-        if not isinstance(path, _Path)
-        else path
-    )
-    path = path.joinpath(*parts)
-
-    if require:
-        assert path.exists(), f"Path '{path}' doesn't exist!"
-
-    return path
-
-
-def stats(path: Pathlike) -> _Optional[_stat_result]:
-    """Get stats for a file on disk if it exists."""
-
-    result = None
-    path = normalize(path)
-    if path.exists():
-        result = path.stat()
-    return result
+__all__ = [
+    "Pathlike",
+    "normalize",
+    "stats",
+    "modified_ns",
+    "modified_after",
+    "get_file_name",
+    "get_file_ext",
+    "DEFAULT_HASH",
+    "bytes_hash_hex",
+    "str_hash_hex",
+    "file_hash_hex",
+    "bytes_md5_hex",
+    "str_md5_hex",
+    "file_md5_hex",
+    "set_exec_flags",
+    "rel",
+    "find_file",
+    "resource",
+]
 
 
 def modified_ns(path: Pathlike) -> _Optional[int]:
@@ -80,68 +85,6 @@ def modified_after(path: Pathlike, candidates: _Iterable[Pathlike]) -> bool:
             return True
 
     return False
-
-
-def get_file_name(path: Pathlike, maxsplit: int = -1) -> str:
-    """
-    From a path to a file, get the name of the file. Use 'maxsplit' to control
-    how many suffixes are considered part of the name or the extension.
-    """
-    split = normalize(path).name.split(".", maxsplit=maxsplit)
-    if len(split) > 1:
-        pieces = split[:-1]
-    else:
-        pieces = [split[0]]
-    return ".".join(pieces)
-
-
-def get_file_ext(path: Pathlike, maxsplit: int = -1) -> str:
-    """
-    From a path to a file, get the file's extension. Use 'maxsplit' to control
-    how many suffixes are considered part of the name or the extension.
-    """
-    return normalize(path).name.split(".", maxsplit=maxsplit)[-1]
-
-
-DEFAULT_HASH = "sha256"
-
-
-def bytes_hash_hex(data: bytes, algorithm: str = DEFAULT_HASH) -> str:
-    """
-    Get the hex digest from some bytes for some provided hashing algorithm.
-    """
-    inst = _new(algorithm)
-    inst.update(data)
-    return inst.hexdigest()
-
-
-def str_hash_hex(
-    data: str, encoding: str = _DEFAULT_ENCODING, algorithm: str = DEFAULT_HASH
-) -> str:
-    """Get the hex digest for string data."""
-    return bytes_hash_hex(bytes(data, encoding), algorithm=algorithm)
-
-
-def file_hash_hex(path: Pathlike, algorithm: str = DEFAULT_HASH) -> str:
-    """Get the hex digest from file data."""
-    with normalize(path).open("rb") as stream:
-        return bytes_hash_hex(stream.read(), algorithm=algorithm)
-
-
-def bytes_md5_hex(data: bytes) -> str:
-    """Get the MD5 sum for some bytes."""
-    return _md5(data).hexdigest()
-
-
-def str_md5_hex(data: str, encoding: str = _DEFAULT_ENCODING) -> str:
-    """Get an md5 hex string from string data."""
-    return bytes_md5_hex(bytes(data, encoding))
-
-
-def file_md5_hex(path: Pathlike) -> str:
-    """Get an md5 hex string for a file by path."""
-    with normalize(path).open("rb") as stream:
-        return bytes_md5_hex(stream.read())
 
 
 def _construct_search_path(
@@ -183,26 +126,6 @@ def _construct_search_path(
         )
 
     return to_check
-
-
-def set_exec_flags(path: Pathlike) -> None:
-    """Set the executable bits, but respect the 'read' bits."""
-
-    path = normalize(path)
-    mode = path.stat().st_mode
-    path.chmod(mode | ((mode & 0o444) >> 2))
-
-
-def rel(path: Pathlike, base: Pathlike = None) -> _Path:
-    """
-    Attempt to make 'path' relative to base (which is the current-working
-    directory, if not provided).
-    """
-
-    path = normalize(path)
-    with _suppress(ValueError):
-        path = path.relative_to(normalize(base).resolve())
-    return path
 
 
 def find_file(
