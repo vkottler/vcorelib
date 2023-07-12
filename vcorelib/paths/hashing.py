@@ -32,14 +32,16 @@ def create_hex_digest(
     sources = normalize(output)
     assert sources.is_dir(), f"'{sources}' is not a directory!"
 
+    # Determine files to has before we create an additional file.
+    to_hash = [x for x in sources.iterdir() if x.is_file()]
+
     hex_digest = output.joinpath(f"{name}.{algorithm}sum")
     with hex_digest.open("w", encoding=_DEFAULT_ENCODING) as sha_fd:
-        for item in sources.iterdir():
-            if item.is_file():
-                sha_fd.write(file_hash_hex(item, algorithm=algorithm))
-                sha_fd.write(" *")
-                sha_fd.write(item.name)
-                sha_fd.write(_linesep)
+        for item in to_hash:
+            sha_fd.write(file_hash_hex(item, algorithm=algorithm))
+            sha_fd.write(" *")
+            sha_fd.write(item.name)
+            sha_fd.write(_linesep)
 
     return hex_digest
 
