@@ -37,12 +37,17 @@ class LoggerMixin:  # pylint: disable=too-few-public-methods
 
     logger: LoggerType
 
-    def __init__(self, logger: LoggerType = None) -> None:
+    def __init__(
+        self, logger: LoggerType = None, logger_name: str = None
+    ) -> None:
         """Initialize this object with logging capabilities."""
+
         if not hasattr(self, "logger"):
             # Set a logger for this class instance.
             if logger is None:
-                logger = _GetLogger(self.__class__.__module__)
+                if logger_name is None:
+                    logger_name = self.__class__.__module__
+                logger = _GetLogger(logger_name)
             self.logger = logger
 
     @contextmanager
