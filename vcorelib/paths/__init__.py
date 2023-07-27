@@ -32,6 +32,7 @@ from vcorelib.paths.hashing import (
     file_md5_hex,
     str_hash_hex,
     str_md5_hex,
+    validate_hex_digest,
 )
 
 __all__ = [
@@ -54,6 +55,7 @@ __all__ = [
     "find_file",
     "resource",
     "create_hex_digest",
+    "validate_hex_digest",
 ]
 
 

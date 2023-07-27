@@ -46,6 +46,42 @@ def create_hex_digest(
     return hex_digest
 
 
+def validate_hex_digest(
+    path: Pathlike, root: Pathlike = None, strict: bool = False
+) -> None:
+    """Attempt to validate a hex-digest file."""
+
+    path = normalize(path)
+    root = normalize(root)
+
+    alg = path.suffix[1:-3]
+
+    with path.open("r", encoding=_DEFAULT_ENCODING) as path_fd:
+        for line in path_fd:
+            if line:
+                parts = line.split()
+
+                # Ignore leading '*' if present.
+                if parts[1].startswith("*"):
+                    parts[1] = parts[1][1:]
+
+                item = _Path(parts[1])
+
+                if not item.is_absolute():
+                    item = root.joinpath(item)
+
+                # Check if the file is present.
+                if not item.is_file():
+                    assert not strict, f"No file '{item}'!"
+
+                # Verify hash.
+                else:
+                    hashed = file_hash_hex(item, algorithm=alg)
+                    assert (
+                        parts[0] == hashed
+                    ), f"Hash ({alg}) expected '{parts[0]}' got '{hashed}'!"
+
+
 def bytes_hash_hex(data: bytes, algorithm: str = DEFAULT_HASH) -> str:
     """
     Get the hex digest from some bytes for some provided hashing algorithm.
