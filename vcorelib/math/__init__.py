@@ -8,11 +8,11 @@ from vcorelib.math.analysis import (
     FloatBuffer,
     MovingAverage,
     MovingSum,
-    RateLimiter,
-    RateTracker,
     WeightedAverage,
     ns_to_s,
 )
+from vcorelib.math.analysis.rate import RateTracker
+from vcorelib.math.analysis.rate.limiter import RateLimiter
 from vcorelib.math.time import (
     TIMER,
     LoggerType,
