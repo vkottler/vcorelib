@@ -2,7 +2,7 @@
     =====================================
     generator=datazen
     version=3.1.2
-    hash=cd9f017854f9b7f6b2043ce44bfebfff
+    hash=e2ae4126124044a1b4f0ca6caba71755
     =====================================
 -->
 
@@ -16,8 +16,14 @@
 
 *A collection of core Python utilities.*
 
-See also: [generated documentation](https://vkottler.github.io/python/pydoc/vcorelib.html)
-(created with [`pydoc`](https://docs.python.org/3/library/pydoc.html)).
+## Documentation
+
+### Generated
+
+* By [sphinx-apidoc](https://vkottler.github.io/python/sphinx/vcorelib)
+(What's [`sphinx-apidoc`](https://www.sphinx-doc.org/en/master/man/sphinx-apidoc.html)?)
+* By [pydoc](https://vkottler.github.io/python/pydoc/vcorelib.html)
+(What's [`pydoc`](https://docs.python.org/3/library/pydoc.html)?)
 
 ## Python Version Support
 
