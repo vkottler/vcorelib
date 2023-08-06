@@ -8,6 +8,7 @@ from pytest import raises
 # module under test
 from vcorelib.task import FailTask, Task, TaskFailed
 from vcorelib.task.manager import TaskManager
+from vcorelib.task.subprocess.run import register_http_server_task
 from vcorelib.task.time.sleep import SleepTask
 
 
@@ -28,6 +29,8 @@ def test_task_manager_basic():
 
     manager.finalized = False
     manager.execute(["test"], init_only=True)
+
+    register_http_server_task(manager, "tmp", "host-tmp")
 
 
 def test_task_manager_dry_run():
