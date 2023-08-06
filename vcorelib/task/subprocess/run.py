@@ -7,6 +7,7 @@ from asyncio.subprocess import PIPE as _PIPE
 from asyncio.subprocess import Process as _Process
 from pathlib import Path as _Path
 from sys import executable as _executable
+from typing import Iterable as _Iterable
 from typing import List as _List
 
 # internal
@@ -15,9 +16,11 @@ from vcorelib.asyncio.cli import (
     handle_process_cancel,
 )
 from vcorelib.asyncio.subprocess import create_subprocess_exec_log
+from vcorelib.paths import Pathlike, normalize
 from vcorelib.platform import is_windows, reconcile_platform
 from vcorelib.task import Inbox as _Inbox
 from vcorelib.task import Outbox, Task
+from vcorelib.task.manager import TaskManager
 
 __all__ = [
     "is_windows",
@@ -303,3 +306,29 @@ class SubprocessShellStreamed(SubprocessLogMixin):
         outbox["code"] = proc.returncode
 
         return True if not require_success else proc.returncode == 0
+
+
+def register_http_server_task(
+    manager: TaskManager,
+    path: Pathlike,
+    task: str,
+    dependencies: _Iterable[str] = None,
+    target: str = None,
+    cd_cmd: str = "cd",
+    port: int = 0,
+) -> None:
+    """
+    A method for registering a task that will host an HTTP server at the
+    provided path.
+    """
+
+    manager.register(
+        SubprocessShellStreamed(
+            task,
+            cmd=(
+                f"{cd_cmd} {normalize(path)} && python -m http.server {port}"
+            ),
+        ),
+        dependencies=dependencies,
+        target=target,
+    )
