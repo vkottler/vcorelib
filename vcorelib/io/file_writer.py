@@ -90,3 +90,13 @@ class IndentedFileWriter:
 
         if self.depth > 0 and amount <= self.depth:
             self.depth -= amount
+
+    @contextmanager
+    def indented(self, amount: int = 1) -> Iterator[None]:
+        """Increase the current indent depth and decrease upon exit."""
+
+        self.indent(amount=amount)
+        try:
+            yield
+        finally:
+            self.dedent(amount=amount)
