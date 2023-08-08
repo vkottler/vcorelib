@@ -37,13 +37,13 @@ def test_file_writer_basic():
     with StringIO() as stream:
         writer = IndentedFileWriter(stream, per_indent=4)
         writer.dedent()
-        writer.indent()
-        writer.write("Hello, world!")
+
+        with writer.indented():
+            writer.write("Hello, world!")
 
         # Check output.
         assert stream.getvalue() == "    Hello, world!" + linesep
 
-        writer.dedent()
         writer.write("Hello, world!")
 
         assert (
