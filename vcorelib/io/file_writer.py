@@ -109,15 +109,19 @@ class IndentedFileWriter:
         then writes a newline character (os.linesep).
         """
 
-        data = (
-            (self.space * self.depth * self.per_indent)
-            + self._prefix
-            + data
-            + self._suffix
-            + linesep
-        )
-        self.stream.write(data)
-        return len(data)
+        count = 0
+        for line in data.splitlines():
+            line = (
+                (self.space * self.depth * self.per_indent)
+                + self._prefix
+                + line
+                + self._suffix
+                + linesep
+            )
+            self.stream.write(line)
+            count += len(line)
+
+        return count
 
     def cpp_comment(self, data: str) -> int:
         """A helper for writing C++-style comments."""
