@@ -5,6 +5,7 @@ A module exposing data-file encoders and decoders.
 # internal
 from vcorelib.io.abc import FileEntity, Serializable
 from vcorelib.io.arbiter import ARBITER, DataArbiter
+from vcorelib.io.file_writer import IndentedFileWriter
 from vcorelib.io.types import (
     DataDecoder,
     DataEncoder,
@@ -38,4 +39,5 @@ __all__ = [
     "Serializable",
     "FileEntity",
     "DEFAULT_INCLUDES_KEY",
+    "IndentedFileWriter",
 ]
