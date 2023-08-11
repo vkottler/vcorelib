@@ -25,12 +25,18 @@ def test_file_writer_scope():
             writer.c_comment("A comment.")
             writer.c_comment("Another comment.")
 
+            writer.empty(count=2)
+            writer.write("")
+
             writer.write(dumps({"a": 1, "b": 2, "c": 3}, indent=4))
 
         assert stream.getvalue() == lines(
             "struct MyStruct {",
             "    /* A comment. */",
             "    /* Another comment. */",
+            "",
+            "",
+            "",
             "    {",
             '        "a": 1,',
             '        "b": 2,',
@@ -46,13 +52,27 @@ def test_file_writer_scope():
                 writer.write("A comment.")
                 writer.write("Another comment.")
 
+                writer.write("")
+                writer.write(dumps({"a": 1, "b": 2, "c": 3}, indent=4))
+                writer.empty(count=2)
+
             with writer.scope():
                 writer.cpp_comment("Yup.")
+
+        print(stream.getvalue())
 
         assert stream.getvalue() == lines(
             "    /**",
             "     * A comment.",
             "     * Another comment.",
+            "     *",
+            "     * {",
+            '     *     "a": 1,',
+            '     *     "b": 2,',
+            '     *     "c": 3',
+            "     * }",
+            "     *",
+            "     *",
             "     */",
             "    {",
             "        // Yup.",

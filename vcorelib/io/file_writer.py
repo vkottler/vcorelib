@@ -110,18 +110,28 @@ class IndentedFileWriter:
         """
 
         count = 0
-        for line in data.splitlines():
-            line = (
-                (self.space * self.depth * self.per_indent)
-                + self._prefix
-                + line
-                + self._suffix
-                + linesep
+        for line in [""] if not data else data.splitlines():
+            line_data = self._prefix + line + self._suffix
+
+            # Don't write the indent if the line data is empty.
+            indent = (
+                self.space * self.depth * self.per_indent if line_data else ""
             )
+
+            line = (indent + line_data).rstrip() + linesep
+
             self.stream.write(line)
             count += len(line)
 
         return count
+
+    def empty(self, count: int = 1) -> int:
+        """Add some number of empty lines."""
+
+        chars = 0
+        for _ in range(count):
+            chars += self.write("")
+        return chars
 
     def cpp_comment(self, data: str) -> int:
         """A helper for writing C++-style comments."""
