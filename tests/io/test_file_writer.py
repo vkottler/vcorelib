@@ -4,6 +4,7 @@ Test the 'io.file_writer' module.
 
 # built-in
 from io import StringIO
+from json import dumps
 from os import linesep
 
 # module under test
@@ -24,10 +25,17 @@ def test_file_writer_scope():
             writer.c_comment("A comment.")
             writer.c_comment("Another comment.")
 
+            writer.write(dumps({"a": 1, "b": 2, "c": 3}, indent=4))
+
         assert stream.getvalue() == lines(
             "struct MyStruct {",
             "    /* A comment. */",
             "    /* Another comment. */",
+            "    {",
+            '        "a": 1,',
+            '        "b": 2,',
+            '        "c": 3',
+            "    }",
             "};",
         )
 
