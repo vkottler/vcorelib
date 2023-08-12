@@ -28,7 +28,8 @@ def test_file_writer_scope():
             writer.empty(count=2)
             writer.write("")
 
-            writer.write(dumps({"a": 1, "b": 2, "c": 3}, indent=4))
+            with writer.padding():
+                writer.write(dumps({"a": 1, "b": 2, "c": 3}, indent=4))
 
         assert stream.getvalue() == lines(
             "struct MyStruct {",
@@ -37,11 +38,13 @@ def test_file_writer_scope():
             "",
             "",
             "",
+            "",
             "    {",
             '        "a": 1,',
             '        "b": 2,',
             '        "c": 3',
             "    }",
+            "",
             "};",
         )
 
