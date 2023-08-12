@@ -133,6 +133,13 @@ class IndentedFileWriter:
             chars += self.write("")
         return chars
 
+    @contextmanager
+    def padding(self, count: int = 1) -> Iterator[None]:
+        """Add padding lines as a managed context."""
+        self.empty(count=count)
+        yield
+        self.empty(count=count)
+
     def cpp_comment(self, data: str) -> int:
         """A helper for writing C++-style comments."""
         return self.write("// " + data)
