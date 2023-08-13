@@ -31,6 +31,7 @@ class IndentedFileWriter:
         self.space = space
         self.per_indent = per_indent
         self.depth = 0
+        self.position = 0
 
         self._prefix = prefix
         self._suffix = suffix
@@ -123,6 +124,7 @@ class IndentedFileWriter:
             self.stream.write(line)
             count += len(line)
 
+        self.position += count
         return count
 
     def empty(self, count: int = 1) -> int:
@@ -136,9 +138,24 @@ class IndentedFileWriter:
     @contextmanager
     def padding(self, count: int = 1) -> Iterator[None]:
         """Add padding lines as a managed context."""
+
         self.empty(count=count)
+        curr = self.position
         yield
-        self.empty(count=count)
+        if self.position > curr:
+            self.empty(count=count)
+
+    def join(self, *lines: str, joiner=",") -> None:
+        """
+        Join lines with some joiner (appended to end), except after the last
+        line.
+        """
+
+        lines_list = [*lines]
+        length = len(lines_list)
+
+        for idx, line in enumerate(lines_list):
+            self.write(line + (joiner if idx < length - 1 else ""))
 
     def cpp_comment(self, data: str) -> int:
         """A helper for writing C++-style comments."""
