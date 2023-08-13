@@ -31,6 +31,12 @@ def test_file_writer_scope():
             with writer.padding():
                 writer.write(dumps({"a": 1, "b": 2, "c": 3}, indent=4))
 
+            with writer.padding():
+                pass
+
+            writer.join("TEST")
+            writer.join("A", "B", "C")
+
         assert stream.getvalue() == lines(
             "struct MyStruct {",
             "    /* A comment. */",
@@ -45,6 +51,11 @@ def test_file_writer_scope():
             '        "c": 3',
             "    }",
             "",
+            "",
+            "    TEST",
+            "    A,",
+            "    B,",
+            "    C",
             "};",
         )
 
