@@ -6,7 +6,21 @@ Test the 'namespace' module.
 from pytest import raises
 
 # module under test
-from vcorelib.namespace import Namespace, NamespaceMixin
+from vcorelib.namespace import CPP_DELIM, Namespace, NamespaceMixin
+
+
+def test_namespace_parent_search():
+    """Test that search recursion works."""
+
+    root = Namespace(delim=CPP_DELIM)
+    root.push("A")
+
+    ns_b = root.child("B")
+
+    root.namespace("C")
+
+    assert list(ns_b.search(pattern="C")) == ["A::C"]
+    assert not list(ns_b.search(pattern="C", recursive=False))
 
 
 def test_namespace_basic():
