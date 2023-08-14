@@ -7,20 +7,28 @@ from contextlib import contextmanager as _contextmanager
 from re import compile as _compile
 from typing import Iterator as _Iterator
 from typing import List as _List
+from typing import Optional as _Optional
 from typing import Set as _Set
 
 DEFAULT_DELIM = "."
+CPP_DELIM = "::"
 
 
 class Namespace:
     """A class for implementing a basic namespace interface."""
 
-    def __init__(self, *names: str, delim: str = DEFAULT_DELIM) -> None:
+    def __init__(
+        self,
+        *names: str,
+        delim: str = DEFAULT_DELIM,
+        parent: "Namespace" = None,
+    ) -> None:
         """Initialize this namespace."""
 
         self.stack: _List[str] = [*names]
         self.names: _Set[str] = set()
         self.delim = delim
+        self.parent: _Optional["Namespace"] = parent
 
         # Use this attribute from preventing this namespace from colliding with
         # its parent namespace.
@@ -28,7 +36,7 @@ class Namespace:
 
     def child(self, *names: str) -> "Namespace":
         """Create a child namespace from this one."""
-        return Namespace(*self.stack, *names, delim=self.delim)
+        return Namespace(*self.stack, *names, delim=self.delim, parent=self)
 
     def push(self, name: str) -> None:
         """Push a name onto the stack."""
@@ -94,32 +102,55 @@ class Namespace:
             self.names.add(result)
         return result
 
-    def search(self, *names: str, pattern: str = ".*") -> _Iterator[str]:
+    @property
+    def parents(self) -> _Iterator["Namespace"]:
+        """Iterate over parents."""
+
+        curr: _Optional["Namespace"] = self
+        while curr is not None:
+            if curr.parent is not None:
+                yield curr.parent
+            curr = curr.parent
+
+    def search(
+        self, *names: str, pattern: str = ".*", recursive: bool = True
+    ) -> _Iterator[str]:
         """
         Iterate over names in this namespace that match a given pattern.
         """
 
-        # Push provided names onto the stack while yielding matches.
-        with self.pushed(*names):
-            start = self.namespace(track=False)
+        to_search = [self]
 
-            # Add a trailing delimeter if we land on a non-empty name. Also
-            # enforce that the namespaced portion is at the beginning.
-            if start:
-                start = "^" + start + self.delim
+        if recursive:
+            to_search.extend(list(self.parents))
 
-            # Ensure that dots are escaped to match literally.
-            if start and self.delim == ".":
-                start = start.replace(".", "\\.")
+        seen = set()
+        while to_search:
+            current = to_search.pop()
 
-            # Allow the provided search string to appear anywhere in the name.
-            if start:
-                start += ".*"
+            # Push provided names onto the stack while yielding matches.
+            with current.pushed(*names):
+                start = current.namespace(track=False)
 
-            compiled = _compile(start + pattern)
-            for name in self.names:
-                if compiled.search(name) is not None:
-                    yield name
+                # Add a trailing delimeter if we land on a non-empty name. Also
+                # enforce that the namespaced portion is at the beginning.
+                if start:
+                    start = "^" + start + current.delim
+
+                # Ensure that dots are escaped to match literally.
+                if start and current.delim == ".":
+                    start = start.replace(".", "\\.")
+
+                # Allow the provided search string to appear anywhere in the
+                # name.
+                if start:
+                    start += ".*"
+
+                compiled = _compile(start + pattern)
+                for name in current.names:
+                    if name not in seen and compiled.search(name) is not None:
+                        seen.add(name)
+                        yield name
 
 
 class NamespaceMixin:
