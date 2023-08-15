@@ -104,7 +104,12 @@ def test_run_handle_stop_multiple_signals():
         sleep(0.25)
         os.kill(proc.pid, signal.SIGINT)
         sleep(0.25)
-        os.kill(proc.pid, signal.SIGINT)
+
+        # This may happen on Windows.
+        try:
+            os.kill(proc.pid, signal.SIGINT)
+        except PermissionError:
+            proc.terminate()
 
         # Sometimes the process doesn't get far enough after the sleep.
         proc.join()
