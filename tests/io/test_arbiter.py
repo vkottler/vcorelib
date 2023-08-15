@@ -121,3 +121,17 @@ def test_arbiter_decode_includes():
         "b_section_1": {"a": "a", "b": "b", "c": "c"},
         "c_section_1": {"a": "a", "b": "b", "c": "c"},
     }
+
+
+def test_arbiter_decode_includes_left():
+    """Test that we can load data via the 'includes_left' key."""
+
+    assert ARBITER.decode(
+        resource("simple_decode").joinpath("includes_left", "test.yaml"),
+        require_success=True,
+        includes_key="includes",
+    ).data == {
+        "a": [2, 0, 1],
+        "b": [2, 0, 1],
+        "c": [2, 0, 1],
+    }

@@ -172,7 +172,9 @@ class LoadResult(NamedTuple):
         """Raise a canonical exception if this result is a failure."""
         assert self.success, f"Couldn't load '{path}'!"
 
-    def merge(self, other: "LoadResult", **kwargs) -> "LoadResult":
+    def merge(
+        self, other: "LoadResult", is_left: bool = False, **kwargs
+    ) -> "LoadResult":
         """Merge two load results."""
 
         # Add the time fields up if they're both positive.
@@ -180,8 +182,11 @@ class LoadResult(NamedTuple):
         if time_ns > 0 and other.time_ns > 0:
             time_ns += other.time_ns
 
+        left = other.data if is_left else self.data
+        right = self.data if is_left else other.data
+
         return LoadResult(
-            merge(self.data, other.data, **kwargs),
+            merge(left, right, **kwargs),
             self.success and other.success,
             time_ns,
         )

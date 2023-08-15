@@ -1,0 +1,10 @@
+---
+includes:
+  - ../1.yaml
+
+includes_left:
+  - ../2.yaml
+
+a: [0]
+b: [0]
+c: [0]
