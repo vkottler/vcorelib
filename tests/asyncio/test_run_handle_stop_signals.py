@@ -12,6 +12,7 @@ from time import sleep
 
 # module under test
 from vcorelib.asyncio import all_stop_signals, run_handle_stop
+from vcorelib.platform import is_windows
 
 
 async def wait_n_events(sig: asyncio.Event, count: int = 1) -> None:
@@ -108,10 +109,11 @@ def test_run_handle_stop_multiple_signals():
             # This may happen on Windows.
             try:
                 os.kill(proc.pid, signal.SIGINT)
+                signal_count += 1
             except PermissionError:
-                proc.terminate()
-
-            signal_count += 1
+                if is_windows():
+                    proc.terminate()
+                    signal_count += 1
 
         # Sometimes the process doesn't get far enough after the sleep.
         proc.join()
