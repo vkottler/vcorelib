@@ -114,6 +114,24 @@ class DataArbiterBase:
                             strategy=strategy,
                         )
 
+                    for include in consume(
+                        result.data, f"{includes_key}_left", []
+                    ):
+                        # Load the included file.
+                        result = result.merge(
+                            self.decode(
+                                find_file(include, relative_to=path),
+                                logger,
+                                require_success=require_success,
+                                includes_key=includes_key,
+                                **kwargs,
+                            ),
+                            is_left=True,
+                            expect_overwrite=expect_overwrite,
+                            logger=logger,
+                            strategy=strategy,
+                        )
+
         if not result.success:
             logger.error("Failed to decode '%s'.", path)
 
