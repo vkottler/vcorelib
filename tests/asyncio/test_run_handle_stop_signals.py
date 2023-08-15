@@ -101,15 +101,17 @@ def test_run_handle_stop_multiple_signals():
 
         assert proc.pid is not None
 
-        sleep(0.25)
-        os.kill(proc.pid, signal.SIGINT)
-        sleep(0.25)
+        signal_count = 0
+        while signal_count < 2:
+            sleep(0.25)
 
-        # This may happen on Windows.
-        try:
-            os.kill(proc.pid, signal.SIGINT)
-        except PermissionError:
-            proc.terminate()
+            # This may happen on Windows.
+            try:
+                os.kill(proc.pid, signal.SIGINT)
+            except PermissionError:
+                proc.terminate()
+
+            signal_count += 1
 
         # Sometimes the process doesn't get far enough after the sleep.
         proc.join()
