@@ -121,7 +121,16 @@ def event_setter(
 
     def setter(sig: int, _: _Optional[_FrameType]) -> None:
         """Set the signal."""
-        LOG.info("Received signal %d (%s).", sig, _signal.Signals(sig).name)
+
+        rep = f"{sig} ({_signal.Signals(sig).name})"
+        LOG.info("Received signal %s.", rep)
+
+        # Ensure scheduling 'stop_sig.set' is a nominal reaction to this
+        # signal. If not, raise an exception.
+        assert (
+            not stop_sig.is_set()
+        ), "Stop signal is set but received signal {rep}!"
+
         normalize_eloop(eloop).call_soon_threadsafe(stop_sig.set)
 
     return setter
