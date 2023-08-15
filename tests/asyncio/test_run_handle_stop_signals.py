@@ -93,7 +93,7 @@ def sample_app_wait_two_no_signals() -> None:
 
 
 def test_run_handle_stop_multiple_signals():
-    """TODO."""
+    """Test run_handle_stop multiple interrupt signal behavior."""
 
     for target in [sample_app_wait_two, sample_app_wait_two_no_signals]:
         proc = Process(target=target)
@@ -114,7 +114,7 @@ def test_run_handle_stop_multiple_signals():
         if target is sample_app_wait_two_no_signals:
             assert abs(proc.exitcode) != 0
         else:
-            assert abs(proc.exitcode) in (0, signal.SIGTERM)
+            assert abs(proc.exitcode) in (0, signal.SIGINT)
 
 
 def test_run_handle_stop_signals():
