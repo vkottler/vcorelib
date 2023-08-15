@@ -144,6 +144,7 @@ def run_handle_stop(
     task: _Coroutine[None, None, T],
     eloop: _AbstractEventLoop = None,
     signals: _Iterable[int] = None,
+    tries: int = 1,
 ) -> T:
     """
     Publish the stop signal on keyboard interrupt and wait for the task to
@@ -159,9 +160,12 @@ def run_handle_stop(
         for signal in signals:
             _signal.signal(signal, setter)
 
-    while True:
+    while tries > 0:
         try:
             return eloop.run_until_complete(to_run)
         except KeyboardInterrupt:
             print("Keyboard interrupt.")
             eloop.call_soon_threadsafe(stop_sig.set)
+            tries -= 1
+
+    return eloop.run_until_complete(to_run)
