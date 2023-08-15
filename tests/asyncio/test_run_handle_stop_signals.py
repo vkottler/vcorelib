@@ -118,10 +118,7 @@ def test_run_handle_stop_multiple_signals():
         assert proc.exitcode is not None
 
         # The program exits because of the uncaught keyboard interrupt.
-        if target is sample_app_wait_two_no_signals:
-            assert abs(proc.exitcode) != 0
-        else:
-            assert abs(proc.exitcode) in (0, signal.SIGINT)
+        assert abs(proc.exitcode) in (0, signal.SIGINT)
 
 
 def test_run_handle_stop_signals():

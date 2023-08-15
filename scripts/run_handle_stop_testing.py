@@ -59,8 +59,8 @@ def main(argv: List[str]) -> int:
 
     sig = asyncio.Event()
 
-    app(sig, loop, 2, True)
-    # app(sig, loop, 2, False)
+    # app(sig, loop, 2, True)
+    app(sig, loop, 2, False)
 
     # Return 0 if the signal is set, 1 if not.
     return int(not sig.is_set())
