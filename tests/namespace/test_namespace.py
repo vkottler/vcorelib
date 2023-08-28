@@ -47,6 +47,25 @@ def test_namespace_basic():
     ]
 
 
+def test_namespace_search_two():
+    """Test that we can search namespaces for names."""
+
+    names = Namespace(delim=CPP_DELIM)
+    for name in [
+        "uint8",
+        "uint16",
+        "uint32",
+        "uint64",
+        "int8",
+        "int16",
+        "int32",
+        "int64",
+    ]:
+        names.namespace(name=name)
+
+    assert list(names.search(pattern="int8", exact=True)) == ["int8"]
+
+
 def test_namespace_search():
     """Test that we can search namespaces for names."""
 

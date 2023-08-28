@@ -113,7 +113,11 @@ class Namespace:
             curr = curr.parent
 
     def search(
-        self, *names: str, pattern: str = ".*", recursive: bool = True
+        self,
+        *names: str,
+        pattern: str = ".*",
+        recursive: bool = True,
+        exact: bool = False,
     ) -> _Iterator[str]:
         """
         Iterate over names in this namespace that match a given pattern.
@@ -143,14 +147,15 @@ class Namespace:
 
                 # Allow the provided search string to appear anywhere in the
                 # name.
-                if start:
+                if start and not exact:
                     start += ".*"
 
                 compiled = _compile(start + pattern)
                 for name in current.names:
                     if name not in seen and compiled.search(name) is not None:
                         seen.add(name)
-                        yield name
+                        if not exact or name == pattern:
+                            yield name
 
 
 class NamespaceMixin:
