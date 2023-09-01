@@ -19,6 +19,7 @@ class CommentStyle(Enum):
     """An enumeration describing different comment styles."""
 
     C = auto()
+    C_DOXYGEN = auto()
     CPP = auto()
     SCRIPT = auto()
 
@@ -27,6 +28,8 @@ class CommentStyle(Enum):
 
         if self is CommentStyle.C:
             return f"/* {data} */"
+        if self is CommentStyle.C_DOXYGEN:
+            return f"/*!< {data} */"
         if self is CommentStyle.CPP:
             return f"// {data}"
         return f"# {data}"
