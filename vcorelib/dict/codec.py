@@ -8,6 +8,7 @@ import abc as _abc
 from typing import Optional as _Optional
 from typing import Type as _Type
 from typing import TypeVar as _TypeVar
+from typing import Union as _Union
 
 # internal
 from vcorelib.io import ARBITER as _ARBITER
@@ -23,6 +24,14 @@ T = _TypeVar("T", bound="JsonCodec")
 
 class JsonCodec(_abc.ABC, SchemaMixin):
     """A simple JSON codec interface."""
+
+    @classmethod
+    def normalize(cls: _Type[T], data: _Union[_JsonObject, T]) -> T:
+        """Ensure that some object is an instance of this class."""
+
+        if not isinstance(data, cls):
+            data = cls.create(data)  # type: ignore
+        return data
 
     @classmethod
     @_abc.abstractmethod

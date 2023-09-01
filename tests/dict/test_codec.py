@@ -57,3 +57,7 @@ def test_dict_codec_error():
             resource("test.json", valid=False),
             schemas=get_test_schemas(),
         )
+
+    inst = codec.BasicDictCodec.normalize({"a": 1})
+    assert inst == {"a": 1}
+    assert codec.BasicDictCodec.normalize(inst) == {"a": 1}
