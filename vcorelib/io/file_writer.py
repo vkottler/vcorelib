@@ -8,7 +8,7 @@ from enum import Enum, auto
 from io import StringIO
 from os import linesep
 from pathlib import Path
-from typing import Iterator, Optional, TextIO
+from typing import Iterator, List, Optional, TextIO, Tuple
 
 # internal
 from vcorelib import DEFAULT_ENCODING
@@ -32,8 +32,8 @@ class CommentStyle(Enum):
         return f"# {data}"
 
 
-LineWithComment = tuple[str, Optional[str]]
-LinesWithComments = list[LineWithComment]
+LineWithComment = Tuple[str, Optional[str]]
+LinesWithComments = List[LineWithComment]
 
 
 class IndentedFileWriter:
