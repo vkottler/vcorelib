@@ -19,6 +19,8 @@ def lines(*parts: str) -> str:
 def test_file_writer_comment_lines():
     """Test the file-writer's line comment alignment."""
 
+    assert CommentStyle.C_DOXYGEN.wrap("test") == "/*!< test */"
+
     with StringIO() as stream:
         writer = IndentedFileWriter(stream)
 
