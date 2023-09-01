@@ -4,14 +4,36 @@ A module implementing an interface for writing to variably indented files.
 
 # built-in
 from contextlib import contextmanager
+from enum import Enum, auto
 from io import StringIO
 from os import linesep
 from pathlib import Path
-from typing import Iterator, TextIO
+from typing import Iterator, Optional, TextIO
 
 # internal
 from vcorelib import DEFAULT_ENCODING
 from vcorelib.paths.context import tempfile
+
+
+class CommentStyle(Enum):
+    """An enumeration describing different comment styles."""
+
+    C = auto()
+    CPP = auto()
+    SCRIPT = auto()
+
+    def wrap(self, data: str) -> str:
+        """Wrap a string in this comment style."""
+
+        if self is CommentStyle.C:
+            return f"/* {data} */"
+        if self is CommentStyle.CPP:
+            return f"// {data}"
+        return f"# {data}"
+
+
+LineWithComment = tuple[str, Optional[str]]
+LinesWithComments = list[LineWithComment]
 
 
 class IndentedFileWriter:
@@ -159,7 +181,8 @@ class IndentedFileWriter:
 
     def cpp_comment(self, data: str) -> int:
         """A helper for writing C++-style comments."""
-        return self.write("// " + data)
+
+        return self.write(CommentStyle.CPP.wrap(data))
 
     def c_comment(self, data: str) -> int:
         """A helper for writing C-style comments."""
@@ -214,3 +237,28 @@ class IndentedFileWriter:
         with self.scope(opener=opener, closer=closer, indent=0):
             with self.prefix(prefix):
                 yield
+
+    @contextmanager
+    def trailing_comment_lines(
+        self,
+        style: CommentStyle = CommentStyle.C,
+        pad: str = " ",
+        min_pad: int = 1,
+    ) -> Iterator[LinesWithComments]:
+        """Align indentations for trailing comments."""
+
+        # Collect lines and comments.
+        lines_comments: LinesWithComments = []
+        yield lines_comments
+
+        longest = 0
+        for line, _ in lines_comments:
+            length = len(line)
+            if len(line) > longest:
+                longest = length
+
+        for line, comment in lines_comments:
+            padding = pad * (longest - len(line))
+            if comment:
+                line += padding + (min_pad * pad) + style.wrap(comment)
+            self.write(line)

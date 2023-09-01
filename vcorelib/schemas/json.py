@@ -6,7 +6,6 @@ A module for interacting with JSON schemas.
 from logging import getLogger as _getLogger
 from typing import Any as _Any
 from typing import Type as _Type
-from urllib.parse import urlparse as _urlparse
 
 # third-party
 from fastjsonschema import JsonSchemaException as _JsonSchemaException
@@ -27,11 +26,9 @@ LOG = _getLogger(__name__)
 def package_handler(uri: str) -> _JsonObject:
     """Load data from a package."""
 
-    parsed = _urlparse(uri)
-    assert parsed.scheme == "package"
+    path = find_file(uri, logger=LOG)
+    assert path is not None, uri
 
-    path = find_file(parsed.path[1:], package=parsed.hostname, logger=LOG)
-    assert path is not None, path
     return _ARBITER.decode(
         path, includes_key=_DEFAULT_INCLUDES_KEY, require_success=True
     ).data

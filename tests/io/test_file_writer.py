@@ -8,12 +8,46 @@ from json import dumps
 from os import linesep
 
 # module under test
-from vcorelib.io.file_writer import IndentedFileWriter
+from vcorelib.io.file_writer import CommentStyle, IndentedFileWriter
 
 
 def lines(*parts: str) -> str:
     """Get a sequence of strings as lines."""
     return linesep.join(parts) + linesep
+
+
+def test_file_writer_comment_lines():
+    """Test the file-writer's line comment alignment."""
+
+    with StringIO() as stream:
+        writer = IndentedFileWriter(stream)
+
+        with writer.trailing_comment_lines() as pairs:
+            pairs.append(("a", "a"))
+            pairs.append(("ab", None))
+            pairs.append(("abc", "c"))
+
+        assert stream.getvalue() == lines(
+            "a   /* a */",
+            "ab",
+            "abc /* c */",
+        )
+
+    with StringIO() as stream:
+        writer = IndentedFileWriter(stream)
+
+        with writer.trailing_comment_lines(
+            style=CommentStyle.SCRIPT, min_pad=2
+        ) as pairs:
+            pairs.append(("a", "a"))
+            pairs.append(("ab", None))
+            pairs.append(("abc", "c"))
+
+        assert stream.getvalue() == lines(
+            "a    # a",
+            "ab",
+            "abc  # c",
+        )
 
 
 def test_file_writer_scope():

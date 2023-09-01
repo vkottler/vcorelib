@@ -3,7 +3,7 @@ includes:
   - ../1.yaml
 
 includes_left:
-  - ../2.yaml
+  - package://tests/valid/simple_decode/2.yaml
 
 a: [0]
 b: [0]
