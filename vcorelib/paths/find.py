@@ -5,10 +5,13 @@ A module implementing interfaces for finding files.
 # built-in
 from logging import Logger as _Logger
 from pathlib import Path as _Path
+from typing import Callable as _Callable
+from typing import Dict as _Dict
 from typing import Iterable as _Iterable
 from typing import List as _List
 from typing import Optional as _Optional
 from typing import Union as _Union
+from urllib.parse import ParseResult as _ParseResult
 from urllib.parse import urlparse as _urlparse
 
 # third-party
@@ -59,6 +62,35 @@ def _construct_search_path(
     return to_check
 
 
+FileFinder = _Callable[
+    [_ParseResult, str, _Optional[_Logger]], _Optional[_Path]
+]
+FINDERS: _Dict[str, FileFinder] = {}
+
+
+def find_package_file(
+    parsed: _ParseResult, package_subdir: str, logger: _Optional[_Logger]
+) -> _Optional[_Path]:
+    """Find a file from a package."""
+
+    return find_file(
+        parsed.path[1:],
+        package=parsed.hostname,
+        logger=logger,
+        package_subdir=package_subdir,
+    )
+
+
+def register_file_finder(scheme: str, finder: FileFinder) -> None:
+    """Register a custom, runtime file finder (for URI paths)."""
+
+    assert scheme not in FINDERS, scheme
+    FINDERS[scheme] = finder
+
+
+register_file_finder("package", find_package_file)
+
+
 def find_file(
     path: Pathlike,
     *parts: _Union[str, _Path],
@@ -75,15 +107,13 @@ def find_file(
     if isinstance(path, str):
         parsed = _urlparse(path)
 
-        # Handle package-data loading.
-        if parsed.scheme == "package":
+        if parsed.scheme in FINDERS:
+            # Validate arguments, because some things aren't passed to custom
+            # handlers.
             assert not parts, parts
-            return find_file(
-                parsed.path[1:],
-                package=parsed.hostname,
-                logger=logger,
-                package_subdir=package_subdir,
-            )
+            assert package is None or package == parsed.hostname
+
+            return FINDERS[parsed.scheme](parsed, package_subdir, logger)
 
     path = normalize(path, *parts)
 
