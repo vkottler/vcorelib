@@ -4,16 +4,21 @@ A module for working with various schema enforcement implementations.
 
 # built-in
 from typing import Any as _Any
+from typing import Optional as _Optional
 from typing import Type as _Type
 
 # third-party
 from cerberus import Validator as _Validator
 
 # internal
+from vcorelib import PKG_NAME
+from vcorelib.dict.codec import DictCodec as _DictCodec
+from vcorelib.io import DEFAULT_INCLUDES_KEY
 from vcorelib.io.types import JsonObject as _JsonObject
 from vcorelib.schemas.base import Schema as _Schema
 from vcorelib.schemas.base import SchemaMap as _SchemaMap
 from vcorelib.schemas.base import SchemaValidationError
+from vcorelib.schemas.json import JsonSchemaMap as _JsonSchemaMap
 
 
 class CerberusSchema(_Schema):
@@ -45,3 +50,14 @@ class CerberusSchemaMap(_SchemaMap):
     def kind(cls) -> _Type[CerberusSchema]:
         """Implement this to determine the concrete schema type."""
         return CerberusSchema
+
+
+class VcorelibDictCodec(_DictCodec):
+    """
+    A simple wrapper for package classes that want to implement DictCodec.
+    """
+
+    default_schemas: _Optional[_SchemaMap] = _JsonSchemaMap.from_package(
+        PKG_NAME,
+        includes_key=DEFAULT_INCLUDES_KEY,
+    )
