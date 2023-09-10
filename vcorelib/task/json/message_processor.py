@@ -122,7 +122,7 @@ class JsonMessageProcessor(LoggerMixin):
     def send_message_str(
         self, data: str, addr: Tuple[str, int] = None
     ) -> None:
-        """TODO."""
+        """Implement this to send messages."""
 
     def send_json(
         self, data: Union[JsonMessage, JsonCodec], addr: Tuple[str, int] = None
