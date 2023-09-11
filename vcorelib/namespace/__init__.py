@@ -38,6 +38,32 @@ class Namespace:
         """Create a child namespace from this one."""
         return Namespace(*self.stack, *names, delim=self.delim, parent=self)
 
+    def suggest(self, data: str, delta: bool = True) -> _Optional[str]:
+        """Find the shortest name suggestion."""
+
+        data_length = len(data)
+        found: _Optional[str] = None
+        found_length: _Optional[int] = None
+
+        for name in self.names:
+            if found == data:
+                break
+
+            length = len(name)
+            if found_length is not None and length >= found_length:
+                continue
+
+            if name.startswith(data):
+                found = name
+                found_length = length
+
+        if found and delta:
+            found = found[data_length:]
+            if not found:
+                found = None
+
+        return found
+
     def push(self, name: str) -> None:
         """Push a name onto the stack."""
         self.stack.append(name)
@@ -202,6 +228,15 @@ class NamespaceMixin:
 
         with self._normalize_namespace(namespace=namespace).pushed(*names):
             yield
+
+    def namespace_suggest(
+        self, data: str, delta: bool = True, namespace: Namespace = None
+    ) -> _Optional[str]:
+        """Find the shortest name suggestion."""
+
+        return self._normalize_namespace(namespace=namespace).suggest(
+            data, delta=delta
+        )
 
     def push_name(self, name: str, namespace: Namespace = None) -> None:
         """Push a name onto the stack."""
