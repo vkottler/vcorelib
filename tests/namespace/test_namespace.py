@@ -46,6 +46,10 @@ def test_namespace_basic():
         "a.b.c.d"
     ]
 
+    assert inst.namespace_suggest("a.b") == ".c"
+    assert inst.namespace_suggest("a.b.c") is None
+    assert inst.namespace_suggest("a.b.c.") == "d"
+
 
 def test_namespace_search_two():
     """Test that we can search namespaces for names."""
