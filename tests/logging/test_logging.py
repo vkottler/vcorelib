@@ -24,8 +24,7 @@ def test_log_queue_handler():
     logger = getLogger()
     assert queue_handler(logger)
 
-    # Can change second argument to None after Python 3.8 it seems.
-    assert normalize(LoggerAdapter(logger, {}))
+    assert normalize(LoggerAdapter(logger))
 
 
 def test_logger_mixin_basic():
