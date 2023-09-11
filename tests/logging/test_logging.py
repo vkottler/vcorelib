@@ -3,10 +3,10 @@ vcorelib - Test the 'logging' module.
 """
 
 # internal
-from logging import getLogger
+from logging import LoggerAdapter, getLogger
 
 # module under test
-from vcorelib.logging import LoggerMixin, log_time
+from vcorelib.logging import LoggerMixin, log_time, normalize, queue_handler
 
 
 def test_log_time_basic():
@@ -16,6 +16,16 @@ def test_log_time_basic():
     with log_time(log, "Example"):
         for _ in range(100):
             pass
+
+
+def test_log_queue_handler():
+    """Test basic queue-related logging methods."""
+
+    logger = getLogger()
+    assert queue_handler(logger)
+
+    # Can change second argument to None after Python 3.8 it seems.
+    assert normalize(LoggerAdapter(logger, {}))
 
 
 def test_logger_mixin_basic():
