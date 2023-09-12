@@ -4,4 +4,3 @@ ruamel.yaml
 tomli
 tomli-w
 importlib-resources
-uvloop; sys_platform != 'win32' and sys_platform != 'cygwin'

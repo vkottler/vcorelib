@@ -10,12 +10,12 @@ requirements:
   - tomli
   - tomli-w
   - importlib-resources
-  - "uvloop; sys_platform != 'win32' and sys_platform != 'cygwin'"
 
 dev_requirements:
   - pytest-asyncio
   - setuptools-wrapper
   - types-setuptools
+  - "uvloop; sys_platform != 'win32' and sys_platform != 'cygwin'"
 
 init_local: |
   DEFAULT_INDENT = 2
