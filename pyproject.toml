@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta:__legacy__"
 
 [project]
 name = "vcorelib"
-version = "2.8.0"
+version = "2.8.1"
 description = "A collection of core Python utilities."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -37,6 +37,8 @@ test = [
   "yamllint",
   "yambs",
   "vmklib",
+  "sphinx",
+  "sphinx-book-theme",
   "pytest-asyncio",
   "setuptools-wrapper",
   "types-setuptools"
