@@ -7,6 +7,9 @@ import argparse
 import logging
 from typing import Iterable, Iterator
 
+# internal
+from vcorelib.platform import is_windows
+
 DEFAULT_FORMAT = "%(name)-36s - %(levelname)-6s - %(message)s"
 
 
@@ -22,7 +25,9 @@ def init_logging(
         )
 
 
-def logging_args(parser: argparse.ArgumentParser) -> None:
+def logging_args(
+    parser: argparse.ArgumentParser, curses: bool = True, uvloop: bool = True
+) -> None:
     """Add logging related command-line arguments to a parser."""
 
     parser.add_argument(
@@ -34,11 +39,20 @@ def logging_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "-q", "--quiet", action="store_true", help="set to reduce output"
     )
-    parser.add_argument(
-        "--curses",
-        action="store_true",
-        help="whether or not to use curses.wrapper when starting",
-    )
+
+    if curses:
+        parser.add_argument(
+            "--curses",
+            action="store_true",
+            help="whether or not to use curses.wrapper when starting",
+        )
+
+    if uvloop and not is_windows():
+        parser.add_argument(
+            "--no-uvloop",
+            action="store_true",
+            help="whether or not to disable uvloop as event loop driver",
+        )
 
 
 def forward_flags(
@@ -56,4 +70,4 @@ def forward_logging_flags(args: argparse.Namespace) -> Iterator[str]:
     Forward logging-related flags passed to this program to some other
     program.
     """
-    yield from forward_flags(args, ["verbose", "quiet", "curses"])
+    yield from forward_flags(args, ["verbose", "quiet", "curses", "no_uvloop"])
