@@ -43,10 +43,14 @@ def test_namespace_basic():
     inst.push_name("a")
     assert inst.pop_name("a") == "a"
 
-    assert list(inst.namespace_search("a", "b", "c", pattern="d")) == [
-        "a.b.c.d",
-        "a.b.c.d.e",
-    ]
+    assert sorted(
+        list(inst.namespace_search("a", "b", "c", pattern="d"))
+    ) == sorted(
+        [
+            "a.b.c.d",
+            "a.b.c.d.e",
+        ]
+    )
 
     assert inst.namespace_suggest("a.b") == ".c"
     assert inst.namespace_suggest("a.b.c") is None

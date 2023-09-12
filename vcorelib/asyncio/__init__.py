@@ -165,8 +165,12 @@ def try_uvloop_runner(
             with _suppress(ImportError):
                 import uvloop
 
+                # Try-catch and type ignore can be removed if 3.10 gets
+                # dropped.
                 try:
-                    from asyncio import Runner
+                    from asyncio import (
+                        Runner,  # type: ignore[unused-ignore,attr-defined]
+                    )
 
                     eloop = stack.enter_context(
                         Runner(debug=debug, loop_factory=uvloop.new_event_loop)
