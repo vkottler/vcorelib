@@ -27,3 +27,7 @@ mypy_local: |
 
   [mypy-cerberus.*]
   ignore_missing_imports = True
+
+  # Needed for windows.
+  [mypy-uvloop.*]
+  ignore_missing_imports = True
