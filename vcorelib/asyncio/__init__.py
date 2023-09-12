@@ -8,9 +8,11 @@ from __future__ import annotations
 from asyncio import AbstractEventLoop as _AbstractEventLoop
 from asyncio import CancelledError as _CancelledError
 from asyncio import Event as _Event
+from asyncio import Runner
 from asyncio import Task as _Task
 from asyncio import all_tasks as _all_tasks
 from asyncio import get_event_loop as _get_event_loop
+from contextlib import ExitStack, contextmanager
 from contextlib import suppress as _suppress
 from logging import getLogger as _getLogger
 import signal as _signal
@@ -20,6 +22,7 @@ from typing import Awaitable as _Awaitable
 from typing import Callable as _Callable
 from typing import Coroutine as _Coroutine
 from typing import Iterable as _Iterable
+from typing import Iterator
 from typing import List as _List
 from typing import Optional as _Optional
 from typing import Set as _Set
@@ -148,30 +151,54 @@ def all_stop_signals() -> _Set[int]:
     }
 
 
+@contextmanager
+def try_uvloop_runner(
+    debug: bool = None, enable: bool = True
+) -> Iterator[_Optional[Runner]]:
+    """Try to set up an asyncio runner using uvloop."""
+
+    result = None
+
+    with ExitStack() as stack:
+        if enable:
+            with _suppress(ImportError):
+                import uvloop  # pylint: disable=import-outside-toplevel
+
+                result = stack.enter_context(
+                    Runner(debug=debug, loop_factory=uvloop.new_event_loop)
+                )
+
+        yield result
+
+
 def run_handle_stop(
     stop_sig: _Event,
     task: _Coroutine[None, None, T],
     eloop: _AbstractEventLoop = None,
     signals: _Iterable[int] = None,
+    try_uvloop: bool = True,
 ) -> T:
     """
     Publish the stop signal on keyboard interrupt and wait for the task to
     complete.
     """
 
-    eloop = normalize_eloop(eloop)
-    to_run = eloop.create_task(task)
+    with try_uvloop_runner(enable=try_uvloop):
+        eloop = normalize_eloop(eloop)
 
-    # Register signal handlers if signals were provided.
-    if signals is not None:
-        setter = event_setter(stop_sig, eloop)
-        for signal in signals:
-            _signal.signal(signal, setter)
+        # eloop = normalize_eloop(eloop)
+        to_run = eloop.create_task(task)
 
-    while True:
-        try:
-            return eloop.run_until_complete(to_run)
-        except KeyboardInterrupt:
-            print("Keyboard interrupt.")
-            assert not stop_sig.is_set(), "Stop signal already set!"
-            eloop.call_soon_threadsafe(stop_sig.set)
+        # Register signal handlers if signals were provided.
+        if signals is not None:
+            setter = event_setter(stop_sig, eloop)
+            for signal in signals:
+                _signal.signal(signal, setter)
+
+        while True:
+            try:
+                return eloop.run_until_complete(to_run)
+            except KeyboardInterrupt:
+                print("Keyboard interrupt.")
+                assert not stop_sig.is_set(), "Stop signal already set!"
+                eloop.call_soon_threadsafe(stop_sig.set)

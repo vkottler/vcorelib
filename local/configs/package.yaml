@@ -10,6 +10,7 @@ requirements:
   - tomli
   - tomli-w
   - importlib-resources
+  - "uvloop; sys_platform != 'win32'"
 
 dev_requirements:
   - pytest-asyncio
