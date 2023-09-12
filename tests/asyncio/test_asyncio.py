@@ -22,7 +22,11 @@ from tests.asyncio.interrupt_tester import task_runner
 
 # module under test
 from vcorelib import PKG_NAME
-from vcorelib.asyncio import log_task_exception, run_handle_stop
+from vcorelib.asyncio import (
+    log_task_exception,
+    normalize_eloop,
+    run_handle_stop,
+)
 from vcorelib.paths.context import linked_to
 
 TestIteration = Callable[[int], bool]
@@ -65,6 +69,9 @@ def test_run_handle_interrupt_process():
     """
     Test that we can gracefully shut down processes running in an event loop.
     """
+
+    # For coverage.
+    assert normalize_eloop()
 
     assert iterative_tester(
         handle_interrupt_process_test, 20

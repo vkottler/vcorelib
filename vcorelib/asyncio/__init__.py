@@ -8,7 +8,6 @@ from __future__ import annotations
 from asyncio import AbstractEventLoop as _AbstractEventLoop
 from asyncio import CancelledError as _CancelledError
 from asyncio import Event as _Event
-from asyncio import Runner
 from asyncio import Task as _Task
 from asyncio import all_tasks as _all_tasks
 from asyncio import get_event_loop as _get_event_loop
@@ -91,7 +90,9 @@ def shutdown_loop(
 
 
 def run_handle_interrupt(
-    to_run: _Awaitable[_Any], eloop: _AbstractEventLoop = None
+    to_run: _Awaitable[_Any],
+    eloop: _AbstractEventLoop = None,
+    enable_uvloop: bool = True,
 ) -> _Optional[_Any]:
     """
     Run a task in an event loop and gracefully handle keyboard interrupts.
@@ -99,12 +100,12 @@ def run_handle_interrupt(
     Return the result of the awaitable or None if execution was interrupted.
     """
 
-    result = None
-    eloop = normalize_eloop(eloop)
-    try:
-        result = eloop.run_until_complete(to_run)
-    except KeyboardInterrupt:
-        shutdown_loop(eloop)
+    with try_uvloop_runner(eloop=eloop, enable=enable_uvloop) as loop:
+        result = None
+        try:
+            result = loop.run_until_complete(to_run)
+        except KeyboardInterrupt:
+            shutdown_loop(loop)
 
     return result
 
@@ -153,22 +154,29 @@ def all_stop_signals() -> _Set[int]:
 
 @contextmanager
 def try_uvloop_runner(
-    debug: bool = None, enable: bool = True
-) -> Iterator[_Optional[Runner]]:
+    debug: bool = None, eloop: _AbstractEventLoop = None, enable: bool = True
+) -> Iterator[_AbstractEventLoop]:
     """Try to set up an asyncio runner using uvloop."""
 
-    result = None
+    # pylint: disable=import-outside-toplevel
 
     with ExitStack() as stack:
-        if enable:
+        if enable and eloop is None:
             with _suppress(ImportError):
-                import uvloop  # pylint: disable=import-outside-toplevel
+                import uvloop
 
-                result = stack.enter_context(
-                    Runner(debug=debug, loop_factory=uvloop.new_event_loop)
-                )
+                try:
+                    from asyncio import Runner
 
-        yield result
+                    eloop = stack.enter_context(
+                        Runner(debug=debug, loop_factory=uvloop.new_event_loop)
+                    ).get_loop()
+                except ImportError:  # pragma: nocover
+                    uvloop.install()
+
+        yield normalize_eloop(eloop)
+
+    # pylint: enable=import-outside-toplevel
 
 
 def run_handle_stop(
@@ -176,29 +184,26 @@ def run_handle_stop(
     task: _Coroutine[None, None, T],
     eloop: _AbstractEventLoop = None,
     signals: _Iterable[int] = None,
-    try_uvloop: bool = True,
+    enable_uvloop: bool = True,
 ) -> T:
     """
     Publish the stop signal on keyboard interrupt and wait for the task to
     complete.
     """
 
-    with try_uvloop_runner(enable=try_uvloop):
-        eloop = normalize_eloop(eloop)
-
-        # eloop = normalize_eloop(eloop)
-        to_run = eloop.create_task(task)
+    with try_uvloop_runner(eloop=eloop, enable=enable_uvloop) as loop:
+        to_run = loop.create_task(task)
 
         # Register signal handlers if signals were provided.
         if signals is not None:
-            setter = event_setter(stop_sig, eloop)
+            setter = event_setter(stop_sig, eloop=loop)
             for signal in signals:
                 _signal.signal(signal, setter)
 
         while True:
             try:
-                return eloop.run_until_complete(to_run)
+                return loop.run_until_complete(to_run)
             except KeyboardInterrupt:
                 print("Keyboard interrupt.")
                 assert not stop_sig.is_set(), "Stop signal already set!"
-                eloop.call_soon_threadsafe(stop_sig.set)
+                loop.call_soon_threadsafe(stop_sig.set)
