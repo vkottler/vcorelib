@@ -38,12 +38,14 @@ def test_namespace_basic():
     with inst.names_pushed("a", "b", "c"):
         assert inst.namespace() == "a.b.c"
         assert inst.namespace("d") == "a.b.c.d"
+        assert inst.namespace("d.e") == "a.b.c.d.e"
     assert inst.namespace("d") == "d"
     inst.push_name("a")
     assert inst.pop_name("a") == "a"
 
     assert list(inst.namespace_search("a", "b", "c", pattern="d")) == [
-        "a.b.c.d"
+        "a.b.c.d",
+        "a.b.c.d.e",
     ]
 
     assert inst.namespace_suggest("a.b") == ".c"
