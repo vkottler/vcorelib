@@ -9,10 +9,10 @@ from vcorelib.math.analysis import (
     MovingAverage,
     MovingSum,
     WeightedAverage,
-    ns_to_s,
 )
 from vcorelib.math.analysis.rate import RateTracker
 from vcorelib.math.analysis.rate.limiter import RateLimiter
+from vcorelib.math.constants import BILLION, MILLION, from_nanos, to_nanos
 from vcorelib.math.time import (
     TIMER,
     LoggerType,
@@ -26,6 +26,10 @@ from vcorelib.math.time import (
 from vcorelib.math.unit import KIBI_UNITS, SI_UNITS, UnitSystem, unit_traverse
 
 __all__ = [
+    "MILLION",
+    "BILLION",
+    "from_nanos",
+    "to_nanos",
     "UnitSystem",
     "SI_UNITS",
     "KIBI_UNITS",
@@ -42,7 +46,6 @@ __all__ = [
     "MovingAverage",
     "RateLimiter",
     "RateTracker",
-    "ns_to_s",
     "FloatBuffer",
     "MovingSum",
     "WeightedAverage",

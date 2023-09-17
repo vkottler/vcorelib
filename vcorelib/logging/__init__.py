@@ -4,8 +4,8 @@ Utilities for logging information.
 
 # built-in
 from contextlib import contextmanager
+from logging import Formatter, Logger, LoggerAdapter, LogRecord
 from logging import INFO as _INFO
-from logging import Logger, LoggerAdapter, LogRecord
 from logging import getLogger as _GetLogger
 from logging.handlers import QueueHandler
 from queue import SimpleQueue
@@ -15,6 +15,7 @@ from typing import Tuple
 # internal
 from vcorelib.logging.args import (
     DEFAULT_FORMAT,
+    DEFAULT_TIME_FORMAT,
     forward_flags,
     forward_logging_flags,
     init_logging,
@@ -31,6 +32,7 @@ __all__ = [
     "LogRecordQueue",
     "normalize",
     "DEFAULT_FORMAT",
+    "DEFAULT_TIME_FORMAT",
     "init_logging",
     "logging_args",
     "forward_flags",
@@ -67,7 +69,12 @@ def queue_handler(
         handler = QueueHandler(queue)
 
     if root_formatter:
-        handler.setFormatter(Logger.root.handlers[0].formatter)
+        # There may not be an existing handler, so use a sane default.
+        handler.setFormatter(
+            Logger.root.handlers[0].formatter
+            if Logger.root.handlers
+            else Formatter(DEFAULT_TIME_FORMAT)
+        )
 
     normalize(logger).addHandler(handler)
 

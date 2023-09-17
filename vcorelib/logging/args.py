@@ -11,6 +11,7 @@ from typing import Iterable, Iterator
 from vcorelib.platform import is_windows
 
 DEFAULT_FORMAT = "%(name)-36s - %(levelname)-6s - %(message)s"
+DEFAULT_TIME_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
 
 def init_logging(
@@ -62,7 +63,7 @@ def forward_flags(
 
     for name in names:
         if getattr(args, name, False):
-            yield f"--{name}"
+            yield f"--{name.replace('_', '-')}"
 
 
 def forward_logging_flags(args: argparse.Namespace) -> Iterator[str]:
