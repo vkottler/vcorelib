@@ -3,7 +3,6 @@ A module implementing interfaces for finding files.
 """
 
 # built-in
-from logging import Logger as _Logger
 from pathlib import Path as _Path
 from typing import Callable as _Callable
 from typing import Dict as _Dict
@@ -18,6 +17,7 @@ from urllib.parse import urlparse as _urlparse
 import importlib_resources as _importlib_resources
 
 # internal
+from vcorelib.logging import LoggerType
 from vcorelib.paths.base import Pathlike, normalize
 
 
@@ -27,7 +27,7 @@ def _construct_search_path(
     relative_to: Pathlike = None,
     package: str = None,
     package_subdir: str = "data",
-    logger: _Logger = None,
+    logger: LoggerType = None,
 ) -> _List[Pathlike]:
     """Construct a list of paths to search for a resource."""
 
@@ -63,13 +63,13 @@ def _construct_search_path(
 
 
 FileFinder = _Callable[
-    [_ParseResult, str, _Optional[_Logger]], _Optional[_Path]
+    [_ParseResult, str, _Optional[LoggerType]], _Optional[_Path]
 ]
 FINDERS: _Dict[str, FileFinder] = {}
 
 
 def find_package_file(
-    parsed: _ParseResult, package_subdir: str, logger: _Optional[_Logger]
+    parsed: _ParseResult, package_subdir: str, logger: _Optional[LoggerType]
 ) -> _Optional[_Path]:
     """Find a file from a package."""
 
@@ -99,7 +99,7 @@ def find_file(
     relative_to: Pathlike = None,
     package: str = None,
     package_subdir: str = "data",
-    logger: _Logger = None,
+    logger: LoggerType = None,
 ) -> _Optional[_Path]:
     """Combines a few simple strategies to locate a file on disk."""
 

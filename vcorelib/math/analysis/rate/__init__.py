@@ -8,14 +8,10 @@ from typing import Iterator as _Iterator
 
 # internal
 from vcorelib.math.analysis.weighted import WeightedAverage as _WeightedAverage
+from vcorelib.math.constants import from_nanos
 from vcorelib.math.time import TIMER as _TIMER
 from vcorelib.math.time import Timer as _Timer
 from vcorelib.math.time import default_time_ns as _default_time_ns
-
-
-def ns_to_s(nanos: int) -> float:
-    """Convert integer nanoseconds to floating-point seconds."""
-    return float(nanos / 1e9)
 
 
 class RateTracker:
@@ -45,7 +41,7 @@ class RateTracker:
             # Consider 'value' as the amount of change since the last data
             # entry, so divide value by the change in time to get a rate.
             self.with_dt(
-                ns_to_s(time_ns - self.prev_time_ns), value=self.accumulated
+                from_nanos(time_ns - self.prev_time_ns), value=self.accumulated
             )
             self.accumulated = 0
 
@@ -75,7 +71,7 @@ class RateTracker:
 
         with timer.measure_ns() as token:
             yield
-        self.with_dt(ns_to_s(timer.result(token)), value=value)
+        self.with_dt(from_nanos(timer.result(token)), value=value)
 
     def reset(self) -> None:
         """Reset this rate tracker."""

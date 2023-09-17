@@ -17,6 +17,7 @@ from typing import Tuple as _Tuple
 from typing import Union as _Union
 
 # internal
+from vcorelib.math.constants import to_nanos
 from vcorelib.math.unit import KIBI_UNITS as _KIBI_UNITS
 from vcorelib.math.unit import SI_UNITS as _SI_UNITS
 from vcorelib.math.unit import UnitSystem as _UnitSystem
@@ -91,8 +92,8 @@ def nano_str(
 def rate_str(period_s: float) -> str:
     """Get a string representing a rate in Hz."""
 
-    period_str = nano_str(int(period_s * 1e9))
-    freq_str = nano_str(int((1.0 / period_s) * 1e9), prefix_space=True)
+    period_str = nano_str(to_nanos(period_s))
+    freq_str = nano_str(to_nanos(1.0 / period_s), prefix_space=True)
     return f"{freq_str}Hz ({period_str}s)"
 
 
