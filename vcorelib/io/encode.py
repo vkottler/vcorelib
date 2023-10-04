@@ -6,9 +6,11 @@ A module implementing various data-file encoders.
 from configparser import ConfigParser
 from json import dump
 from logging import getLogger
+from os import linesep
 from typing import cast as _cast
 
 # third-party
+from ruamel.yaml import YAML
 from tomli_w import dumps
 
 # internal
@@ -17,7 +19,6 @@ from vcorelib.dict import GenericStrDict as _GenericStrDict
 from vcorelib.dict import consume
 from vcorelib.io.types import DataStream as _DataStream
 from vcorelib.io.types import JsonObject as _JsonObject
-from vcorelib.io.types import YAML_INTERFACE as _YAML_INTERFACE
 from vcorelib.logging import LoggerType
 from vcorelib.math.time import TIMER as _TIMER
 
@@ -42,12 +43,23 @@ def encode_json(
 
 
 def encode_yaml(
-    configs: _JsonObject, ostream: _DataStream, _: LoggerType = _LOG, **kwargs
+    configs: _JsonObject,
+    ostream: _DataStream,
+    _: LoggerType = _LOG,
+    sequence: int = 4,
+    offset: int = 2,
+    mapping: int = 2,
+    document_start: bool = True,
+    **kwargs,
 ) -> int:
     """Write config data as YAML to the output stream."""
 
     with _TIMER.measure_ns() as token:
-        _YAML_INTERFACE.dump(configs, ostream, **kwargs)
+        with YAML(output=ostream) as yaml:
+            yaml.indent(sequence=sequence, offset=offset, mapping=mapping)
+            if document_start:
+                ostream.write("---" + linesep)
+            yaml.dump(configs, **kwargs)
     return _TIMER.result(token)
 
 
