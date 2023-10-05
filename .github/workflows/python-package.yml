@@ -20,6 +20,7 @@ jobs:
         python-version:
           - "3.10"
           - "3.11"
+          - "3.12"
         system:
           - ubuntu-latest
           - macos-latest
@@ -57,7 +58,7 @@ jobs:
         env:
           PY_TEST_EXTRA_ARGS: --cov-report=xml
 
-      - uses: codecov/codecov-action@main
+      - uses: codecov/codecov-action@v3
 
       - run: mk pypi-upload-ci
         env:
@@ -70,7 +71,7 @@ jobs:
 
       - run: |
           mk python-release owner=vkottler \
-                            repo=vcorelib version=3.0.0
+                            repo=vcorelib version=3.0.1
         if: |
           matrix.python-version == '3.11'
           && matrix.system == 'ubuntu-latest'
