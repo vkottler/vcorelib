@@ -202,11 +202,12 @@ def try_uvloop_runner(
                     # type: ignore[attr-defined,unused-ignore]
                     eloop = stack.enter_context(
                         getattr(_asyncio, "Runner")(
-                            debug=debug, loop_factory=uvloop.new_event_loop
+                            debug=debug,
+                            loop_factory=uvloop.new_event_loop,  # type: ignore
                         )
                     ).get_loop()
                 except AttributeError:  # pragma: nocover
-                    uvloop.install()
+                    uvloop.install()  # type: ignore
 
         yield normalize_eloop(eloop)
 
