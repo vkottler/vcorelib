@@ -163,6 +163,10 @@ class LoadResult(NamedTuple):
     success: bool
     time_ns: int = -1
 
+    def __bool__(self) -> bool:
+        """A simple wrapper."""
+        return self.success
+
     def __eq__(self, other: object) -> bool:
         """Don't compare timing when checking equivalence."""
         assert isinstance(other, (LoadResult, tuple))

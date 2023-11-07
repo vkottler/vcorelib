@@ -100,6 +100,7 @@ def find_file(
     package: str = None,
     package_subdir: str = "data",
     logger: LoggerType = None,
+    strict: bool = False,
 ) -> _Optional[_Path]:
     """Combines a few simple strategies to locate a file on disk."""
 
@@ -121,6 +122,8 @@ def find_file(
     if path.is_absolute():
         if path.exists():
             return path
+
+        assert not strict, f"Couldn't find '{path}'!"
         return None
 
     # Return the first file we find on the search path, if we find one.
@@ -145,4 +148,5 @@ def find_file(
             if logger is not None:
                 logger.debug("Didn't find '%s' at '%s'.", path, search)
 
+    assert not strict, f"Couldn't find '{path}'!"
     return None
