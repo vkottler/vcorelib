@@ -4,6 +4,8 @@ A module exposing data-file encoders and decoders.
 
 # built-in
 import logging
+from pathlib import Path
+from typing import List
 from typing import Optional as _Optional
 
 # internal
@@ -75,6 +77,7 @@ class DataArbiterBase:
         maxsplit: int = 1,
         expect_overwrite: bool = False,
         strategy: MergeStrategy = MergeStrategy.RECURSIVE,
+        files_loaded: List[Path] = None,
         **kwargs,
     ) -> LoadResult:
         """Attempt to load data from a file."""
@@ -82,6 +85,10 @@ class DataArbiterBase:
         result = LoadResult({}, False)
         if logger is None:
             logger = self.logger
+
+        # Keep track of all files that get loaded.
+        if files_loaded is None:
+            files_loaded = []
 
         path = normalize(pathlike)
         if path.is_file():
@@ -96,6 +103,8 @@ class DataArbiterBase:
                     logger,
                     **kwargs,
                 )
+                if result:
+                    files_loaded.append(path)
 
                 # Resolve includes if necessary.
                 if includes_key is not None:
@@ -103,16 +112,21 @@ class DataArbiterBase:
                         # Load the included file.
                         result = result.merge(
                             self.decode(
-                                find_file(include, relative_to=path),
+                                find_file(
+                                    include, relative_to=path, strict=True
+                                ),
                                 logger,
                                 require_success=require_success,
                                 includes_key=includes_key,
+                                files_loaded=files_loaded,
                                 **kwargs,
                             ),
                             expect_overwrite=expect_overwrite,
                             logger=logger,
                             strategy=strategy,
                         )
+                        if result:
+                            files_loaded.append(include)
 
                     for include in consume(
                         result.data, f"{includes_key}_left", []
@@ -120,10 +134,13 @@ class DataArbiterBase:
                         # Load the included file.
                         result = result.merge(
                             self.decode(
-                                find_file(include, relative_to=path),
+                                find_file(
+                                    include, relative_to=path, strict=True
+                                ),
                                 logger,
                                 require_success=require_success,
                                 includes_key=includes_key,
+                                files_loaded=files_loaded,
                                 **kwargs,
                             ),
                             is_left=True,
@@ -131,6 +148,8 @@ class DataArbiterBase:
                             logger=logger,
                             strategy=strategy,
                         )
+                        if result:
+                            files_loaded.append(include)
 
         if not result.success:
             logger.error("Failed to decode '%s'.", path)
