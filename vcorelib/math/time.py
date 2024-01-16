@@ -11,6 +11,7 @@ from logging import LoggerAdapter as _LoggerAdapter
 from math import floor as _floor
 from time import perf_counter_ns as _perf_counter_ns
 from time import time_ns as _time_ns
+from typing import Any as _Any
 from typing import Dict as _Dict
 from typing import Iterator as _Iterator
 from typing import Tuple as _Tuple
@@ -102,7 +103,7 @@ def byte_count_str(byte_count: int) -> str:
     return nano_str(byte_count, False, 99, _KIBI_UNITS, True) + "B"
 
 
-LoggerType = _Union[_Logger, _LoggerAdapter]
+LoggerType = _Union[_Logger, _LoggerAdapter[_Any]]
 
 
 class Timer:

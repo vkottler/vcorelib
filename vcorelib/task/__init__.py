@@ -29,7 +29,7 @@ from vcorelib.target import Substitutions, Target
 Outbox = _Dict[str, _Any]
 Inbox = _Dict[str, Outbox]
 TaskExecute = _Callable[[Inbox, Outbox], _Coroutine[_Any, _Any, bool]]
-TaskGenerator = _Callable[..., _asyncio.Task]
+TaskGenerator = _Callable[..., _asyncio.Task[_Any]]
 
 
 class TaskFailed(Exception):

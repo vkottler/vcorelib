@@ -15,7 +15,24 @@ from tests.resources import get_test_schemas, resource
 
 # module under test
 from vcorelib.dict import codec
+from vcorelib.paths.context import tempfile
 from vcorelib.schemas.base import SchemaValidationError
+
+
+def test_dict_codec_file_cache():
+    """Test the 'file_cache' method."""
+
+    with tempfile(suffix=".yaml") as path:
+        with codec.BasicDictCodec.file_cache(path) as inst:
+            inst.data["a"] = 1
+            inst.data["b"] = 2
+            inst.data["c"] = 3
+
+        # Load and confirm.
+        inst = codec.BasicDictCodec.decode(path)
+        assert inst.data["a"] == 1
+        assert inst.data["b"] == 2
+        assert inst.data["c"] == 3
 
 
 def test_dict_codec_basic():
