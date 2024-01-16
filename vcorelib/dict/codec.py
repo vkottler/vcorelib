@@ -5,6 +5,10 @@ exported as dictionaries.
 
 # built-in
 import abc as _abc
+from contextlib import contextmanager as _contextmanager
+from typing import Any as _Any
+from typing import Dict as _Dict
+from typing import Iterator as _Iterator
 from typing import Optional as _Optional
 from typing import Type as _Type
 from typing import TypeVar as _TypeVar
@@ -85,16 +89,47 @@ class JsonCodec(_abc.ABC, SchemaMixin):
         schemas: _SchemaMap = None,
         dest_attr: str = "data",
         verify: bool = True,
+        require_success: bool = True,
+        default_data: _JsonObject = None,
         **kwargs,
     ) -> T:
         """Decode an object instance from data loaded from a file."""
 
+        decoded = arbiter.decode(
+            pathlike, require_success=require_success, **kwargs
+        )
+
         return cls.create(
-            arbiter.decode(pathlike, require_success=True, **kwargs).data,
+            decoded.data if decoded or not default_data else default_data,
             schemas=schemas,
             dest_attr=dest_attr,
             verify=verify,
         )
+
+    @classmethod
+    @_contextmanager
+    def file_cache(
+        cls: _Type[T],
+        pathlike: _Pathlike,
+        arbiter: _DataArbiter = _ARBITER,
+        encode_kwargs: _Dict[str, _Any] = None,
+        require_success: bool = False,
+        **kwargs,
+    ) -> _Iterator[T]:
+        """Manage an instance of this class as a disk-backed file."""
+
+        inst = cls.decode(
+            pathlike,
+            arbiter=arbiter,
+            require_success=require_success,
+            **kwargs,
+        )
+        try:
+            yield inst
+        finally:
+            if encode_kwargs is None:
+                encode_kwargs = {}
+            inst.encode(pathlike, arbiter=arbiter, **encode_kwargs)
 
 
 V = _TypeVar("V", bound="DictCodec")
