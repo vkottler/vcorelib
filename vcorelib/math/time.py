@@ -141,9 +141,13 @@ class Timer:
         message: str,
         *args,
         level: int = _INFO,
+        reminder: bool = False,
         **kwargs,
     ) -> _Iterator[None]:
         """Log how long the caller's context took to execute."""
+
+        if reminder:
+            log.log(level, message + " is executing.", *args, **kwargs)
 
         with self.measure_ns() as token:
             yield

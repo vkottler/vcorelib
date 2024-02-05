@@ -97,9 +97,11 @@ class DataArbiterBase:
                 # external code to treat data files as templates.
                 result = self.decode_stream(
                     get_file_ext(path, maxsplit=maxsplit),
-                    preprocessor(path_fd)
-                    if preprocessor is not None
-                    else path_fd,
+                    (
+                        preprocessor(path_fd)
+                        if preprocessor is not None
+                        else path_fd
+                    ),
                     logger,
                     **kwargs,
                 )

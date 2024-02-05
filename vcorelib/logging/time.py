@@ -17,10 +17,13 @@ def log_time(
     message: str,
     *args,
     level: int = _INFO,
+    reminder: bool = False,
     **kwargs,
 ) -> _Iterator[None]:
     """
     A simple context manager for conveniently logging time taken for a task.
     """
-    with TIMER.log(log, message, *args, level=level, **kwargs):
+    with TIMER.log(
+        log, message, *args, level=level, reminder=reminder, **kwargs
+    ):
         yield
