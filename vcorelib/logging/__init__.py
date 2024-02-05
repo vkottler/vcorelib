@@ -105,8 +105,17 @@ class LoggerMixin:  # pylint: disable=too-few-public-methods
         message: str,
         *args,
         level: int = _INFO,
+        reminder: bool = False,
         **kwargs,
     ) -> _Iterator[None]:
         """A simple wrapper."""
-        with log_time(self.logger, message, *args, level=level, **kwargs):
+
+        with log_time(
+            self.logger,
+            message,
+            *args,
+            level=level,
+            reminder=reminder,
+            **kwargs,
+        ):
             yield
