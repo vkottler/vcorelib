@@ -30,6 +30,7 @@ def test_namespace_basic():
         """A sample class."""
 
     inst = NamespaceEntity()
+    assert inst.ns
 
     child = inst.child_namespace("test")
     with raises(IndexError):
