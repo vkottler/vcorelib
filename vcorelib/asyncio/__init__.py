@@ -64,7 +64,11 @@ def normalize_eloop(
     """Get the active event loop if one isn't provided explicitly."""
 
     if eloop is None:
-        eloop = _asyncio.get_event_loop()
+        try:
+            eloop = _asyncio.get_running_loop()
+        except RuntimeError:
+            eloop = _asyncio.new_event_loop()
+            _asyncio.set_event_loop(eloop)
     return eloop
 
 
