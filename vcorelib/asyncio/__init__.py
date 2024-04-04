@@ -129,11 +129,7 @@ def event_setter(
         LOG.info("Received signal %s.", rep)
 
         # Ensure scheduling 'stop_sig.set' is a nominal reaction to this
-        # signal. If not, raise an exception.
-        assert (
-            not stop_sig.is_set()
-        ), "Stop signal is set but received signal {rep}!"
-
+        # signal.
         normalize_eloop(eloop).call_soon_threadsafe(stop_sig.set)
 
     return setter
@@ -177,8 +173,7 @@ def run_handle_stop(
                 return loop.run_until_complete(to_run)
             except KeyboardInterrupt:
                 print("Keyboard interrupt.")
-                assert not stop_sig.is_set(), "Stop signal already set!"
-                loop.call_soon_threadsafe(stop_sig.set)
+                stop_sig.set()
 
 
 @contextmanager
