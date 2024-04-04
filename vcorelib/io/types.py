@@ -137,8 +137,7 @@ class FileExtension(Enum):
         """
         for file_ext in FileExtension:
             if file_ext.is_archive():
-                for candidate in file_ext.candidates(path, exists_only):
-                    yield candidate
+                yield from file_ext.candidates(path, exists_only)
 
     @staticmethod
     def data_candidates(
@@ -149,8 +148,7 @@ class FileExtension(Enum):
         """
         for file_ext in FileExtension:
             if file_ext.is_data():
-                for candidate in file_ext.candidates(path, exists_only):
-                    yield candidate
+                yield from file_ext.candidates(path, exists_only)
 
 
 class LoadResult(NamedTuple):
