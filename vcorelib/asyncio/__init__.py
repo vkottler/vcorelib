@@ -58,6 +58,15 @@ def log_exceptions(
     return [x for x in tasks if not x.done()]
 
 
+def new_eloop(set_current: bool = True) -> _asyncio.AbstractEventLoop:
+    """Get a new event loop."""
+
+    eloop = _asyncio.new_event_loop()
+    if set_current:
+        _asyncio.set_event_loop(eloop)
+    return eloop
+
+
 def normalize_eloop(
     eloop: _asyncio.AbstractEventLoop = None,
 ) -> _asyncio.AbstractEventLoop:
@@ -67,8 +76,7 @@ def normalize_eloop(
         try:
             eloop = _asyncio.get_running_loop()
         except RuntimeError:
-            eloop = _asyncio.new_event_loop()
-            _asyncio.set_event_loop(eloop)
+            eloop = new_eloop()
     return eloop
 
 
@@ -93,10 +101,10 @@ def shutdown_loop(
 
 
 def run_handle_interrupt(
-    to_run: _Awaitable[_Any],
+    to_run: _Awaitable[T],
     eloop: _asyncio.AbstractEventLoop = None,
     enable_uvloop: bool = True,
-) -> _Optional[_Any]:
+) -> _Optional[T]:
     """
     Run a task in an event loop and gracefully handle keyboard interrupts.
 
