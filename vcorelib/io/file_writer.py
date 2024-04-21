@@ -6,7 +6,7 @@ A module implementing an interface for writing to variably indented files.
 from contextlib import contextmanager
 from enum import Enum, auto
 from io import StringIO
-from os import linesep
+import os
 from pathlib import Path
 from typing import Iterator, List, Optional, TextIO, Tuple
 
@@ -49,6 +49,7 @@ class IndentedFileWriter:
         per_indent: int = 1,
         prefix: str = "",
         suffix: str = "",
+        linesep: str = os.linesep,
     ) -> None:
         """Initialize this instance."""
 
@@ -60,6 +61,8 @@ class IndentedFileWriter:
 
         self._prefix = prefix
         self._suffix = suffix
+
+        self.linesep = linesep
 
     @contextmanager
     def prefix(self, prefix: str) -> Iterator[None]:
@@ -93,13 +96,13 @@ class IndentedFileWriter:
     @staticmethod
     @contextmanager
     def from_path(
-        path: Path, space: str = " ", per_indent: int = 1
+        path: Path, space: str = " ", per_indent: int = 1, **kwargs
     ) -> Iterator["IndentedFileWriter"]:
         """Create an instance from a path as a managed context."""
 
         with path.open("w", encoding=DEFAULT_ENCODING) as stream:
             yield IndentedFileWriter(
-                stream, space=space, per_indent=per_indent
+                stream, space=space, per_indent=per_indent, **kwargs
             )
 
     @staticmethod
@@ -117,13 +120,13 @@ class IndentedFileWriter:
     @staticmethod
     @contextmanager
     def temporary(
-        space: str = " ", per_indent: int = 1
+        space: str = " ", per_indent: int = 1, **kwargs
     ) -> Iterator["IndentedFileWriter"]:
         """Create an instance from a temporary file as a managed context."""
 
         with tempfile() as tmp:
             with IndentedFileWriter.from_path(
-                tmp, space=space, per_indent=per_indent
+                tmp, space=space, per_indent=per_indent, **kwargs
             ) as writer:
                 yield writer
 
@@ -144,7 +147,7 @@ class IndentedFileWriter:
                 self.space * self.depth * self.per_indent if line_data else ""
             )
 
-            line = (indent + line_data).rstrip() + linesep
+            line = (indent + line_data).rstrip() + self.linesep
 
             self.stream.write(line)
             count += len(line)
