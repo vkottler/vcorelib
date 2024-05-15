@@ -3,6 +3,7 @@ A module implementing a file-info cache.
 """
 
 # built-in
+from contextlib import ExitStack as _ExitStack
 from contextlib import contextmanager as _contextmanager
 import logging as _logging
 from pathlib import Path as _Path
@@ -15,6 +16,7 @@ from typing import Tuple as _Tuple
 
 # internal
 from vcorelib.dict.cache import FileCache
+from vcorelib.io.types import JsonObject as _JsonObject
 from vcorelib.math.time import LoggerType
 from vcorelib.paths import Pathlike as _Pathlike
 from vcorelib.paths import normalize as _normalize
@@ -202,6 +204,24 @@ class FileInfoManager:
 
 
 @_contextmanager
+def file_info_manager(
+    data: _JsonObject, poll_cb: FileChangedCallback, **kwargs
+) -> _Iterator[FileInfoManager]:
+    """Create a file-info manager as a managed context."""
+
+    manager = FileInfoManager(
+        poll_cb, FileInfo.from_json(data, force=True), **kwargs
+    )
+    try:
+        yield manager
+    finally:
+        # Update dictionary data with the current cache contents.
+        data.clear()
+        for info in manager.infos.values():
+            info.to_json(data)
+
+
+@_contextmanager
 def file_info_cache(
     cache_path: _Pathlike,
     poll_cb: FileChangedCallback,
@@ -213,17 +233,13 @@ def file_info_cache(
 
     path = _normalize(cache_path)
     assert not path.is_dir(), f"'{path}' is a directory!"
-    with FileCache(path).loaded() as data:
-        manager = FileInfoManager(
+
+    with _ExitStack() as stack:
+        with file_info_manager(
+            stack.enter_context(FileCache(path).loaded()),
             poll_cb,
-            FileInfo.from_json(data, force=True),
             logger=logger,
             level=level,
             check_contents=check_contents,
-        )
-        yield manager
-
-        # Update dictionary data with the current cache contents.
-        data.clear()
-        for info in manager.infos.values():
-            info.to_json(data)
+        ) as manager:
+            yield manager

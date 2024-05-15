@@ -3,7 +3,7 @@ A module implementing an interface for writing to variably indented files.
 """
 
 # built-in
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 from enum import Enum, auto
 from io import StringIO
 import os
@@ -124,11 +124,15 @@ class IndentedFileWriter:
     ) -> Iterator["IndentedFileWriter"]:
         """Create an instance from a temporary file as a managed context."""
 
-        with tempfile() as tmp:
-            with IndentedFileWriter.from_path(
-                tmp, space=space, per_indent=per_indent, **kwargs
-            ) as writer:
-                yield writer
+        with ExitStack() as stack:
+            yield stack.enter_context(
+                IndentedFileWriter.from_path(
+                    stack.enter_context(tempfile()),
+                    space=space,
+                    per_indent=per_indent,
+                    **kwargs,
+                )
+            )
 
     def write(self, data: str) -> int:
         """
