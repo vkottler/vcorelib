@@ -19,6 +19,7 @@ class FloatBuffer:
         self._index: int = 0
         self.data: _List[float] = []
         self.depth: int = depth
+        self.elements: int = 0
 
         self.reset(initial=initial)
 
@@ -35,11 +36,22 @@ class FloatBuffer:
 
         self._index += 1
 
+        # Keep track of how full the buffer is.
+        if self.elements < self.depth:
+            self.elements += 1
+
         return oldest
+
+    @property
+    def saturated(self) -> bool:
+        """Determine if the buffer is saturated with elements yet."""
+        return self.elements == self.depth
 
     def reset(self, initial: float = 0.0) -> None:
         """Reset the buffer."""
+
         self.data = [initial for _ in range(self.depth)]
+        self.elements = 0
 
     def resize(self, depth: int, initial: float = 0.0) -> None:
         """Set a new depth for this buffer average and reset the values."""

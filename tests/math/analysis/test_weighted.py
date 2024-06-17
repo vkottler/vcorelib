@@ -20,3 +20,10 @@ def test_weighted_average_basic():
     expected = (10.0 / 6.0) + (1.0 * (5.0 / 6.0))
 
     assert average.average() == expected
+
+    assert not average.saturated
+
+    average.reset()
+    for _ in range(average.depth):
+        average(1.0)
+    assert average.saturated

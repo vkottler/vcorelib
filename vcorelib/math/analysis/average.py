@@ -79,6 +79,11 @@ class MovingAverage:
         self.min = initial
         self._initialized = False
 
+    @property
+    def saturated(self) -> bool:
+        """Determine if the buffer is saturated with elements yet."""
+        return self.buffer.saturated
+
     def resize(self, depth: int, initial: float = 0.0) -> None:
         """Set a new depth for this moving average and reset the value."""
 
