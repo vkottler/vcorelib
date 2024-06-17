@@ -10,7 +10,6 @@ from logging import Logger as _Logger
 from logging import LoggerAdapter as _LoggerAdapter
 from math import floor as _floor
 from time import perf_counter_ns as _perf_counter_ns
-from time import time_ns as _time_ns
 from typing import Any as _Any
 from typing import Dict as _Dict
 from typing import Iterator as _Iterator
@@ -19,6 +18,8 @@ from typing import Union as _Union
 
 # internal
 from vcorelib.math.constants import to_nanos
+from vcorelib.math.keeper import SimulatedTime as _SimulatedTime
+from vcorelib.math.keeper import TIME as _TIME
 from vcorelib.math.unit import KIBI_UNITS as _KIBI_UNITS
 from vcorelib.math.unit import SI_UNITS as _SI_UNITS
 from vcorelib.math.unit import UnitSystem as _UnitSystem
@@ -27,7 +28,19 @@ from vcorelib.math.unit import unit_traverse as _unit_traverse
 
 def default_time_ns() -> int:
     """Get a timestamp value using a default method."""
-    return _time_ns()
+    return _TIME()
+
+
+@contextmanager
+def simulated_time(
+    step_dt_ns: int = 1, start_ns: int = None
+) -> _Iterator[_SimulatedTime]:
+    """Take control over the default time source as a managed context."""
+
+    with _TIME.simulated(
+        step_dt_ns=step_dt_ns, start_ns=start_ns
+    ) as simulated:
+        yield simulated
 
 
 def seconds_str(seconds: int) -> _Tuple[str, int]:

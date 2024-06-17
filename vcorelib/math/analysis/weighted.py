@@ -22,6 +22,11 @@ class WeightedAverage:
         """This average's depth."""
         return self.signals.depth
 
+    @property
+    def saturated(self) -> bool:
+        """Determine if the buffer is saturated with elements yet."""
+        return self.signals.saturated and self.weights.saturated
+
     def reset(self) -> None:
         """Reset the average."""
         self.signals.reset()

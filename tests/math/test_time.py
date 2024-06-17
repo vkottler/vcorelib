@@ -3,7 +3,49 @@ vcorelib - Test the 'math.time' module.
 """
 
 # module under test
-from vcorelib.math import byte_count_str, nano_str, rate_str, seconds_str
+from vcorelib.math import (
+    BILLION,
+    byte_count_str,
+    default_time_ns,
+    nano_str,
+    rate_str,
+    seconds_str,
+    simulated_time,
+)
+
+
+def test_simulated_time_basic():
+    """
+    Test that we can take control over the global time source as a managed
+    context.
+    """
+
+    start = default_time_ns()
+
+    with simulated_time(start_ns=0) as sim_time:
+        assert default_time_ns() == 0
+        sim_time.step()
+        assert default_time_ns() == 1
+        sim_time.step(-1)
+        assert default_time_ns() == 0
+
+        sim_time.step_s(1.0)
+        assert default_time_ns() == BILLION
+
+        sim_time.step_s(-1.0)
+        assert default_time_ns() == 0
+
+    with simulated_time(100, start_ns=0) as sim_time:
+        assert default_time_ns() == 0
+        sim_time.step()
+        assert default_time_ns() == 100
+        sim_time.step(-2)
+        assert default_time_ns() == -100
+
+    with simulated_time() as sim_time:
+        assert default_time_ns() >= start
+
+    assert default_time_ns() >= start
 
 
 def test_nano_str_basic():
