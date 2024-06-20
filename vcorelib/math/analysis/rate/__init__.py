@@ -9,6 +9,7 @@ from typing import Iterator as _Iterator
 # internal
 from vcorelib.math.analysis.weighted import WeightedAverage as _WeightedAverage
 from vcorelib.math.constants import from_nanos
+from vcorelib.math.keeper import TimeSource
 from vcorelib.math.time import TIMER as _TIMER
 from vcorelib.math.time import Timer as _Timer
 from vcorelib.math.time import default_time_ns as _default_time_ns
@@ -17,12 +18,15 @@ from vcorelib.math.time import default_time_ns as _default_time_ns
 class RateTracker:
     """A class for managing rate information for some data channel."""
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(
+        self, source: TimeSource = _default_time_ns, **kwargs
+    ) -> None:
         """Initialize this rate tracker."""
 
         self.average = _WeightedAverage(**kwargs)
         self.prev_time_ns: int = 0
         self.accumulated: float = 0.0
+        self.source = source
 
     @property
     def value(self) -> float:
@@ -34,7 +38,7 @@ class RateTracker:
 
         # Use a default time if one wasn't provided.
         if time_ns is None:
-            time_ns = _default_time_ns()
+            time_ns = self.source()
 
         # Only start tracking when a second data point is encountered.
         if self.prev_time_ns != 0 and time_ns > self.prev_time_ns:

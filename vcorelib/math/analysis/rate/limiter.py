@@ -7,7 +7,6 @@ from typing import Callable as _Callable
 
 # internal
 from vcorelib.math.analysis.rate import RateTracker as _RateTracker
-from vcorelib.math.time import default_time_ns as _default_time_ns
 
 
 class RateLimiter:
@@ -42,7 +41,7 @@ class RateLimiter:
 
         # Use a default time if one wasn't provided.
         if time_ns is None:
-            time_ns = _default_time_ns()
+            time_ns = self.rate.source()
 
         if time_ns >= self.prev_time_ns + self.period_ns:
             self.prev_time_ns = time_ns
