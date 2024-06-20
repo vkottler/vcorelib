@@ -5,11 +5,14 @@ vcorelib - Test the 'math.time' module.
 # module under test
 from vcorelib.math import (
     BILLION,
+    SimulatedTime,
     byte_count_str,
     default_time_ns,
     nano_str,
     rate_str,
+    restore_time_source,
     seconds_str,
+    set_simulated_source,
     simulated_time,
 )
 
@@ -19,6 +22,10 @@ def test_simulated_time_basic():
     Test that we can take control over the global time source as a managed
     context.
     """
+
+    sim = SimulatedTime(1)
+    set_simulated_source(sim)
+    restore_time_source()
 
     start = default_time_ns()
 
