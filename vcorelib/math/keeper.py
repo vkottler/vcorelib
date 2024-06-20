@@ -45,6 +45,11 @@ class TimeKeeper:
         """Initialize this instance."""
 
         self.source = source
+        self.orig = self.source
+
+    def restore(self) -> None:
+        """Restore the original time source."""
+        self.source = self.orig
 
     @contextmanager
     def simulated(
@@ -59,13 +64,12 @@ class TimeKeeper:
         sim_time = SimulatedTime(step_dt_ns, start_ns=start_ns)
 
         # Update 'source' to power simulated time resolution.
-        orig = self.source
         self.source = sim_time
 
         try:
             yield sim_time
         finally:
-            self.source = orig
+            self.restore()
 
     def __call__(self) -> int:
         """Get time."""

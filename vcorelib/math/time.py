@@ -31,6 +31,21 @@ def default_time_ns() -> int:
     return _TIME()
 
 
+def metrics_time_ns() -> int:
+    """Get a timestamp suitable for runtime performance metrics."""
+    return _perf_counter_ns()
+
+
+def set_simulated_source(source: _SimulatedTime) -> None:
+    """Set a simulated time source for the global clock."""
+    _TIME.source = source
+
+
+def restore_time_source() -> None:
+    """Restore the original global time source."""
+    _TIME.restore()
+
+
 @contextmanager
 def simulated_time(
     step_dt_ns: int = 1, start_ns: int = None
@@ -137,11 +152,11 @@ class Timer:
 
         curr = self.curr
         self.curr += 1
-        start = _perf_counter_ns()
+        start = metrics_time_ns()
         try:
             yield curr
         finally:
-            self.data[curr] = _perf_counter_ns() - start
+            self.data[curr] = metrics_time_ns() - start
 
     def result(self, token: int) -> int:
         """Get the timer result."""
