@@ -7,6 +7,7 @@ from logging import LoggerAdapter, getLogger
 
 # module under test
 from vcorelib.logging import LoggerMixin, log_time, normalize, queue_handler
+from vcorelib.math import RateLimiter, to_nanos
 
 
 def test_log_time_basic():
@@ -38,6 +39,8 @@ def test_logger_mixin_basic():
     inst = LoggerMixinTest()
     inst.logger.info("This is a test, %d %d %d.", 1, 2, 3)
 
+    lim = RateLimiter.from_s(1.0)
+
     with inst.log_time("Hello, %s! %d", "world", 5, reminder=True):
-        for _ in range(100):
-            pass
+        for idx in range(100):
+            inst.governed_log(lim, "test %d", 1, time_ns=to_nanos(idx) // 10)

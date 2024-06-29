@@ -65,6 +65,7 @@ def test_paths_file_info_cache():  # pylint: disable=too-many-locals
                         path_fd.flush()
 
                 finfo = FileInfo.from_file(files[0])
+                assert str(finfo)
                 assert finfo == FileInfo.from_file(files[0])
                 assert hash(finfo)
                 assert finfo.to_json()
