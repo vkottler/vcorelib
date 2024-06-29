@@ -7,6 +7,7 @@ from typing import Callable as _Callable
 
 # internal
 from vcorelib.math.analysis.rate import RateTracker as _RateTracker
+from vcorelib.math.constants import to_nanos
 
 
 class RateLimiter:
@@ -19,6 +20,12 @@ class RateLimiter:
         self.period_ns = period_ns
         self.prev_time_ns: int = 0
         self.rate = _RateTracker(**kwargs)
+        self._skips: int = 0
+
+    @staticmethod
+    def from_s(period_s: float, **kwargs) -> "RateLimiter":
+        """Create a rate limiter from seconds."""
+        return RateLimiter(to_nanos(period_s), **kwargs)
 
     @property
     def rate_hz(self) -> float:
@@ -28,6 +35,14 @@ class RateLimiter:
         some task.
         """
         return self.rate.value
+
+    @property
+    def skips(self) -> int:
+        """Get the number of accumulated skips (due to rate limiting)."""
+
+        result = self._skips
+        self._skips = 0
+        return result
 
     def __call__(
         self, time_ns: int = None, task: _Callable[[], None] = None
@@ -53,5 +68,8 @@ class RateLimiter:
 
             # Update rate tracking.
             self.rate(time_ns=time_ns)
+
+        else:
+            self._skips += 1
 
         return result

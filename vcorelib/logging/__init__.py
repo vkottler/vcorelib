@@ -22,6 +22,7 @@ from vcorelib.logging.args import (
     logging_args,
 )
 from vcorelib.logging.time import log_time
+from vcorelib.math import RateLimiter
 from vcorelib.math.time import TIMER, LoggerType
 
 __all__ = [
@@ -81,7 +82,7 @@ def queue_handler(
     return queue, handler
 
 
-class LoggerMixin:  # pylint: disable=too-few-public-methods
+class LoggerMixin:
     """A class that provides an inheriting class a logger attribute."""
 
     logger: LoggerType
@@ -98,6 +99,23 @@ class LoggerMixin:  # pylint: disable=too-few-public-methods
                     logger_name = self.__class__.__module__
                 logger = _GetLogger(logger_name)
             self.logger = logger
+
+    def governed_log(
+        self,
+        limiter: RateLimiter,
+        message: str,
+        *args,
+        level: int = _INFO,
+        time_ns: int = None,
+        **kwargs,
+    ) -> None:
+        """Log a message but limit the rate."""
+
+        if limiter(time_ns=time_ns):
+            skips = limiter.skips
+            if skips:
+                message += f" ({skips} messages skipped)"
+            self.logger.log(level, message, *args, **kwargs)
 
     @contextmanager
     def log_time(

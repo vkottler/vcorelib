@@ -17,6 +17,7 @@ from typing import cast as _cast
 
 # internal
 from vcorelib.io.types import JsonObject as _JsonObject
+from vcorelib.math import byte_count_str
 from vcorelib.paths import Pathlike as _Pathlike
 from vcorelib.paths import file_md5_hex as _file_md5_hex
 from vcorelib.paths import normalize as _normalize
@@ -38,6 +39,10 @@ class FileInfo(NamedTuple):
     size: int
     md5_hex: str
     modified_ns: int
+
+    def __str__(self) -> str:
+        """Get this instance as a string."""
+        return f"{self.path} ({byte_count_str(self.size)})"
 
     def __eq__(self, other: object) -> bool:
         """Determine if two file info's are equivalent."""
