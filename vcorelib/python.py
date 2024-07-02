@@ -9,6 +9,7 @@ from pathlib import Path as _Path
 from shutil import which as _which
 from sys import executable as _executable
 from sys import version_info as _version_info
+from typing import NamedTuple
 
 # internal
 from vcorelib.paths import Pathlike as _Pathlike
@@ -72,3 +73,19 @@ def venv_bin(
     if program is not None:
         path = path.joinpath(f"{program}{'.exe' if _is_windows() else ''}")
     return path
+
+
+class StrToBool(NamedTuple):
+    """A container for results when converting strings to boolean."""
+
+    result: bool
+    valid: bool
+
+    @staticmethod
+    def parse(data: str) -> "StrToBool":
+        """Parse a string to boolean."""
+
+        data = data.lower()
+        is_true = data == "true"
+        resolved = is_true or data == "false"
+        return StrToBool(is_true, resolved)

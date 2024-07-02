@@ -13,6 +13,7 @@ from time import sleep
 from tests.resources import get_archives_root, resource
 
 # module under test
+from vcorelib import DEFAULT_ENCODING
 from vcorelib.io.types import FileExtension
 from vcorelib.paths import (
     file_hash_hex,
@@ -28,7 +29,7 @@ from vcorelib.paths import (
     str_hash_hex,
     str_md5_hex,
 )
-from vcorelib.paths.context import in_dir, tempfile
+from vcorelib.paths.context import as_path, in_dir, tempfile
 from vcorelib.platform import is_windows
 
 
@@ -183,3 +184,16 @@ def test_paths_rel_basic():
     """Test the behavior of the relative-pather."""
 
     assert str(rel(Path("test.txt").resolve())) == "test.txt"
+
+
+def test_as_path_basic():
+    """Test converting data to an on-disk path."""
+
+    msg = "Hello, world!"
+    with as_path(msg) as path:
+        # SA bug (path should be detected as Path instance).
+        path = Path(path)
+        with path.open("r", encoding=DEFAULT_ENCODING) as path_fd:
+            assert path_fd.read() == msg
+
+    assert not path.exists()
