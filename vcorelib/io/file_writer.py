@@ -168,14 +168,16 @@ class IndentedFileWriter:
         return chars
 
     @contextmanager
-    def padding(self, count: int = 1) -> Iterator[None]:
+    def padding(
+        self, count: int = 1, before: bool = True, after: bool = True
+    ) -> Iterator[None]:
         """Add padding lines as a managed context."""
 
-        self.empty(count=count)
+        self.empty(count=count if before else 0)
         curr = self.position
         yield
         if self.position > curr:
-            self.empty(count=count)
+            self.empty(count=count if after else 0)
 
     def join(self, *lines: str, joiner=",") -> None:
         """

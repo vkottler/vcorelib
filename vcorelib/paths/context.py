@@ -3,7 +3,7 @@ A module for context managers related to file-system paths.
 """
 
 # built-in
-from contextlib import contextmanager, suppress
+from contextlib import ExitStack, contextmanager, suppress
 from os import chdir as _chdir
 from os import makedirs as _makedirs
 from pathlib import Path as _Path
@@ -31,6 +31,30 @@ def in_dir(
         yield path
     finally:
         _chdir(cwd)
+
+
+PossiblePath = _Path | bytes | str
+
+
+@contextmanager
+def as_path(pathlike: PossiblePath, **kwargs) -> _Iterator[_Path]:
+    """
+    Write contents to a temporary file (and return it) if it's not already a
+    path.
+    """
+
+    with ExitStack() as stack:
+        if isinstance(pathlike, str):
+            pathlike = pathlike.encode()
+
+        # Write contents to a temporary file if necessary.
+        if not isinstance(pathlike, _Path):
+            tmp = stack.enter_context(tempfile(**kwargs))
+            with tmp.open("wb") as path_fd:
+                path_fd.write(pathlike)
+            pathlike = tmp
+
+        yield pathlike
 
 
 @contextmanager
