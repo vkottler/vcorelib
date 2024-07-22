@@ -21,6 +21,7 @@ from vcorelib.math import byte_count_str
 from vcorelib.paths import Pathlike as _Pathlike
 from vcorelib.paths import file_md5_hex as _file_md5_hex
 from vcorelib.paths import normalize as _normalize
+from vcorelib.paths import rel as _rel
 from vcorelib.paths import stats as _stats
 
 
@@ -42,7 +43,7 @@ class FileInfo(NamedTuple):
 
     def __str__(self) -> str:
         """Get this instance as a string."""
-        return f"{self.path} ({byte_count_str(self.size)})"
+        return f"{_rel(self.path)} ({byte_count_str(self.size)})"
 
     def __eq__(self, other: object) -> bool:
         """Determine if two file info's are equivalent."""
