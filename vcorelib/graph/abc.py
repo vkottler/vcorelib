@@ -47,7 +47,7 @@ class AbstractDiGraphNode(_Serializable):
         """Get the graph that this node belongs to."""
         del kind
         assert self._graph is not None, "Node hasn't joined a graph!"
-        return self._graph
+        return self._graph  # type: ignore
 
     @property
     def label(self) -> str:
@@ -68,7 +68,7 @@ class AbstractDiGraphNode(_Serializable):
             self._label is None or self._label == label
         ), f"Node already has label '{self._label}' (!= '{label}')!"
 
-        self._graph = graph
+        self._graph = graph  # type: ignore
         self._label = label
 
     def outgoing(self, graph_kind: _Type[V] = None) -> _Iterator[T]:
