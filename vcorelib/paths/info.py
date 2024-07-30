@@ -62,7 +62,6 @@ class FileInfo(NamedTuple):
         """Create file info from a file."""
 
         path = _normalize(path).resolve()
-        assert path.is_file()
         if stats is None:
             stats = _stats(path)
         assert stats is not None
