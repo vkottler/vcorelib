@@ -23,6 +23,7 @@ from vcorelib.paths import (
     modified_after,
     modified_ns,
     normalize,
+    prune_empty_directories,
     rel,
     set_exec_flags,
     stats,
@@ -162,6 +163,24 @@ def test_file_stats_basic():
 
         assert modified_after(tmpdir.joinpath("test3.txt"), [first_file])
         assert modified_after(tmpdir.joinpath("test4.txt"), [second_file])
+
+
+def test_prune_empty_directories():
+    """Test pruning empty directories."""
+
+    with TemporaryDirectory() as tmpdir:
+        root = Path(tmpdir, "test")
+        root.mkdir()
+
+        for subdir in "abc":
+            root.joinpath(subdir).mkdir()
+            root.joinpath(subdir, "subdir").mkdir()
+            root.joinpath(subdir, "subdir", "subdir2").mkdir()
+
+        prune_empty_directories(root)
+
+        # Confirm directory is gone.
+        assert not root.is_dir()
 
 
 def test_paths_in_dir():
