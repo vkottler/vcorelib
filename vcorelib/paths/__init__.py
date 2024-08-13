@@ -50,6 +50,7 @@ __all__ = [
     "resource",
     "create_hex_digest",
     "validate_hex_digest",
+    "prune_empty_directories",
 ]
 
 
@@ -61,6 +62,22 @@ def modified_ns(path: Pathlike) -> _Optional[int]:
     if stat is not None:
         result = stat.st_mtime_ns
     return result
+
+
+def prune_empty_directories(path: Pathlike) -> None:
+    """Attempt to prune empty directories from some path."""
+
+    path = normalize(path)
+
+    if path.is_dir():
+        # Remove sub-directories.
+        for subdir in path.iterdir():
+            if subdir.is_dir():
+                prune_empty_directories(subdir)
+
+        # Remove this directory.
+        if len(list(path.iterdir())) == 0:
+            path.rmdir()
 
 
 def modified_after(path: Pathlike, candidates: _Iterable[Pathlike]) -> bool:
