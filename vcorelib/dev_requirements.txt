@@ -12,4 +12,5 @@ sphinx-book-theme
 pytest-asyncio
 setuptools-wrapper
 types-setuptools
+types-markdown
 uvloop; sys_platform != 'win32' and sys_platform != 'cygwin'

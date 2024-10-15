@@ -10,6 +10,9 @@ import os
 from pathlib import Path
 from typing import Iterator, List, Optional, TextIO, Tuple
 
+# third-party
+import markdown
+
 # internal
 from vcorelib import DEFAULT_ENCODING
 from vcorelib.paths.context import tempfile
@@ -158,6 +161,10 @@ class IndentedFileWriter:
 
         self.position += count
         return count
+
+    def write_markdown(self, data: str, **kwargs) -> int:
+        """Write markdown to this document."""
+        return self.write(markdown.markdown(data, **kwargs))
 
     def empty(self, count: int = 1) -> int:
         """Add some number of empty lines."""
