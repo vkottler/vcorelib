@@ -1,5 +1,5 @@
 """
-A module for implementing namespaces.
+A module implementing namespace-related interfaces.
 """
 
 # internal
