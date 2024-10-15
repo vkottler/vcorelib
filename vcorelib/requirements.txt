@@ -1,5 +1,6 @@
 cerberus
 fastjsonschema
+markdown
 ruamel.yaml
 tomli
 tomli-w

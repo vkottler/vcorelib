@@ -6,6 +6,7 @@ description: "A collection of core Python utilities."
 requirements:
   - cerberus
   - fastjsonschema
+  - markdown
   - ruamel.yaml
   - tomli
   - tomli-w

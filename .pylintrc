@@ -1,5 +1,6 @@
 [DESIGN]
 max-args=10
+max-positional-arguments=10
 max-attributes=8
 
 [SIMILARITIES]
