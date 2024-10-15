@@ -3,6 +3,7 @@ Test the 'io.file_writer' module.
 """
 
 # built-in
+from contextlib import ExitStack
 from io import StringIO
 from json import dumps
 from os import linesep
@@ -14,6 +15,32 @@ from vcorelib.io.file_writer import CommentStyle, IndentedFileWriter
 def lines(*parts: str) -> str:
     """Get a sequence of strings as lines."""
     return linesep.join(parts) + linesep
+
+
+def test_file_writer_markdown():
+    """Test writing markdown to a file."""
+
+    with ExitStack() as stack:
+        stream = stack.enter_context(StringIO())
+        writer = IndentedFileWriter(stream)
+
+        def write_message() -> None:
+            """Write a sample message to the document."""
+            writer.write("<!-- comment -->")
+            writer.write_markdown(
+                "# what is up y'all\n\nThis is my documentation."
+            )
+            writer.write("<!-- comment -->")
+
+        write_message()
+        for _ in range(5):
+            stack.enter_context(writer.indented())
+            write_message()
+
+        assert stream.getvalue()
+        # print(stream.getvalue())
+
+    # assert False
 
 
 def test_file_writer_comment_lines():
