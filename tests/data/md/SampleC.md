@@ -1,0 +1,3 @@
+# SampleC
+
+SampleC's documentation.
