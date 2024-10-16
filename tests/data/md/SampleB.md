@@ -1,0 +1,3 @@
+# SampleB
+
+SampleB's documentation.

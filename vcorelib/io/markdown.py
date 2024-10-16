@@ -5,8 +5,9 @@ A module implementing markdown-specific interfaces.
 # built-in
 from contextlib import suppress
 from functools import cache
+from os import linesep
 from pathlib import Path
-from typing import Optional
+from typing import Iterator, Optional
 
 # internal
 from vcorelib import DEFAULT_ENCODING, PKG_NAME
@@ -37,6 +38,8 @@ def read_resource(
 def default_markdown() -> str:
     """Get default markdown contents."""
 
+    # This path gets hit even when reaching 'MarkdownMixin' due to the
+    # singleton 'package' variable (only one package is searched)
     return read_resource("md", "MarkdownMixin.md")
 
 
@@ -46,22 +49,40 @@ class MarkdownMixin:
     markdown: str
 
     @classmethod
-    def class_markdown(cls, **kwargs) -> Optional[str]:
+    def class_markdown_parts(
+        cls, _visited: set[str] = None, **kwargs
+    ) -> Iterator[str]:
+        """Iterate over all documentation snippets."""
+
+        if _visited is None:
+            _visited = set()
+
+        # Search for documentation for this class.
+        name = cls.__name__
+        if name not in _visited:
+            with suppress(AssertionError):
+                yield read_resource("md", f"{name}.md", **kwargs)
+
+        # Search for parts in parents.
+        for base in cls.__bases__:
+            if hasattr(base, "class_markdown_parts"):
+                yield from base.class_markdown_parts(
+                    _visited=_visited, **kwargs
+                )
+
+    @classmethod
+    def class_markdown(
+        cls, _visited: set[str] = None, **kwargs
+    ) -> Optional[str]:
         """Attempt to get markdown for this class."""
 
         result = None
 
-        # Search for documentation for this class.
-        with suppress(AssertionError):
-            result = read_resource("md", f"{cls.__name__}.md", **kwargs)
-
-        # Search the class hierarchy for documentation.
-        if result is None and cls.__bases__:
-            for base in cls.__bases__:
-                if hasattr(base, "class_markdown"):
-                    result = base.class_markdown(**kwargs)
-                if result:
-                    break
+        compiled = (linesep + linesep).join(
+            list(x.rstrip() for x in cls.class_markdown_parts(**kwargs))
+        )
+        if compiled:
+            result = compiled
 
         return result
 
