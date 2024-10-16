@@ -72,14 +72,15 @@ class MarkdownMixin:
 
     @classmethod
     def class_markdown(
-        cls, _visited: set[str] = None, **kwargs
+        cls, _visited: set[str] = None, parts: list[str] = None, **kwargs
     ) -> Optional[str]:
         """Attempt to get markdown for this class."""
 
         result = None
 
         compiled = (linesep + linesep).join(
-            list(x.rstrip() for x in cls.class_markdown_parts(**kwargs))
+            (parts or [])
+            + list(x.rstrip() for x in cls.class_markdown_parts(**kwargs))
         )
         if compiled:
             result = compiled
@@ -93,9 +94,12 @@ class MarkdownMixin:
 
         assert not hasattr(self, "markdown")
 
+        parts = []
+        if markdown:
+            parts.append(markdown)
+        if config and config.get("markdown"):
+            parts.append(config["markdown"])  # type: ignore
+
         self.markdown: str = (
-            markdown  # type: ignore
-            or (None if config is None else config.get("markdown"))
-            or self.class_markdown(**kwargs)
-            or default_markdown()
+            self.class_markdown(parts=parts, **kwargs) or default_markdown()
         )
