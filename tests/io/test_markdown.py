@@ -38,7 +38,11 @@ def test_markdown_mixin_inheritance():
         """A sample class."""
 
     inst = SampleC()
-    inst.set_markdown(package="tests")
+    inst.set_markdown(
+        markdown="instance-specific stuff 1",
+        config={"markdown": "instance-specific stuff 2"},
+        package="tests",
+    )
 
     # print("==========")
     # print(inst.markdown)
