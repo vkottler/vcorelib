@@ -62,6 +62,7 @@ class MarkdownMixin:
         if name not in _visited:
             with suppress(AssertionError):
                 yield read_resource("md", f"{name}.md", **kwargs)
+                _visited.add(name)
 
         # Search for parts in parents.
         for base in cls.__bases__:
