@@ -4,10 +4,13 @@ Test the 'io.markdown' module.
 
 # module under test
 from vcorelib.io import MarkdownMixin
+from vcorelib.io.markdown import default_markdown
 
 
 def test_markdown_mixin_basic():
     """Test basic interactions with markdown mixin."""
+
+    assert default_markdown()
 
     inst = MarkdownMixin()
     inst.set_markdown()
