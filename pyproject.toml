@@ -4,19 +4,19 @@ build-backend = "setuptools.build_meta:__legacy__"
 
 [project]
 name = "vcorelib"
-version = "3.4.2"
+version = "3.4.3"
 description = "A collection of core Python utilities."
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 authors = [
-  {name = "Vaughn Kottler", email = "vaughnkottler@gmail.com"}
+  {name = "Vaughn Kottler", email = "vaughn@libre-embedded.com"}
 ]
 maintainers = [
-  {name = "Vaughn Kottler", email = "vaughnkottler@gmail.com"}
+  {name = "Vaughn Kottler", email = "vaughn@libre-embedded.com"}
 ]
 classifiers = [
-  "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Operating System :: Microsoft :: Windows",
   "Operating System :: MacOS",
   "Operating System :: POSIX :: Linux",

@@ -1,7 +1,7 @@
 # =====================================
 # generator=datazen
 # version=3.1.4
-# hash=705d79f6b6d06bca64ad9f039193e9a0
+# hash=2dd482c8bf7dce8141fb36a697c152aa
 # =====================================
 
 """
@@ -19,7 +19,7 @@ from vcorelib import DESCRIPTION, PKG_NAME, VERSION
 
 author_info = {
     "name": "Vaughn Kottler",
-    "email": "vaughnkottler@gmail.com",
+    "email": "vaughn@libre-embedded.com",
     "username": "vkottler",
 }
 pkg_info = {
@@ -28,8 +28,8 @@ pkg_info = {
     "version": VERSION,
     "description": DESCRIPTION,
     "versions": [
-        "3.11",
         "3.12",
+        "3.13",
     ],
 }
 setup(

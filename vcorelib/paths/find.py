@@ -5,9 +5,7 @@ A module implementing interfaces for finding files.
 # built-in
 from pathlib import Path as _Path
 from typing import Callable as _Callable
-from typing import Dict as _Dict
 from typing import Iterable as _Iterable
-from typing import List as _List
 from typing import Optional as _Optional
 from typing import Union as _Union
 from urllib.parse import ParseResult as _ParseResult
@@ -17,8 +15,36 @@ from urllib.parse import urlparse as _urlparse
 import importlib_resources as _importlib_resources
 
 # internal
+from vcorelib import PKG_NAME
 from vcorelib.logging import LoggerType
 from vcorelib.paths.base import Pathlike, normalize
+
+PACKAGE_SEARCH: list[str] = [PKG_NAME]
+
+
+def _populate_package_search_paths(
+    to_check: list[Pathlike],
+    package: str,
+    package_subdir: str = "data",
+    logger: LoggerType = None,
+) -> None:
+    """Get candidate package directories to search."""
+
+    checked = []
+
+    for pkg in [package] + PACKAGE_SEARCH:
+        # Avoid double searching any package.
+        if pkg not in checked:
+            try:
+                checked.append(pkg)
+                to_check.append(
+                    _importlib_resources.files(pkg).joinpath(package_subdir)
+                )
+            except ModuleNotFoundError:
+                if logger is not None:
+                    logger.warning(
+                        "Can't search package '%s', not found.", pkg
+                    )
 
 
 def _construct_search_path(
@@ -28,22 +54,18 @@ def _construct_search_path(
     package: str = None,
     package_subdir: str = "data",
     logger: LoggerType = None,
-) -> _List[Pathlike]:
+) -> list[Pathlike]:
     """Construct a list of paths to search for a resource."""
 
-    to_check: _List[Pathlike] = []
+    to_check: list[Pathlike] = []
+
+    # iterate over entire package search path
 
     # Add a package resource to the search path if a package name was provided.
     if package is not None:
-        try:
-            to_check.append(
-                _importlib_resources.files(package).joinpath(package_subdir)
-            )
-        except ModuleNotFoundError:
-            if logger is not None:
-                logger.warning(
-                    "Can't search package '%s', not found.", package
-                )
+        _populate_package_search_paths(
+            to_check, package, package_subdir=package_subdir, logger=logger
+        )
 
     if search_paths:
         to_check += list(search_paths)
@@ -65,7 +87,7 @@ def _construct_search_path(
 FileFinder = _Callable[
     [_ParseResult, str, _Optional[LoggerType]], _Optional[_Path]
 ]
-FINDERS: _Dict[str, FileFinder] = {}
+FINDERS: dict[str, FileFinder] = {}
 
 
 def find_package_file(
