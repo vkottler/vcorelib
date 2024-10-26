@@ -40,7 +40,7 @@ def default_markdown() -> str:
 
     # This path gets hit even when reaching 'MarkdownMixin' due to the
     # singleton 'package' variable (only one package is searched)
-    return read_resource("md", "MarkdownMixin.md")
+    return read_resource("md", "default.md")
 
 
 class MarkdownMixin:
