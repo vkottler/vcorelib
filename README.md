@@ -2,11 +2,11 @@
     =====================================
     generator=datazen
     version=3.1.4
-    hash=481d954406ac1e05f0fe2f1ff7b1882c
+    hash=7ea5d02e721034df4d7213302d0c348b
     =====================================
 -->
 
-# vcorelib ([3.4.3](https://pypi.org/project/vcorelib/))
+# vcorelib ([3.4.4](https://pypi.org/project/vcorelib/))
 
 [![python](https://img.shields.io/pypi/pyversions/vcorelib.svg)](https://pypi.org/project/vcorelib/)
 ![Build Status](https://github.com/vkottler/vcorelib/workflows/Python%20Package/badge.svg)
