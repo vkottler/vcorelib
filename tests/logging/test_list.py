@@ -24,3 +24,8 @@ def test_list_logger_basic():
 
     assert handler
     assert handler.drain_str()
+
+    for idx in range(handler.max_size * 2):
+        logger.info("test %d", idx)
+
+    assert handler.drain_str()
