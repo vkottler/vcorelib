@@ -3,10 +3,12 @@ A module for working with test data.
 """
 
 # built-in
+from functools import cache
 from os.path import join
 from pathlib import Path
 
 # internal
+from vcorelib.io import DEFAULT_INCLUDES_KEY
 from vcorelib.schemas.base import SchemaMap
 from vcorelib.schemas.json import JsonSchemaMap
 
@@ -24,8 +26,12 @@ def get_archives_root() -> Path:
     return Path(__file__).parent.joinpath("data", "archives")
 
 
+@cache
 def get_test_schemas() -> SchemaMap:
     """Get schemas stored in test data."""
+
     return JsonSchemaMap.from_package(
-        "tests", package_subdir=join("data", "valid")
+        "tests",
+        package_subdir=join("data", "valid"),
+        includes_key=DEFAULT_INCLUDES_KEY,
     )

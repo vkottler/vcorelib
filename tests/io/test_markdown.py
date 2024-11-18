@@ -2,9 +2,14 @@
 Test the 'io.markdown' module.
 """
 
+# internal
+from tests.resources import get_test_schemas
+
 # module under test
 from vcorelib.io import MarkdownMixin
 from vcorelib.io.markdown import default_markdown
+from vcorelib.io.types import JsonObject
+from vcorelib.schemas.mixins import SchemaMixin
 
 
 def test_markdown_mixin_basic():
@@ -16,16 +21,23 @@ def test_markdown_mixin_basic():
     inst.set_markdown()
     assert inst.markdown
 
-    class Subclass(MarkdownMixin):
+    schemas = get_test_schemas()
+
+    class Subclass(MarkdownMixin, SchemaMixin):
         """Declare a sub-class."""
 
-    new_inst = Subclass()
-    new_inst.set_markdown()
-    assert inst.markdown
+        data: JsonObject = {"a": "test", "b": {}}
 
-    new_inst = Subclass()
+    new_inst = Subclass(schemas)
+    new_inst.set_markdown(config=Subclass.data)
+    assert new_inst.markdown
+
+    # print(new_inst.markdown)
+    # assert False
+
+    new_inst = Subclass(schemas)
     new_inst.set_markdown(package="tests")
-    assert inst.markdown
+    assert new_inst.markdown
 
 
 def test_markdown_mixin_inheritance():
