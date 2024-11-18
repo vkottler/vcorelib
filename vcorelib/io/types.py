@@ -7,9 +7,7 @@ from enum import Enum
 from io import StringIO
 from pathlib import Path
 from typing import Callable as _Callable
-from typing import Dict as _Dict
 from typing import Iterator as _Iterator
-from typing import List as _List
 from typing import NamedTuple
 from typing import Optional as _Optional
 from typing import TextIO
@@ -31,24 +29,24 @@ DEFAULT_DATA_EXT = "json"
 # A simple type system for JSON.
 JsonPrimitive = _Union[str, int, float, bool, None]
 JsonValue = _Union[
-    JsonPrimitive, _Dict[str, JsonPrimitive], _List[JsonPrimitive]
+    JsonPrimitive, dict[str, JsonPrimitive], list[JsonPrimitive]
 ]
-JsonArray = _List[JsonValue]
-JsonObject = _Dict[str, JsonValue]
+JsonArray = list[JsonValue]
+JsonObject = dict[str, JsonValue]
 
 
 class FileExtension(Enum):
     """A mapping of expected encoding type to file extensions."""
 
-    UNKNOWN: _List[str] = ["unknown"]
+    UNKNOWN: list[str] = ["unknown"]
     # Data formats.
-    JSON: _List[str] = [DEFAULT_DATA_EXT]
-    YAML: _List[str] = ["yaml", "yml", "eyaml"]
-    INI: _List[str] = ["ini", "cfg"]
-    TOML: _List[str] = ["toml"]
+    JSON: list[str] = [DEFAULT_DATA_EXT]
+    YAML: list[str] = ["yaml", "yml", "eyaml"]
+    INI: list[str] = ["ini", "cfg"]
+    TOML: list[str] = ["toml"]
     # Archive formats.
-    ZIP: _List[str] = ["zip"]
-    TAR: _List[str] = [
+    ZIP: list[str] = ["zip"]
+    TAR: list[str] = [
         DEFAULT_ARCHIVE_EXT,
         "tgz",
         "tar",
@@ -57,7 +55,7 @@ class FileExtension(Enum):
         "tar.xz",
     ]
     # Template formats.
-    JINJA: _List[str] = ["j2", "jinja", "j2_template", "j2_macro"]
+    JINJA: list[str] = ["j2", "jinja", "j2_template", "j2_macro"]
 
     def __str__(self) -> str:
         """Get this extension as a string."""

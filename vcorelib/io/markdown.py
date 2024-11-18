@@ -2,9 +2,12 @@
 A module implementing markdown-specific interfaces.
 """
 
-# built-in
 from contextlib import suppress
+
+# built-in
+from copy import copy
 from functools import cache
+from json import dumps
 from os import linesep
 from pathlib import Path
 from typing import Iterator, Optional
@@ -13,6 +16,7 @@ from typing import Iterator, Optional
 from vcorelib import DEFAULT_ENCODING, PKG_NAME
 from vcorelib.io.types import JsonObject as _JsonObject
 from vcorelib.paths import resource
+from vcorelib.schemas.mixins import SchemaMixin
 
 
 @cache
@@ -41,6 +45,16 @@ def default_markdown() -> str:
     # This path gets hit even when reaching 'MarkdownMixin' due to the
     # singleton 'package' variable (only one package is searched)
     return read_resource("md", "default.md")
+
+
+def object_markdown(
+    title: str, data: _JsonObject, indent: int = 4, **kwargs
+) -> str:
+    """Get markdown contents for object data."""
+
+    return linesep.join(
+        [title, "", "```", dumps(data, indent=indent, **kwargs), "```"]
+    )
 
 
 class MarkdownMixin:
@@ -89,17 +103,39 @@ class MarkdownMixin:
         return result
 
     def set_markdown(
-        self, markdown: str = None, config: _JsonObject = None, **kwargs
+        self,
+        *_parts: str,
+        markdown: str = None,
+        config: _JsonObject = None,
+        schema_data: _JsonObject = None,
+        **kwargs,
     ) -> None:
         """Set markdown for this instance."""
 
         assert not hasattr(self, "markdown")
 
-        parts = []
+        parts = list(_parts)
         if markdown:
             parts.append(markdown)
-        if config and config.get("markdown"):
-            parts.append(config["markdown"])  # type: ignore
+
+        if config:
+            cloned = copy(config)
+
+            # Instance markdonw.
+            if cloned.get("markdown"):
+                parts.append(cloned["markdown"])  # type: ignore
+                del cloned["markdown"]
+
+            # Configuration data.
+            parts.append(object_markdown("# Instance Configuration", cloned))
+
+        # Possible schema component.
+        if isinstance(self, SchemaMixin) and schema_data is None:
+            schema_data = self.schema.data
+        if schema_data:
+            parts.append(
+                object_markdown("# Configuration Schema", schema_data)
+            )
 
         self.markdown: str = (
             self.class_markdown(parts=parts, **kwargs) or default_markdown()
