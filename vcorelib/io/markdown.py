@@ -129,7 +129,8 @@ class MarkdownMixin:
                 del cloned["markdown"]
 
             # Configuration data.
-            parts.append(object_markdown(config_instance_title, cloned))
+            if cloned:
+                parts.append(object_markdown(config_instance_title, cloned))
 
         # Possible schema component.
         if isinstance(self, SchemaMixin) and schema_data is None:
