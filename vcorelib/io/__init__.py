@@ -7,7 +7,6 @@ from vcorelib.io.abc import FileEntity, Serializable
 from vcorelib.io.arbiter import ARBITER, DataArbiter
 from vcorelib.io.fifo import ByteFifo
 from vcorelib.io.file_writer import IndentedFileWriter
-from vcorelib.io.markdown import MarkdownMixin
 from vcorelib.io.types import (
     DataDecoder,
     DataEncoder,
@@ -33,7 +32,6 @@ __all__ = [
     "JsonObject",
     "FileExtension",
     "LoadResult",
-    "MarkdownMixin",
     "EncodeResult",
     "DataStream",
     "StreamProcessor",

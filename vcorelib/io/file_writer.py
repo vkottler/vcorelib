@@ -41,6 +41,8 @@ class CommentStyle(Enum):
 LineWithComment = Tuple[str, Optional[str]]
 LinesWithComments = List[LineWithComment]
 
+MARKDOWN_EXTENSIONS = ["extra"]
+
 
 class IndentedFileWriter:
     """A class for writing lines to a file and tracking indentation."""
@@ -164,7 +166,17 @@ class IndentedFileWriter:
 
     def write_markdown(self, data: str, **kwargs) -> int:
         """Write markdown to this document."""
-        return self.write(markdown.markdown(data, **kwargs))
+
+        with self.preformatted():
+            result = self.write(
+                markdown.markdown(
+                    data,
+                    extensions=kwargs.pop("extensions", MARKDOWN_EXTENSIONS),
+                    **kwargs,
+                )
+            )
+
+        return result
 
     def empty(self, count: int = 1) -> int:
         """Add some number of empty lines."""
@@ -220,6 +232,17 @@ class IndentedFileWriter:
 
         if self.depth > 0 and amount <= self.depth:
             self.depth -= amount
+
+    @contextmanager
+    def preformatted(self) -> Iterator[None]:
+        """Disable indentation as a managed context."""
+
+        temp = self.depth
+        self.depth = 0
+        try:
+            yield
+        finally:
+            self.depth = temp
 
     @contextmanager
     def indented(self, amount: int = 1) -> Iterator[None]:
