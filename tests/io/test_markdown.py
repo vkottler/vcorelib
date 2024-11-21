@@ -6,8 +6,7 @@ Test the 'io.markdown' module.
 from tests.resources import get_test_schemas
 
 # module under test
-from vcorelib.io import MarkdownMixin
-from vcorelib.io.markdown import default_markdown
+from vcorelib.io.markdown import MarkdownMixin, default_markdown
 from vcorelib.io.types import JsonObject
 from vcorelib.schemas.mixins import SchemaMixin
 

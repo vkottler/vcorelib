@@ -108,6 +108,8 @@ class MarkdownMixin:
         markdown: str = None,
         config: _JsonObject = None,
         schema_data: _JsonObject = None,
+        config_instance_title: str = "# Instance Configuration",
+        config_schema_title: str = "# Configuration Schema",
         **kwargs,
     ) -> None:
         """Set markdown for this instance."""
@@ -127,15 +129,13 @@ class MarkdownMixin:
                 del cloned["markdown"]
 
             # Configuration data.
-            parts.append(object_markdown("# Instance Configuration", cloned))
+            parts.append(object_markdown(config_instance_title, cloned))
 
         # Possible schema component.
         if isinstance(self, SchemaMixin) and schema_data is None:
             schema_data = self.schema.data
         if schema_data:
-            parts.append(
-                object_markdown("# Configuration Schema", schema_data)
-            )
+            parts.append(object_markdown(config_schema_title, schema_data))
 
         self.markdown: str = (
             self.class_markdown(parts=parts, **kwargs) or default_markdown()
