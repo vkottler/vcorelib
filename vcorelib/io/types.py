@@ -38,15 +38,15 @@ JsonObject = dict[str, JsonValue]
 class FileExtension(Enum):
     """A mapping of expected encoding type to file extensions."""
 
-    UNKNOWN: list[str] = ["unknown"]
+    UNKNOWN = ["unknown"]
     # Data formats.
-    JSON: list[str] = [DEFAULT_DATA_EXT]
-    YAML: list[str] = ["yaml", "yml", "eyaml"]
-    INI: list[str] = ["ini", "cfg"]
-    TOML: list[str] = ["toml"]
+    JSON = [DEFAULT_DATA_EXT]
+    YAML = ["yaml", "yml", "eyaml"]
+    INI = ["ini", "cfg"]
+    TOML = ["toml"]
     # Archive formats.
-    ZIP: list[str] = ["zip"]
-    TAR: list[str] = [
+    ZIP = ["zip"]
+    TAR = [
         DEFAULT_ARCHIVE_EXT,
         "tgz",
         "tar",
@@ -55,7 +55,7 @@ class FileExtension(Enum):
         "tar.xz",
     ]
     # Template formats.
-    JINJA: list[str] = ["j2", "jinja", "j2_template", "j2_macro"]
+    JINJA = ["j2", "jinja", "j2_template", "j2_macro"]
 
     def __str__(self) -> str:
         """Get this extension as a string."""

@@ -8,7 +8,7 @@ from enum import Enum, auto
 from io import StringIO
 import os
 from pathlib import Path
-from typing import Iterator, List, Optional, TextIO, Tuple
+from typing import Callable, Iterator, List, Optional, TextIO, Tuple
 
 # third-party
 import markdown
@@ -164,17 +164,22 @@ class IndentedFileWriter:
         self.position += count
         return count
 
-    def write_markdown(self, data: str, **kwargs) -> int:
+    def write_markdown(
+        self, data: str, hook: Callable[[str], str] = None, **kwargs
+    ) -> int:
         """Write markdown to this document."""
 
         with self.preformatted():
-            result = self.write(
-                markdown.markdown(
-                    data,
-                    extensions=kwargs.pop("extensions", MARKDOWN_EXTENSIONS),
-                    **kwargs,
-                )
+            rendered = markdown.markdown(
+                data,
+                extensions=kwargs.pop("extensions", MARKDOWN_EXTENSIONS),
+                **kwargs,
             )
+
+            if hook:
+                rendered = hook(rendered)
+
+            result = self.write(rendered)
 
         return result
 

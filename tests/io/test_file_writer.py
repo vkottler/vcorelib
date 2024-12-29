@@ -28,7 +28,8 @@ def test_file_writer_markdown():
             """Write a sample message to the document."""
             writer.write("<!-- comment -->")
             writer.write_markdown(
-                "# what is up y'all\n\nThis is my documentation."
+                "# what is up y'all\n\nThis is my documentation.",
+                hook=lambda x: x,
             )
             writer.write("<!-- comment -->")
 
