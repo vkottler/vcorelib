@@ -8,6 +8,9 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
 
+# third-party
+from pytest import mark
+
 # internal
 from tests.resources import resource
 
@@ -25,7 +28,8 @@ def verify_can_encode(data: Any, ext: FileExtension) -> None:
             ARBITER.encode(tfile, data)
 
 
-def test_arbiter_encode_decode_basic():
+@mark.asyncio
+async def test_arbiter_encode_decode_basic():
     """Verify that we can load data of every file type."""
 
     base = resource("simple_decode")
@@ -53,6 +57,11 @@ def test_arbiter_encode_decode_basic():
             data = ARBITER.decode(
                 path, require_success=True, preprocessor=lambda x: x
             ).data
+            assert (
+                await ARBITER.decode_async(
+                    path, require_success=True, preprocessor=lambda x: x
+                )
+            ).data == data
             with suppress(KeyError):
                 del data["DEFAULT"]
 
@@ -62,7 +71,8 @@ def test_arbiter_encode_decode_basic():
             verify_can_encode(data, ext)
 
 
-def test_arbiter_decode_empty():
+@mark.asyncio
+async def test_arbiter_decode_empty():
     """Verify we can decode certain kinds of empty files."""
 
     empty = resource("simple_decode").joinpath("empty")
@@ -73,12 +83,14 @@ def test_arbiter_decode_empty():
         if candidate.is_file():
             data = ARBITER.decode(candidate).data
             assert not data
+            assert not (await ARBITER.decode_async(candidate)).data
             counter += 1
 
     assert counter == 2
 
 
-def test_arbiter_decode_failures():
+@mark.asyncio
+async def test_arbiter_decode_failures():
     """Test various invalid loading scenarios."""
 
     base = resource("simple_decode", valid=False)
@@ -88,7 +100,8 @@ def test_arbiter_decode_failures():
         ext_root = Path(base, str(ext))
         for fname in "abc":
             path = ext.apply(Path(ext_root, fname))
-            assert not ARBITER.decode(path).success
+            assert not ARBITER.decode(path)
+            assert not await ARBITER.decode_async(path)
 
             if ext is FileExtension.UNKNOWN:
                 with path.open(encoding="utf-8") as path_fd:
@@ -123,15 +136,26 @@ def test_arbiter_decode_includes():
     }
 
 
-def test_arbiter_decode_includes_left():
+@mark.asyncio
+async def test_arbiter_decode_includes_left():
     """Test that we can load data via the 'includes_left' key."""
 
-    assert ARBITER.decode(
-        resource("simple_decode").joinpath("includes_left", "test.yaml"),
-        require_success=True,
-        includes_key="includes",
-    ).data == {
+    expected = {
         "a": [2, 0, 1],
         "b": [2, 0, 1],
         "c": [2, 0, 1],
     }
+
+    path = resource("simple_decode").joinpath("includes_left", "test.yaml")
+
+    assert (
+        ARBITER.decode(
+            path, require_success=True, includes_key="includes"
+        ).data
+        == expected
+    )
+    assert (
+        await ARBITER.decode_async(
+            path, require_success=True, includes_key="includes"
+        )
+    ).data == expected

@@ -3,10 +3,14 @@ A module exposing data-file encoders and decoders.
 """
 
 # built-in
+from io import StringIO
 import logging
 from pathlib import Path
 from typing import List
 from typing import Optional as _Optional
+
+# third-party
+import aiofiles
 
 # internal
 from vcorelib import DEFAULT_ENCODING as _DEFAULT_ENCODING
@@ -67,6 +71,154 @@ class DataArbiterBase:
             result = decoder(stream, logger, **kwargs)
         return result
 
+    def _decode_stream(
+        self,
+        stream: _DataStream,
+        ext: str,
+        logger: LoggerType,
+        preprocessor: _StreamProcessor = None,
+        **kwargs,
+    ) -> LoadResult:
+        """A wrapper for stream decoding."""
+
+        return self.decode_stream(
+            ext,
+            # Preprocess the stream if specified. This can be useful for
+            # external code to treat data files as templates.
+            (preprocessor(stream) if preprocessor is not None else stream),
+            logger,
+            **kwargs,
+        )
+
+    def _decode_file(
+        self,
+        path: Path,
+        logger: LoggerType,
+        preprocessor: _StreamProcessor = None,
+        maxsplit: int = 1,
+        **kwargs,
+    ) -> LoadResult:
+        """Decode a file via path."""
+
+        with path.open(encoding=self.encoding) as path_fd:
+            result = self._decode_stream(
+                path_fd,
+                get_file_ext(path, maxsplit=maxsplit),
+                logger,
+                preprocessor=preprocessor,
+                **kwargs,
+            )
+
+        return result
+
+    async def _decode_file_async(
+        self,
+        path: Path,
+        logger: LoggerType,
+        preprocessor: _StreamProcessor = None,
+        maxsplit: int = 1,
+        **kwargs,
+    ) -> LoadResult:
+        """Decode a file via path using asyncio."""
+
+        async with aiofiles.open(path, encoding=self.encoding) as path_fd:
+            with StringIO(await path_fd.read()) as stream:
+                result = self._decode_stream(
+                    stream,
+                    get_file_ext(path, maxsplit=maxsplit),
+                    logger,
+                    preprocessor=preprocessor,
+                    **kwargs,
+                )
+
+        return result
+
+    async def decode_async(
+        self,
+        pathlike: _Pathlike,
+        logger: LoggerType = None,
+        require_success: bool = False,
+        includes_key: str = None,
+        preprocessor: _StreamProcessor = None,
+        maxsplit: int = 1,
+        expect_overwrite: bool = False,
+        strategy: MergeStrategy = MergeStrategy.RECURSIVE,
+        files_loaded: List[Path] = None,
+        **kwargs,
+    ) -> LoadResult:
+        """Attempt to load data from a file using asyncio."""
+
+        result = LoadResult({}, False)
+        if logger is None:
+            logger = self.logger
+
+        # Keep track of all files that get loaded.
+        if files_loaded is None:
+            files_loaded = []
+
+        path = normalize(pathlike)
+        if path.is_file():
+            result = await self._decode_file_async(
+                path,
+                logger,
+                preprocessor=preprocessor,
+                maxsplit=maxsplit,
+                **kwargs,
+            )
+
+            if result:
+                files_loaded.append(path)
+
+            # Resolve includes if necessary.
+            if includes_key is not None:
+                for include in consume(result.data, includes_key, []):
+                    # Load the included file.
+                    result = result.merge(
+                        await self.decode_async(
+                            find_file(include, relative_to=path, strict=True),
+                            logger,
+                            require_success=require_success,
+                            includes_key=includes_key,
+                            files_loaded=files_loaded,
+                            **kwargs,
+                        ),
+                        expect_overwrite=expect_overwrite,
+                        logger=logger,
+                        strategy=strategy,
+                    )
+                    if result:
+                        files_loaded.append(include)
+
+                for include in consume(
+                    result.data, f"{includes_key}_left", []
+                ):
+                    # Load the included file.
+                    result = result.merge(
+                        await self.decode_async(
+                            find_file(include, relative_to=path, strict=True),
+                            logger,
+                            require_success=require_success,
+                            includes_key=includes_key,
+                            files_loaded=files_loaded,
+                            **kwargs,
+                        ),
+                        is_left=True,
+                        expect_overwrite=expect_overwrite,
+                        logger=logger,
+                        strategy=strategy,
+                    )
+                    if result:
+                        files_loaded.append(include)
+
+        if not result.success:
+            logger.error("Failed to decode '%s'.", path)
+
+        # Raise an exception if we expected decoding to succeed.
+        if require_success:
+            result.require_success(path)
+
+        return result
+
     def decode(
         self,
         pathlike: _Pathlike,
@@ -92,66 +244,57 @@ class DataArbiterBase:
 
         path = normalize(pathlike)
         if path.is_file():
-            with path.open(encoding=self.encoding) as path_fd:
-                # Preprocess the stream if specified. This can be useful for
-                # external code to treat data files as templates.
-                result = self.decode_stream(
-                    get_file_ext(path, maxsplit=maxsplit),
-                    (
-                        preprocessor(path_fd)
-                        if preprocessor is not None
-                        else path_fd
-                    ),
-                    logger,
-                    **kwargs,
-                )
-                if result:
-                    files_loaded.append(path)
+            result = self._decode_file(
+                path,
+                logger,
+                preprocessor=preprocessor,
+                maxsplit=maxsplit,
+                **kwargs,
+            )
 
-                # Resolve includes if necessary.
-                if includes_key is not None:
-                    for include in consume(result.data, includes_key, []):
-                        # Load the included file.
-                        result = result.merge(
-                            self.decode(
-                                find_file(
-                                    include, relative_to=path, strict=True
-                                ),
-                                logger,
-                                require_success=require_success,
-                                includes_key=includes_key,
-                                files_loaded=files_loaded,
-                                **kwargs,
-                            ),
-                            expect_overwrite=expect_overwrite,
-                            logger=logger,
-                            strategy=strategy,
-                        )
-                        if result:
-                            files_loaded.append(include)
+            if result:
+                files_loaded.append(path)
 
-                    for include in consume(
-                        result.data, f"{includes_key}_left", []
-                    ):
-                        # Load the included file.
-                        result = result.merge(
-                            self.decode(
-                                find_file(
-                                    include, relative_to=path, strict=True
-                                ),
-                                logger,
-                                require_success=require_success,
-                                includes_key=includes_key,
-                                files_loaded=files_loaded,
-                                **kwargs,
-                            ),
-                            is_left=True,
-                            expect_overwrite=expect_overwrite,
-                            logger=logger,
-                            strategy=strategy,
-                        )
-                        if result:
-                            files_loaded.append(include)
+            # Resolve includes if necessary.
+            if includes_key is not None:
+                for include in consume(result.data, includes_key, []):
+                    # Load the included file.
+                    result = result.merge(
+                        self.decode(
+                            find_file(include, relative_to=path, strict=True),
+                            logger,
+                            require_success=require_success,
+                            includes_key=includes_key,
+                            files_loaded=files_loaded,
+                            **kwargs,
+                        ),
+                        expect_overwrite=expect_overwrite,
+                        logger=logger,
+                        strategy=strategy,
+                    )
+                    if result:
+                        files_loaded.append(include)
+
+                for include in consume(
+                    result.data, f"{includes_key}_left", []
+                ):
+                    # Load the included file.
+                    result = result.merge(
+                        self.decode(
+                            find_file(include, relative_to=path, strict=True),
+                            logger,
+                            require_success=require_success,
+                            includes_key=includes_key,
+                            files_loaded=files_loaded,
+                            **kwargs,
+                        ),
+                        is_left=True,
+                        expect_overwrite=expect_overwrite,
+                        logger=logger,
+                        strategy=strategy,
+                    )
+                    if result:
+                        files_loaded.append(include)
 
         if not result.success:
             logger.error("Failed to decode '%s'.", path)
@@ -182,6 +325,32 @@ class DataArbiterBase:
             time_ns = encoder(data, stream, logger, **kwargs)
             result = True
         return result, time_ns
+
+    async def encode_async(
+        self,
+        pathlike: _Pathlike,
+        data: _JsonObject,
+        logger: LoggerType = None,
+        maxsplit: int = 1,
+        **kwargs,
+    ) -> _EncodeResult:
+        """Encode data to a file on disk using asyncio."""
+
+        path = normalize(pathlike)
+        async with aiofiles.open(
+            path, mode="w", encoding=self.encoding
+        ) as path_fd:
+            with StringIO() as stream:
+                result = self.encode_stream(
+                    get_file_ext(path, maxsplit=maxsplit),
+                    stream,
+                    data,
+                    logger,
+                    **kwargs,
+                )
+                await path_fd.write(stream.getvalue())
+
+        return result
 
     def encode(
         self,
