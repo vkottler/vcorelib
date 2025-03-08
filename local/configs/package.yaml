@@ -4,6 +4,7 @@ version: "{{major}}.{{minor}}.{{patch}}"
 description: "A collection of core Python utilities."
 
 requirements:
+  - aiofiles
   - cerberus
   - fastjsonschema
   - markdown
@@ -28,6 +29,9 @@ mypy_local: |
   ignore_missing_imports = True
 
   [mypy-cerberus.*]
+  ignore_missing_imports = True
+
+  [mypy-aiofiles.*]
   ignore_missing_imports = True
 
   # Needed for windows.
