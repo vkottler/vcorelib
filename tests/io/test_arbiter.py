@@ -47,6 +47,11 @@ async def test_arbiter_encode_decode_basic():
         # Verify we can encode an entire directory at once.
         with TemporaryDirectory() as tmpdir:
             assert ARBITER.encode_directory(tmpdir, data, ext=str(ext))[0]
+            assert (
+                await ARBITER.encode_directory_async(
+                    tmpdir, data, ext=str(ext)
+                )
+            )[0]
             assert not ARBITER.encode_directory(tmpdir, data, ext="unknown")[0]
 
         # Verify we can load each file.
@@ -108,32 +113,52 @@ async def test_arbiter_decode_failures():
                     assert not ARBITER.decode_stream(str(ext), path_fd).success
 
 
-def test_arbiter_decode_directory_recurse():
+@mark.asyncio
+async def test_arbiter_decode_directory_recurse():
     """Ensure we can successfully recurse a directory."""
 
-    assert ARBITER.decode_directory(
-        resource("simple_decode").joinpath("recurse"),
-        require_success=True,
-        recurse=True,
-    ).data == {
+    expected = {
         "a_section_1": {"a": "a", "b": "b", "c": "c"},
         "b_section_1": {"a": "a", "b": "b", "c": "c"},
         "c_section_1": {"a": "a", "b": "b", "c": "c"},
     }
 
+    path = resource("simple_decode").joinpath("recurse")
 
-def test_arbiter_decode_includes():
+    assert (
+        ARBITER.decode_directory(path, require_success=True, recurse=True).data
+        == expected
+    )
+    assert (
+        await ARBITER.decode_directory_async(
+            path, require_success=True, recurse=True
+        )
+    ).data == expected
+
+
+@mark.asyncio
+async def test_arbiter_decode_includes():
     """Test that we can load data via the 'includes' key."""
 
-    assert ARBITER.decode_directory(
-        resource("simple_decode").joinpath("includes"),
-        require_success=True,
-        includes_key="includes",
-    ).data == {
+    expected = {
         "a_section_1": {"a": "a", "b": "b", "c": "c"},
         "b_section_1": {"a": "a", "b": "b", "c": "c"},
         "c_section_1": {"a": "a", "b": "b", "c": "c"},
     }
+    path = resource("simple_decode").joinpath("includes")
+
+    assert (
+        ARBITER.decode_directory(
+            path, require_success=True, includes_key="includes"
+        ).data
+        == expected
+    )
+
+    assert (
+        await ARBITER.decode_directory_async(
+            path, require_success=True, includes_key="includes"
+        )
+    ).data == expected
 
 
 @mark.asyncio
