@@ -81,6 +81,15 @@ class StrToBool(NamedTuple):
     result: bool
     valid: bool
 
+    def __bool__(self) -> bool:
+        """Determine boolean status."""
+        return self.result and self.valid
+
+    @staticmethod
+    def check(data: str) -> bool:
+        """Check a string for a boolean 'true' value."""
+        return bool(StrToBool.parse(data))
+
     @staticmethod
     def parse(data: str) -> "StrToBool":
         """Parse a string to boolean."""

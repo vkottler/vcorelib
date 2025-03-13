@@ -75,7 +75,7 @@ jobs:
 
       - run: |
           mk python-release owner=vkottler \
-                            repo=vcorelib version=3.5.0
+                            repo=vcorelib version=3.5.1
         if: |
           matrix.python-version == '3.12'
           && matrix.system == 'ubuntu-latest'

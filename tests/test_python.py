@@ -21,3 +21,6 @@ def test_str_to_bool_basic():
 
     assert StrToBool.parse("true").result
     assert StrToBool.parse("false").valid
+
+    assert StrToBool.check("true")
+    assert StrToBool.check("TRUE")
