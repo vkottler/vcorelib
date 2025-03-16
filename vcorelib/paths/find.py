@@ -148,6 +148,8 @@ def find_file(
         assert not strict, f"Couldn't find '{path}'!"
         return None
 
+    candidates_checked: list[str] = []
+
     # Return the first file we find on the search path, if we find one.
     for search in [
         normalize(x)
@@ -170,5 +172,10 @@ def find_file(
             if logger is not None:
                 logger.debug("Didn't find '%s' at '%s'.", path, search)
 
-    assert not strict, f"Couldn't find '{path}'!"
+            candidates_checked.append(str(candidate))
+
+    assert (
+        not strict
+    ), f"Couldn't find '{path}'! (checked: {candidates_checked})"
+
     return None
